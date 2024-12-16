@@ -15,11 +15,13 @@ import torch
 from typing import TYPE_CHECKING
 
 import omni.isaac.lab.utils.math as math_utils
+from omni.isaac.lab.utils.math import subtract_frame_transforms, normalize, quat_unique
 from omni.isaac.lab.assets import Articulation, RigidObject
 from omni.isaac.lab.managers import SceneEntityCfg
 from omni.isaac.lab.managers.manager_base import ManagerTermBase
 from omni.isaac.lab.managers.manager_term_cfg import ObservationTermCfg
 from omni.isaac.lab.sensors import Camera, Imu, RayCaster, RayCasterCamera, TiledCamera
+from omni.isaac.lab.sensors import FrameTransformer
 
 if TYPE_CHECKING:
     from omni.isaac.lab.envs import ManagerBasedEnv, ManagerBasedRLEnv
@@ -156,7 +158,35 @@ def joint_vel_rel(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityC
     asset: Articulation = env.scene[asset_cfg.name]
     return asset.data.joint_vel[:, asset_cfg.joint_ids] - asset.data.default_joint_vel[:, asset_cfg.joint_ids]
 
+"""
+End-effector state.
+"""
+def ee_position_in_robot_root_frame(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame")) -> torch.Tensor:
+    """The position of the end-effector in the robot’s root frame."""
+    robot: RigidObject = env.scene[robot_cfg.name]
+    ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
+    ee_pos_w = ee_frame.data.target_pos_w[..., 0, :]
+    ee_pos_b, _ = subtract_frame_transforms(
+        robot.data.root_state_w[:, :3], robot.data.root_state_w[:, 3:7], ee_pos_w
+    )
+    return ee_pos_b
 
+def ee_rotation_in_robot_root_frame(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), ee_frame_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
+) -> torch.Tensor:
+    """The rotation of the end-effector in the robot’s root frame."""
+    robot: RigidObject = env.scene[robot_cfg.name]
+    ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
+    ee_pos_w = ee_frame.data.target_pos_w[..., 0, :]
+    ee_quat_w = ee_frame.data.target_quat_w[..., 0, :]
+    _, ee_quat_b = subtract_frame_transforms(
+        robot.data.root_state_w[:, :3],
+        robot.data.root_state_w[:, 3:7],
+        ee_pos_w,
+        ee_quat_w,
+    )
+    ee_quat_b = normalize(ee_quat_b)
+    ee_quat_b = quat_unique(ee_quat_b)
+    return ee_quat_b
 """
 Sensors.
 """
