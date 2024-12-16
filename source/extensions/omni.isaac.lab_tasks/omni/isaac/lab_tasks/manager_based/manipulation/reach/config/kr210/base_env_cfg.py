@@ -34,8 +34,8 @@ class KR210BaseReachEnvCfg(ReachEnvCfg):
         super().__post_init__()
 
         self.ee_str = "kr210_tool0"
-        self.scene.robot = KUKA_KR210_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
+        self.scene.robot = KUKA_KR210_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.scene.ee_frame = FrameTransformerCfg(
             prim_path="{ENV_REGEX_NS}/Robot/kr210_base_link",
             debug_vis=False,
@@ -50,7 +50,7 @@ class KR210BaseReachEnvCfg(ReachEnvCfg):
                 ),
             ],
         )
-        
+
         # override rewards
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = ["kr210_tool0"]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = ["kr210_tool0"]
@@ -60,4 +60,7 @@ class KR210BaseReachEnvCfg(ReachEnvCfg):
         # override command generator body
         # end-effector is along x-direction
         self.commands.ee_pose.body_name = "kr210_tool0"
+        self.commands.ee_pose.ranges.pos_x = (1.0, 1.5)
+        self.commands.ee_pose.ranges.pos_y = (-1.0, 1.0)
+        self.commands.ee_pose.ranges.pos_z = (1.0, 2.0)
         self.commands.ee_pose.ranges.pitch = (0, 0)
