@@ -24,6 +24,11 @@ class UR5EJointPosReachEnvCfg(UR5eBaseReachEnvCfg):
             asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True
         )
 
+        # remove joint velocity, end-effector position and orientation from observation
+        self.observations.policy.joint_vel = None
+        self.observations.policy.ee_orientation = None
+        self.observations.policy.ee_position = None
+
 @configclass
 class UR5eReachEnvCfg_PLAY(UR5EJointPosReachEnvCfg):
     def __post_init__(self):
