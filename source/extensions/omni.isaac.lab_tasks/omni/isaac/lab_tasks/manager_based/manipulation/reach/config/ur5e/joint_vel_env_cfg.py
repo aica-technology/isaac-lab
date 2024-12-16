@@ -38,15 +38,3 @@ class UR5EJointVelReachEnvCfg(UR5eBaseReachEnvCfg):
         # remove joint velocity and actions from the observation
         self.observations.policy.joint_vel = None
         self.observations.policy.actions = None
-
-
-@configclass
-class UR5eReachEnvCfg_PLAY(UR5EJointVelReachEnvCfg):
-    def __post_init__(self):
-        # post init of parent
-        super().__post_init__()
-        # make a smaller scene for play
-        self.scene.num_envs = 50
-        self.scene.env_spacing = 2.5
-        # disable randomization for play
-        self.observations.policy.enable_corruption = False
