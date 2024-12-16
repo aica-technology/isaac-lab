@@ -93,3 +93,16 @@ UR5E_CFG_VELOCIY.actuators = {
         ),
     }
 
+"""
+Configuration of UR5e arm for inverse kinematic based control.
+"""
+UR5E_CFG_IK = UR5E_CFG.copy()
+UR5E_CFG_IK.actuators = {
+        "arm": ImplicitActuatorCfg(
+            joint_names_expr=[".*"],
+            velocity_limit=100.0,
+            effort_limit=87.0,
+            stiffness=1600.0,
+            damping=200.0,
+        ),
+    }
