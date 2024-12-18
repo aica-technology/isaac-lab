@@ -5,7 +5,6 @@ from omni.isaac.lab.controllers.differential_ik_cfg import DifferentialIKControl
 from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from omni.isaac.lab.utils import configclass
 
-
 @configclass
 class XARM6ReachIKEnvCfg(BaseXARM6ReachEnvCfg):
     def __post_init__(self):
@@ -15,7 +14,7 @@ class XARM6ReachIKEnvCfg(BaseXARM6ReachEnvCfg):
         # override actions
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
-            joint_names=["*"],
+            joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
             scale=1.0,
