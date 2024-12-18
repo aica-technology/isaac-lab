@@ -8,7 +8,6 @@ from omni.isaac.lab.utils import configclass
 @configclass
 class KR210ReachIKEnvCfg(KR210BaseReachEnvCfg):
     def __post_init__(self):
-        # post init of parent
         super().__post_init__()
 
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
@@ -19,7 +18,6 @@ class KR210ReachIKEnvCfg(KR210BaseReachEnvCfg):
             scale=1.0,
         )
 
-        # remove last action and joint velocity from observation
         self.observations.policy.joint_vel = None
         self.observations.policy.actions = None
         self.observations.policy.joint_pos = None

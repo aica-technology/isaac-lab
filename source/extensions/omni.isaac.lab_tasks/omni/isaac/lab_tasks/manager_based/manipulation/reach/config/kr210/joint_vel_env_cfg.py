@@ -18,7 +18,6 @@ class KR210ReachEnvCfg(KR210BaseReachEnvCfg):
             asset_name="robot", joint_names=[".*"], scale=1, use_default_offset=True
         )
 
-        # remove last action and joint velocity from observation
         self.observations.policy.joint_vel = None
         self.observations.policy.actions = None
         self.observations.policy.ee_position = None
