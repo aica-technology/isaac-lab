@@ -22,6 +22,3 @@ class KR210ReachEnvCfg(KR210BaseReachEnvCfg):
         self.observations.policy.actions = None
         self.observations.policy.ee_position = None
         self.observations.policy.ee_orientation = None
-
-
-
