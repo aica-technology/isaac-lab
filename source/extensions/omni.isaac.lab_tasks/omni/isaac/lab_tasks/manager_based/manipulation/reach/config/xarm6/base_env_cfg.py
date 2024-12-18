@@ -33,9 +33,10 @@ class BaseXARM6ReachEnvCfg(ReachEnvCfg):
         # override command generator body
         # end-effector is along x-direction
         self.commands.ee_pose.body_name = self.ee_str
-        self.commands.ee_pose.ranges.pitch = (-math.pi, -math.pi)
 
         # remove last action and joint velocity from observation
         self.observations.policy.joint_vel = None
         self.observations.policy.ee_orientation = None
         self.observations.policy.ee_position = None
+
+        self.commands.ee_pose.ranges.pitch = (0, 0)

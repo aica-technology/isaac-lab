@@ -11,7 +11,6 @@ class XARM6ReachIKEnvCfg(BaseXARM6ReachEnvCfg):
         # post init of parent
         super().__post_init__()
 
-        # override actions
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=[".*"],
@@ -20,7 +19,7 @@ class XARM6ReachIKEnvCfg(BaseXARM6ReachEnvCfg):
             scale=1.0,
         )
     
-        # remove last action and joint velocity from observation
         self.observations.policy.joint_vel = None
         self.observations.policy.actions = None
         self.observations.policy.joint_pos = None
+    

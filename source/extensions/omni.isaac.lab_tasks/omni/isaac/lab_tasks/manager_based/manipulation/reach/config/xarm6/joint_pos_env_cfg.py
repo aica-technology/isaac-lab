@@ -15,7 +15,6 @@ class XARM6ReachEnvCfg(BaseXARM6ReachEnvCfg):
             asset_name="robot", joint_names=[".*"], scale=0.5, use_default_offset=True
         )
 
-        # remove last action and joint velocity from observation
         self.observations.policy.joint_vel = None
         self.observations.policy.ee_orientation = None
         self.observations.policy.ee_position = None
