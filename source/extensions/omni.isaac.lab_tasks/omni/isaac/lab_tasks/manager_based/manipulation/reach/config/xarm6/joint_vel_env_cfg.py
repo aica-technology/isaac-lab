@@ -1,13 +1,13 @@
 from omni.isaac.lab.utils import configclass
 
 import omni.isaac.lab_tasks.manager_based.manipulation.reach.mdp as mdp
-from omni.isaac.lab_tasks.manager_based.manipulation.reach.reach_env_cfg import ReachEnvCfg
+from omni.isaac.lab_tasks.manager_based.manipulation.reach.config.xarm6.base_env_cfg import BaseXARM6ReachEnvCfg
 
 from omni.isaac.lab_assets import UF_XARM6_VELOCITY
 
 
 @configclass
-class XARM6ReachEnvCfg(ReachEnvCfg):
+class XARM6ReachEnvCfg(BaseXARM6ReachEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()

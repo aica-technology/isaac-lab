@@ -5,7 +5,7 @@ from omni.isaac.lab.assets.articulation import ArticulationCfg
 
 KUKA_KR210_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"omniverse://localhost/Users/yrh012/KUKA/kr210/kr210.usd", # TODO: replace with NUCLEUS location
+        usd_path=f"omniverse://localhost/Users/aica/KUKA/kr210/kr210.usd", # TODO: replace with NUCLEUS location
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=5.0,

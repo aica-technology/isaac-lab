@@ -5,7 +5,7 @@ from omni.isaac.lab.assets.articulation import ArticulationCfg
 
 UF_XARM6_WITH_GRIPPER = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="omniverse://localhost/Users/yrh012/ufactory/xarm_with_gripper/ufactory.usd", # TODO: handle with AICA Nuclues Account
+        usd_path="omniverse://localhost/Users/aica/ufactory/xarm_with_gripper/ufactory.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
             max_depenetration_velocity=5.0,
@@ -57,7 +57,7 @@ UF_XARM6_WITH_GRIPPER = ArticulationCfg(
 
 UF_XARM6= ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="omniverse://localhost/Users/yrh012/ufactory/xarm/ufactory.usd",  # TODO: handle with AICA Nuclues Account
+        usd_path="omniverse://localhost/Users/aica/ufactory/xarm/ufactory.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=False,
             max_depenetration_velocity=5.0,
@@ -112,11 +112,7 @@ UF_XARM6_VELOCITY.actuators = {
                 "joint3": 40,
                 "joint4": 40,
                 "joint5": 40,
-                "joint6": 40,
-                "gripper.*": 0,                    
+                "joint6": 40,                
             }
         ),
     }
-
-UF_XARM6_IK = UF_XARM6.copy()
-"""Configuration of UR-5e arm using implicit actuator models."""
