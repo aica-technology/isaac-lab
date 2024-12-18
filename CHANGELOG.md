@@ -3,6 +3,7 @@
 ## Upcoming changes
 
 - feat: Develop Universal Robots (UR5e) Assets and RL Reach Environments (#1)
+- feat: Develop KUKA (KR210) Assets and RL Reach Environments (#3)
 
 ### Breaking changes
 
