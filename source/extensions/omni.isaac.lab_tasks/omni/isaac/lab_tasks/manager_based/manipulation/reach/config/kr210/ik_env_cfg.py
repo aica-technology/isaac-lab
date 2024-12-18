@@ -5,24 +5,12 @@ from omni.isaac.lab.controllers.differential_ik_cfg import DifferentialIKControl
 from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from omni.isaac.lab.utils import configclass
 
-##
-# Pre-defined configs
-##
-from omni.isaac.lab_assets import KUKA_IK_KR210_CFG  # isort: skip
-
-
-##
-# Environment configuration
-##
-
 @configclass
 class KR210ReachIKEnvCfg(KR210BaseReachEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
 
-        self.scene.robot = KUKA_IK_KR210_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=[".*"],

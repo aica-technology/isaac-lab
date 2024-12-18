@@ -1,28 +1,8 @@
-# Copyright (c) 2022-2024, The Isaac Lab Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
-import math
-
 from omni.isaac.lab.utils import configclass
 
 from omni.isaac.lab_tasks.manager_based.manipulation.reach.reach_env_cfg import ReachEnvCfg
-from omni.isaac.lab.sensors import FrameTransformerCfg
-from omni.isaac.lab.markers.config import FRAME_MARKER_CFG  # isort: skip
-from omni.isaac.lab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
-from omni.isaac.lab.markers.visualization_markers import VisualizationMarkersCfg
 
-##
-# Pre-defined configs
-##
-from omni.isaac.lab_assets import KUKA_KR210_CFG  # isort: skip
-
-
-##
-# Environment configuration
-##
-
+from omni.isaac.lab_assets import KUKA_KR210_CFG
 
 @configclass
 class KR210BaseReachEnvCfg(ReachEnvCfg):

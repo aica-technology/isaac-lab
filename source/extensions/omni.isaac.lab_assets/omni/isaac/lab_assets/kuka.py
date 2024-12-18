@@ -3,25 +3,11 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-"""Configuration for the Universal Robots.
-
-The following configuration parameters are available:
-
-* :obj:`UR10_CFG`: The UR10 arm without a gripper.
-* :obj:`UR5E_CFG`: The UR5e arm without a gripper.
-
-Reference: https://github.com/ros-industrial/universal_robot
-"""
-
 import omni.isaac.lab.sim as sim_utils
 from omni.isaac.lab.actuators import ImplicitActuatorCfg
 from omni.isaac.lab.assets.articulation import ArticulationCfg
 
-##
-# Configuration
-##
 
-"""Configuration of K210 arm using implicit actuator models."""
 KUKA_KR210_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path=f"omniverse://localhost/Users/yrh012/KUKA/kr210/kr210.usd", # TODO: replace with NUCLEUS location
@@ -46,15 +32,13 @@ KUKA_KR210_CFG = ArticulationCfg(
         "arm": ImplicitActuatorCfg(
             joint_names_expr=[".*"],
             velocity_limit=100.0,
-            stiffness=0.0,
+            stiffness=100000,
             damping=50000.0,
         ),
     },
 )
 
-"""
-Configuration of UR5e arm for inverse kinematic based control.
-"""
-KUKA_IK_KR210_CFG = KUKA_KR210_CFG.copy()
-KUKA_IK_KR210_CFG.actuators["arm"].stiffness = 100000
-KUKA_IK_KR210_CFG.actuators["arm"].damping = 20000
+
+KUKA_VEL_KR210_CFG = KUKA_KR210_CFG.copy()
+KUKA_VEL_KR210_CFG.actuators["arm"].stiffness = 0
+KUKA_VEL_KR210_CFG.actuators["arm"].damping = 50000

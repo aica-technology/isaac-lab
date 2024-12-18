@@ -1,15 +1,6 @@
-# Copyright (c) 2022-2024, The Isaac Lab Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
 import gymnasium as gym
 
 from . import agents, joint_vel_env_cfg, ik_env_cfg
-
-##
-# Register Gym environments.
-##
 
 gym.register(
 id="Isaac-Reach-KR210-JointVel-v0",
