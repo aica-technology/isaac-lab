@@ -26,8 +26,8 @@ class KR210ReachIKEnvCfg(KR210BaseReachEnvCfg):
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=[".*"],
-            body_name="kr210_tool0",
-            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=False, ik_method="dls"),
+            body_name=self.ee_str,
+            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
             scale=1.0,
         )
 
