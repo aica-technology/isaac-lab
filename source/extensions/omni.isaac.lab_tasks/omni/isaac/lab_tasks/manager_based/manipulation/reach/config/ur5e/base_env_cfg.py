@@ -29,15 +29,16 @@ class UR5eBaseReachEnvCfg(ReachEnvCfg):
         # switch robot to ur5e
         self.scene.robot = UR5E_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         
+        self.ee_str = "tool0"
+        
         # override randomization
         self.events.reset_robot_joints.params["position_range"] = (0.75, 1.25)
         # override rewards
-        self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = ["tool0"]
-        self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = ["tool0"]
-        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = ["tool0"]
-        self.rewards.action_termination_penalty.params["asset_cfg"].body_names = ["tool0"]
+        self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
+        self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.ee_str]
+        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
+        self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
 
-        self.ee_str = "tool0"
         self.scene.ee_frame = FrameTransformerCfg(
             prim_path="{ENV_REGEX_NS}/Robot/base_link",
             debug_vis=False,
@@ -55,5 +56,5 @@ class UR5eBaseReachEnvCfg(ReachEnvCfg):
 
         # override command generator body
         # end-effector is along x-direction
-        self.commands.ee_pose.body_name = "tool0"
+        self.commands.ee_pose.body_name = self.ee_str 
         self.commands.ee_pose.ranges.pitch = (0, 0)

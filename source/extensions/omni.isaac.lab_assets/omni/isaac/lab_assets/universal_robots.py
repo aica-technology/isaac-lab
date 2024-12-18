@@ -75,7 +75,7 @@ UR5E_CFG = ArticulationCfg(
         },
     ),
     actuators={
-        "arm": parse_actuator_model("source/assets/ur5e/actuator_models/actuator_model_v1.json")
+        "arm": parse_actuator_model("source/assets/ur5e/actuator_models/actuator_model.json")
     },
 )
 

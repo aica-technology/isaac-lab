@@ -22,7 +22,7 @@ class UR5eReachIKEnvCfg(UR5eBaseReachEnvCfg):
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=[".*"],
-            body_name="tool0",
+            body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
             scale=1.0,
         )
