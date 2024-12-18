@@ -1,7 +1,7 @@
 {
-    "name": "UR5E",
+    "name": "UR5e",
     "version": "0.0.1",
-    "description": "UR5E actuator model trained on dataset (v1 https://drive.google.com/file/d/1G1V-y0hHAjVN6Uy34iNlVfRDm1VV5dij/view?usp=drive_link)",
+    "description": "UR5e actuator model trained on dataset (v1 https://drive.google.com/file/d/1G1V-y0hHAjVN6Uy34iNlVfRDm1VV5dij/view?usp=drive_link)",
     "metric_score": 0.87,
     "metric_unit": "degrees",
     "joint_names": [
