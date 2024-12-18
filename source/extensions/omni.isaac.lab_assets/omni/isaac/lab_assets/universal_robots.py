@@ -52,8 +52,6 @@ UR10_CFG = ArticulationCfg(
     },
 )
 
-"""Configuration of UR5e arm using implicit actuator models."""
-
 UR5E_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path="omniverse://localhost/NVIDIA/Assets/Isaac/4.2/Isaac/Robots/UniversalRobots/ur5e/ur5e.usd",
@@ -78,9 +76,6 @@ UR5E_CFG = ArticulationCfg(
     },
 )
 
-"""
-Configuration of UR5e arm for joint velocity based control.
-"""
 UR5E_CFG_VELOCIY = UR5E_CFG.copy()
 UR5E_CFG_VELOCIY.actuators = {
         "arm": ImplicitActuatorCfg(
@@ -92,9 +87,7 @@ UR5E_CFG_VELOCIY.actuators = {
         ),
     }
 
-"""
-Configuration of UR5e arm for inverse kinematic based control.
-"""
+
 UR5E_CFG_IK = UR5E_CFG.copy()
 UR5E_CFG_IK.actuators = {
         "arm": ImplicitActuatorCfg(
