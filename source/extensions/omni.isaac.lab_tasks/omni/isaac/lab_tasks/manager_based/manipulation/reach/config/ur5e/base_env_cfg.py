@@ -1,16 +1,7 @@
 from omni.isaac.lab.utils import configclass
 
 from omni.isaac.lab_tasks.manager_based.manipulation.reach.reach_env_cfg import ReachEnvCfg
-from omni.isaac.lab.sensors.frame_transformer.frame_transformer_cfg import OffsetCfg
-from omni.isaac.lab.sensors import FrameTransformerCfg
-from omni.isaac.lab.markers.config import FRAME_MARKER_CFG  
-from omni.isaac.lab.markers.visualization_markers import VisualizationMarkersCfg
-
 from omni.isaac.lab_assets import UR5E_CFG  
-
-ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
-ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
-ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class UR5eBaseReachEnvCfg(ReachEnvCfg):
@@ -25,26 +16,16 @@ class UR5eBaseReachEnvCfg(ReachEnvCfg):
         
         # override randomization
         self.events.reset_robot_joints.params["position_range"] = (0.75, 1.25)
-        # override rewards
+
+        # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
 
-        self.scene.ee_frame = FrameTransformerCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/base_link",
-            debug_vis=False,
-            visualizer_cfg=ee_frame_cfg,
-            target_frames=[
-                FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/" + self.ee_str,
-                    name="end_effector",
-                    offset=OffsetCfg(
-                        pos=(0, 0, 0),
-                    ),
-                ),
-            ],
-        )
+        # set end-effector frame
+        self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
+        self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         # override command generator body
         # end-effector is along x-direction

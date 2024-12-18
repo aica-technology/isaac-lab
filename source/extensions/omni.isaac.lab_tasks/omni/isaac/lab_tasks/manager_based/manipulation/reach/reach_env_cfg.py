@@ -19,12 +19,19 @@ from omni.isaac.lab.managers import TerminationTermCfg as DoneTerm
 from omni.isaac.lab.scene import InteractiveSceneCfg
 from omni.isaac.lab.utils import configclass
 from omni.isaac.lab.utils.noise import AdditiveUniformNoiseCfg as Unoise
-from omni.isaac.lab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg
+from omni.isaac.lab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
 import omni.isaac.lab_tasks.manager_based.manipulation.reach.mdp as mdp
+from omni.isaac.lab.markers.config import FRAME_MARKER_CFG  
+from omni.isaac.lab.markers.visualization_markers import VisualizationMarkersCfg
 import math
 ##
 # Scene definition
 ##
+
+
+ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
+ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 
 @configclass
@@ -41,7 +48,21 @@ class ReachSceneCfg(InteractiveSceneCfg):
     # robots
     robot: ArticulationCfg = MISSING
 
-    ee_frame: FrameTransformerCfg = MISSING
+    ee_frame: FrameTransformerCfg = FrameTransformerCfg(
+            prim_path=MISSING,
+            debug_vis=False,
+            visualizer_cfg=ee_frame_cfg,
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path=MISSING,
+                    name="end_effector",
+                    offset=OffsetCfg(
+                        pos=(0, 0, 0),
+                    ),
+                ),
+            ],
+        )
+
 
     # lights
     light = AssetBaseCfg(
