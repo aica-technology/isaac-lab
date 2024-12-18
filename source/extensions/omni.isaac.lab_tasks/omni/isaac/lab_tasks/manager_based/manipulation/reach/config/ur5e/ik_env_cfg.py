@@ -4,10 +4,8 @@ from omni.isaac.lab_tasks.manager_based.manipulation.reach.config.ur5e.base_env_
 from omni.isaac.lab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from omni.isaac.lab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from omni.isaac.lab.utils import configclass
-##
-# Pre-defined configs
-##
-from omni.isaac.lab_assets import UR5E_CFG_IK  # isort: skip
+
+from omni.isaac.lab_assets import UR5E_CFG_IK
 
 @configclass
 class UR5eReachIKEnvCfg(UR5eBaseReachEnvCfg):

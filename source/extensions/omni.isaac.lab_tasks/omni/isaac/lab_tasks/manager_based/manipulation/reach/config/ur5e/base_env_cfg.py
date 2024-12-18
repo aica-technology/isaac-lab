@@ -6,15 +6,7 @@ from omni.isaac.lab.sensors import FrameTransformerCfg
 from omni.isaac.lab.markers.config import FRAME_MARKER_CFG  
 from omni.isaac.lab.markers.visualization_markers import VisualizationMarkersCfg
 
-##
-# Pre-defined configs
-##
-from omni.isaac.lab_assets import UR5E_CFG  # isort: skip
-
-
-##
-# Environment configuration
-##
+from omni.isaac.lab_assets import UR5E_CFG  
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
 ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)

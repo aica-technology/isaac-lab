@@ -3,11 +3,6 @@ from omni.isaac.lab.utils import configclass
 import omni.isaac.lab_tasks.manager_based.manipulation.reach.mdp as mdp
 from omni.isaac.lab_tasks.manager_based.manipulation.reach.config.ur5e.base_env_cfg import UR5eBaseReachEnvCfg
 
-
-##
-# Environment configuration
-##
-
 @configclass
 class UR5EJointPosReachEnvCfg(UR5eBaseReachEnvCfg):
     def __post_init__(self):

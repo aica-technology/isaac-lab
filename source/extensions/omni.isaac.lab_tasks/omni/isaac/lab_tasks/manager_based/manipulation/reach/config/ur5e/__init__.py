@@ -7,10 +7,6 @@ import gymnasium as gym
 
 from . import agents, joint_pos_env_cfg, joint_vel_env_cfg, ik_env_cfg
 
-##
-# Register Gym environments.
-##
-
 gym.register(
     id="Isaac-Reach-UR5e-JointPos-v0",
     entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",

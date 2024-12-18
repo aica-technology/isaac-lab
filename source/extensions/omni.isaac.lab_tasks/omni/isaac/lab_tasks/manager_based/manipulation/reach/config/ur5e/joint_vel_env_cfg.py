@@ -3,16 +3,7 @@ from omni.isaac.lab.utils import configclass
 import omni.isaac.lab_tasks.manager_based.manipulation.reach.mdp as mdp
 from omni.isaac.lab_tasks.manager_based.manipulation.reach.config.ur5e.base_env_cfg import UR5eBaseReachEnvCfg
 
-##
-# Pre-defined configs
-##
-from omni.isaac.lab_assets import UR5E_CFG_VELOCIY  # isort: skip
-
-
-##
-# Environment configuration
-##
-
+from omni.isaac.lab_assets import UR5E_CFG_VELOCIY
 
 @configclass
 class UR5EJointVelReachEnvCfg(UR5eBaseReachEnvCfg):
