@@ -21,7 +21,6 @@ from ..lab_assets.custom_actuator_models.actuator_model_parsers import parse_act
 ##
 # Configuration
 ##
-"""Configuration of UR-10 arm using implicit actuator models."""
 
 UR10_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
