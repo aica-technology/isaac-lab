@@ -13,7 +13,7 @@ from omni.isaac.lab_tasks.utils.wrappers.rsl_rl import (
 
 
 @configclass
-class UR5eReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
+class XARMReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1000
     save_interval = 50
