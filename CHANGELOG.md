@@ -4,6 +4,7 @@
 
 - feat: Develop Universal Robots (UR5e) Assets and RL Reach Environments (#1)
 - feat: Develop KUKA (KR210) Assets and RL Reach Environments (#3)
+- feat: Develop UFactory (xArm6) Assets and RL Reach Environment (#5)
 
 ### Breaking changes
 
