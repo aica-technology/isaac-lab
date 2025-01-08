@@ -32,7 +32,7 @@ To set up a Reinforcement Learning environment in Isaac Lab, familiarize yoursel
 
 Assets are objects defined within a 3D scene and can belong to one of the following categories: (1) Articulated Objects, (2) Rigid Objects, or (3) Deformable Objects. These assets are represented in the USD (Universal Scene Description) format. 
 
-Predefined assets are located in the directory:  
+Predefined assets are located in the directory in Isaac Lab Repo:  
 `source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets`.  
 
 This directory contains a range of manipulator robots, including the Franka Panda, Universal Robot UR5E and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
@@ -87,8 +87,40 @@ Beyond the default assets, AICA has curated a list of additional resources not i
 
 ## Simulation Environments
 
+Simulation environments are virtual environments where a reinforcement learning (RL) agent takes actions, observes states, receives rewards, and refines its strategy to maximize performance. In Isaac Lab, there are two types of environments:
 
-## Reinforcement Learning Backends
+1. [Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html)  
+2. [Direct RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html)
+
+Manager-Based RL Environments simplify simulation complexity by bundling essential components, **InteractiveScene**, **ActionManager**, **ObservationManager**, and **EventManager**, into a single interface. In contrast, Direct-Based RL Environments provide greater flexibility by requiring users to define observations and rewards directly within the task script. Manager-Based RL Environment are more commonly used compared.
+
+### Manager-Based RL Environment
+
+To create your own Manager-Based RL Environment, follow the [tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html). Below is a summary of a basic environment configuration class:
+
+```python
+class ReachEnvCfg(ManagerBasedRLEnvCfg):
+    """Configuration for the end-effector pose tracking environment."""
+
+    # Scene settings
+    scene: ReachSceneCfg = ReachSceneCfg(num_envs=4096, env_spacing=2.5)
+
+    # Basic settings
+    observations: ObservationsCfg = ObservationsCfg()
+    actions: ActionsCfg = ActionsCfg()
+    commands: CommandsCfg = CommandsCfg()
+
+    # MDP settings
+    rewards: RewardsCfg = RewardsCfg()
+    terminations: TerminationsCfg = TerminationsCfg()
+    events: EventCfg = EventCfg()
+    curriculum: CurriculumCfg = CurriculumCfg()
+```
+
+This configuration class demonstrates the essential components—scene settings, observations, actions, rewards, terminations, events, and curriculum—that can be customized to suit your RL tasks.
+
+  
+## Reinforcement Learning Workflows
 
 ## Training Reinforcement Learning Policies
 
