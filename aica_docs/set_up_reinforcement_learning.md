@@ -37,7 +37,51 @@ Predefined assets are located in the directory:
 
 This directory contains a range of manipulator robots, including the Franka Panda, Universal Robot UR5E and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
+#### Example of Asset Configuration
+Here is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
 
+```python
+UR10_CFG = ArticulationCfg(
+    spawn=sim_utils.UsdFileCfg(
+        usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Robots/UniversalRobots/UR10/ur10_instanceable.usd",
+        rigid_props=sim_utils.RigidBodyPropertiesCfg(
+            disable_gravity=False,
+            max_depenetration_velocity=5.0,
+        ),
+        activate_contact_sensors=False,
+    ),
+    init_state=ArticulationCfg.InitialStateCfg(
+        joint_pos={
+            "shoulder_pan_joint": 0.0,
+            "shoulder_lift_joint": -1.712,
+            "elbow_joint": 1.712,
+            "wrist_1_joint": 0.0,
+            "wrist_2_joint": 0.0,
+            "wrist_3_joint": 0.0,
+        },
+    ),
+    actuators={
+        "arm": ImplicitActuatorCfg(
+            joint_names_expr=[".*"],
+            velocity_limit=100.0,
+            effort_limit=87.0,
+            stiffness=800.0,
+            damping=40.0,
+        ),
+    },
+)
+```
+
+- **`spawn`**: Defines the USD file path for the asset and specifies its physical properties, such as rigid body settings (e.g., enabling or disabling gravity) and contact sensor activation.
+- **`init_state`**: Configures the initial state of the robot, including specific joint positions, joint velocities, ... to initialize the articulation.
+- **`actuators`**: Sets up the robot's actuator model, specifying parameters such as velocity limits, effort limits, stiffness, and damping.
+
+In this example, the actuator model is defined using `ImplicitActuatorCfg`. However, actuator models in Isaac Lab can be either implicit or explicit. For more information on configuring actuators, refer to the [Actuators in Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/source/overview/core-concepts/actuators.html).
+
+#### Isaac Nucleus
+Isaac Nucleus is part of NVIDIA’s Omniverse platform, serving as a central repository for assets and utilities used in Isaac Lab. It provides a comprehensive collection of prebuilt USD assets—including objects, tables, and manipulator robots—that greatly simplify scene construction. Additionally, Isaac Nucleus streamlines collaboration by storing and sharing all necessary files in one location, making it easier for multiple users to work together on robotics simulations and environments.
+
+Beyond these default assets, AICA has curated a list of additional resources not included with Isaac Nucleus—such as the uFactory xArm 6 and KUKA KR210 robots—which can be made available upon request.
 
 ### Simulation Environments
 
