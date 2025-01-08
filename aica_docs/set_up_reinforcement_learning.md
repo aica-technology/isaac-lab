@@ -1,16 +1,16 @@
-## Reinforcement Learning with Isaac Lab
+# Reinforcement Learning with Isaac Lab
 
 This README provides a step-by-step guide for training a Neural Network-based Reinforcement Learning (RL) policy in a simulation environment and exporting the trained policy in ONNX format.
 
 Isaac Lab is a modular framework designed to simplify robotics research workflows, including reinforcement learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
 
-## Prerequisites
+# Prerequisites
 
 Before training a new policy, begin by cloning the AICA fork of [Isaac Lab](https://github.com/aica-technology/isaac-lab). 
 
 Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/pip_installation.html) guide for comprehensive instructions on installation and developer setup.
 
-## Key Concepts
+# Key Concepts
 
 In the context of Deep Neural Network-based Reinforcement Learning (RL), an **actor**—typically represented by a neural network—learns to perform a specific task by interacting with an environment and optimizing its behavior based on received rewards. This process involves the following steps:
 
@@ -28,7 +28,7 @@ Isaac Lab enables agents to perform actions and execute policies within simulate
 
 To set up a Reinforcement Learning environment in Isaac Lab, familiarize yourself with the following topics.
 
-### Asset Management
+## Asset Management
 
 Assets are objects defined within a 3D scene and can belong to one of the following categories: (1) Articulated Objects, (2) Rigid Objects, or (3) Deformable Objects. These assets are represented in the USD (Universal Scene Description) format. 
 
@@ -37,7 +37,7 @@ Predefined assets are located in the directory:
 
 This directory contains a range of manipulator robots, including the Franka Panda, Universal Robot UR5E and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
-#### Example of Asset Configuration
+### Example of Asset Configuration
 Here is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
 
 ```python
@@ -78,19 +78,20 @@ UR10_CFG = ArticulationCfg(
 
 In this example, the actuator model is defined using `ImplicitActuatorCfg`. However, actuator models in Isaac Lab can be either implicit or explicit. For more information on configuring actuators, refer to the [Actuators in Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/source/overview/core-concepts/actuators.html).
 
-#### Isaac Nucleus
+### Isaac Nucleus
 Isaac Nucleus is part of NVIDIA’s Omniverse platform and serves as a central repository for assets and utilities used in Isaac Lab. It provides a comprehensive collection of prebuilt USD assets—such as objects, tables, and manipulator robots—that greatly simplify scene construction. Additionally, Isaac Nucleus streamlines collaboration by storing and sharing all necessary files in one location, making it easier for multiple users to work together on robotics simulations and environments.
 
 As shown in the example articulation configuration, the relevant USD file is stored in Isaac Nucleus and can be accessed by importing `ISAACLAB_NUCLEUS_DIR` from `omni.isaac.lab.utils.assets` in Isaac Lab.
 
 Beyond the default assets, AICA has curated a list of additional resources not included in the default Isaac Sim folder on Isaac Nucleus, such as the uFactory xArm 6 and KUKA KR210 robots, which can be made available upon request.
 
-### Simulation Environments
+## Simulation Environments
 
-### Reinforcement Learning Backends
 
-### Training Reinforcement Learning Policies
+## Reinforcement Learning Backends
 
-### Evaluating and Exporting Reinforcement Learning Models
+## Training Reinforcement Learning Policies
 
-## Next Steps to Execute the Policy on the Robot
+## Evaluating and Exporting Reinforcement Learning Models
+
+# Next Steps to Execute the Policy on the Robot
