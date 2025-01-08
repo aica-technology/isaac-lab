@@ -79,9 +79,11 @@ UR10_CFG = ArticulationCfg(
 In this example, the actuator model is defined using `ImplicitActuatorCfg`. However, actuator models in Isaac Lab can be either implicit or explicit. For more information on configuring actuators, refer to the [Actuators in Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/source/overview/core-concepts/actuators.html).
 
 #### Isaac Nucleus
-Isaac Nucleus is part of NVIDIA’s Omniverse platform, serving as a central repository for assets and utilities used in Isaac Lab. It provides a comprehensive collection of prebuilt USD assets—including objects, tables, and manipulator robots—that greatly simplify scene construction. Additionally, Isaac Nucleus streamlines collaboration by storing and sharing all necessary files in one location, making it easier for multiple users to work together on robotics simulations and environments.
+Isaac Nucleus is part of NVIDIA’s Omniverse platform and serves as a central repository for assets and utilities used in Isaac Lab. It provides a comprehensive collection of prebuilt USD assets—such as objects, tables, and manipulator robots—that greatly simplify scene construction. Additionally, Isaac Nucleus streamlines collaboration by storing and sharing all necessary files in one location, making it easier for multiple users to work together on robotics simulations and environments.
 
-Beyond these default assets, AICA has curated a list of additional resources not included with Isaac Nucleus—such as the uFactory xArm 6 and KUKA KR210 robots—which can be made available upon request.
+As shown in the example articulation configuration, the relevant USD file is stored in Isaac Nucleus and can be accessed by importing `ISAACLAB_NUCLEUS_DIR` from `omni.isaac.lab.utils.assets` in Isaac Lab.
+
+Beyond the default assets, AICA has curated a list of additional resources not included in the default Isaac Sim folder on Isaac Nucleus, such as the uFactory xArm 6 and KUKA KR210 robots, which can be made available upon request.
 
 ### Simulation Environments
 
