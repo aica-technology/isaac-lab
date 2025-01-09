@@ -259,6 +259,15 @@ class CommandsCfg:
 
 ## Reinforcement Learning Workflows
 
+Several open-source reinforcement learning (RL) frameworks facilitate policy learning and optimization. Isaac Lab offers wrappers for various RL libraries, translating environment data into the appropriate formats for each library's functions. The three supported libraries are:
+
+1. **RSL-RL**: Developed by the Robotic Systems Lab at ETH Zürich, RSL-RL is a fast and straightforward implementation of RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans to incorporate additional algorithms. More details can be found on [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
+
+2. **SKRL**: An open-source modular RL library written in Python, built on top of PyTorch and JAX. SKRL emphasizes modularity, readability, and simplicity, supporting various environments, including NVIDIA Isaac Gym and Omniverse Isaac Gym. It enables simultaneous training of multiple agents with customizable scopes. More details can be found on [SKRL Github](https://github.com/Toni-SM/skrl).
+
+3. **RL Games**: An open-source high-performance reinforcement learning framework implemented in Python, designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
+
+
 ## Training Reinforcement Learning Policies
 
 ## Evaluating and Exporting Reinforcement Learning Models
