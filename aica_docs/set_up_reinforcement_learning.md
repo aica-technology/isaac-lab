@@ -116,7 +116,7 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
     events: EventCfg = EventCfg()
     curriculum: CurriculumCfg = CurriculumCfg()
 ```
-As shown in the configuration above, **ReachEnvCfg** inherits from **ManagerBasedRLEnvCfg** and sets up the various managers that define the RL environment. The scene settings specify the assets in the environment such as the ground, robot, and lights as demonstrated in the snippet below:
+As shown in the configuration above, **ReachEnvCfg** inherits from **ManagerBasedRLEnvCfg** and sets up the various managers that define the RL environment. The **ReachSceneCfg** specify the assets in the environment such as the ground, robot, and lights as demonstrated in the snippet below:
 
 ```python
 @configclass
@@ -140,7 +140,122 @@ class ReachSceneCfg(InteractiveSceneCfg):
     )
 ```
 
-Here, the **ReachSceneCfg** class defines the ground plane, the robot articulation, and the lighting setup for the environment. 
+The **ObservationsCfg** class specifies the observations passed to the RL agent in the form of a state vector, which can include information such as joint positions, joint velocities, and end-effector pose for robotic arms.
+
+```python
+@configclass
+class ObservationsCfg:
+    """Observation specifications for the MDP."""
+
+    @configclass
+    class PolicyCfg(ObsGroup):
+        """Observations for the policy group."""
+
+        # Observation terms (order preserved)
+        joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
+        
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        actions = ObsTerm(func=mdp.last_action)
+
+        def __post_init__(self):
+            self.enable_corruption = True
+            self.concatenate_terms = True
+
+    # Observation groups
+    policy: PolicyCfg = PolicyCfg()
+```
+
+Each observation term specifies how a particular piece of data, such as joint positions or end-effector orientation, is retrieved, optionally corrupted with noise (for dynamic randomization), and appended to the RL agent’s input vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the configuration dictates their arrangement in the final state input.
+
+The **ActionsCfg** class defines how the outputs of the neural network are translated into actions applied in the simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the policy’s outputs may represent:
+
+- **Joint Position Control**: The policy outputs joint position setpoints.  
+- **Joint Velocity Control**: The policy outputs joint velocity setpoints.  
+- **Impedance Control**: The policy outputs joint torque setpoints.  
+- **Cartesian Control**: The policy outputs Cartesian pose or Cartesian twist setpoints, often processed through an inverse kinematics solver.  
+
+Below are examples of different control configurations:
+
+### Example: Joint Position Control
+In this configuration, the policy outputs joint position setpoints that are applied directly to the robot:
+
+```python
+@configclass
+class ActionsCfg:
+    """Action specifications for the MDP."""
+
+    arm_action: ActionTerm = mdp.JointPositionActionCfg(
+        asset_name="robot", 
+        joint_names=[".*"], 
+        scale=0.5, 
+        use_default_offset=True
+    )
+```
+
+### Example: Joint Velocity Control
+Here, the policy outputs joint velocity setpoints for controlling the robot's movement:
+
+```python
+@configclass
+class ActionsCfg:
+    """Action specifications for the MDP."""
+
+    arm_action: ActionTerm = mdp.JointVelocityActionCfg(
+        asset_name="robot", 
+        joint_names=[".*"], 
+        scale=1.0, 
+        use_default_offset=True
+    )
+```
+
+### Example: Cartesian Twist Control
+In this setup, the policy outputs Cartesian twist commands (e.g., velocities in Cartesian space) that are translated into joint commands using an inverse kinematics solver:
+
+```python
+@configclass
+class ActionsCfg:
+    """Action specifications for the MDP."""
+
+    arm_action: ActionTerm = DifferentialInverseKinematicsActionCfg(
+        asset_name="robot",
+        joint_names=[".*"],
+        body_name="tool0",  # End-effector frame name
+        controller=DifferentialIKControllerCfg(
+            command_type="pose", 
+            use_relative_mode=True, 
+            ik_method="dls"
+        ),
+        scale=0.5,
+    )
+```
+The **CommandsCfg** class specifies the commands applied to the robot, which are also referenced in the **ObservationsCfg** to be included in the state vector. For example, the command `ee_pose` can be sampled and referenced in an observation term like `pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})`.
+
+Here is an example configuration that defines a Cartesian pose command:
+
+```python
+@configclass
+class CommandsCfg:
+    """Command terms for the MDP."""
+
+    ee_pose = mdp.UniformPoseCommandCfg(
+        asset_name="robot",
+        body_name=MISSING,
+        resampling_time_range=(2.0, 4.0),
+        debug_vis=True,
+        make_quat_unique=True,
+        ranges=mdp.UniformPoseCommandCfg.Ranges(
+            pos_x=(0.3, 0.5),
+            pos_y=(-0.3, 0.3),
+            pos_z=(0.25, 0.4),
+            roll=(-math.pi, -math.pi),
+            pitch=MISSING,  # depends on the end-effector axis
+            yaw=(-2 * math.pi, 2 * math.pi),
+        ),
+    )
+```
 
 ## Reinforcement Learning Workflows
 
