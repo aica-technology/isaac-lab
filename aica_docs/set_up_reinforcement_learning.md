@@ -267,9 +267,35 @@ Several open-source reinforcement learning (RL) frameworks facilitate policy lea
 
 3. **RL Games**: An open-source high-performance reinforcement learning framework implemented in Python, designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
 
+For detailed instructions on running the various RL libraries, refer to [Reinforcement Learning Wrappers](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
+
+To prepare a reinforcement learning environment for use with one of the mentioned wrappers, additional configuration files need to be specified. For an example, check out the directory in the Isaac Lab fork:
+
+`source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach`
+
+In the following, I will outline the necessary configurations for a Reach Task. This approach can be applied to other environments as well.
+
+### Step 1: Create a New Folder  
+Begin by creating a new folder under the predefined directory. The folder name should typically correspond to the RL actor (in this case, the robot being used).  
+
+### Step 2: Define the Required Structure  
+Inside this folder, you need to define an **agents** folder and a configuration file for the Manager-Based RL environment.  
+
+- The **agents** folder contains the configuration file required by the RL wrapper to learn a policy.  
+- This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
+
+### Examples of Configurations  
+To understand the structure and parameters, you can explore these examples for training the UR5E robot for a Reach Task using different RL libraries and can refer to the chosen library readme for more details:
+
+- Using **RSL-RL**: [RSL-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)  
+- Using **RL-Games**: [RL-Games PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)  
+- Using **SK-RL**: [SK-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/skrl_ppo_cfg.yaml)  
+
 
 ## Training Reinforcement Learning Policies
 
+
+
 ## Evaluating and Exporting Reinforcement Learning Models
 
-# Next Steps to Execute the Policy on the Robot
+# Next Steps to Execute the Policy on the Robot 
