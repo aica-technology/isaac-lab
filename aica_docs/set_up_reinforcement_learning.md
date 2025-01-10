@@ -279,13 +279,12 @@ In the following, I will outline the necessary configurations for a Reach Task. 
 Begin by creating a new folder under the predefined directory. The folder name should typically correspond to the RL actor (in this case, the robot being used).  
 
 ### Step 2: Define the Required Structure  
-Inside this folder, you need to define an **agents** folder and a configuration file for the Manager-Based RL environment.  
+Inside this folder, you need to define **agents** folder and a configuration file for the Manager-Based RL environment.  
 
-- The **agents** folder contains the configuration file required by the RL wrapper to learn a policy.  
-- This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
+The **agents** folder contains the configuration file required by the RL wrapper to learn a policy. This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
 
 ### Examples of Configurations  
-To understand the structure and parameters, you can explore these examples for training the UR5E robot for a Reach Task using different RL libraries and can refer to the chosen library readme for more details:
+To understand the structure and parameters, explore these configuration examples for training the UR5E robot for a Reach Task using different RL libraries and refer to the chosen library documentation for more details:
 
 - Using **RSL-RL**: [RSL-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)  
 - Using **RL-Games**: [RL-Games PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)  
