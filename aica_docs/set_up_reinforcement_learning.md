@@ -1,6 +1,6 @@
 # Reinforcement Learning with Isaac Lab
 
-This README provides a step-by-step guide for training a Neural Network-based Reinforcement Learning (RL) policy in a simulation environment and exporting the trained policy in ONNX format.
+This README provides a step-by-step guide for training a Neural Network-based Reinforcement Learning (RL) policy in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
 Isaac Lab is a modular framework designed to simplify robotics research workflows, including reinforcement learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
 
@@ -12,7 +12,7 @@ Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab
 
 # Key Concepts
 
-In the context of Deep Neural Network-based Reinforcement Learning (RL), an **actor**—typically represented by a neural network—learns to perform a specific task by interacting with an environment and optimizing its behavior based on received rewards. This process involves the following steps:
+In the context of Deep Neural Network-based Reinforcement Learning (RL), an **actor**, typically represented by a neural network, learns to perform a specific task by interacting with an environment and optimizing its behavior based on received rewards. This process involves the following steps:
 
 1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy. The policy, often parameterized by a deep neural network, maps observed states to actions.
 
