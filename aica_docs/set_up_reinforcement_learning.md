@@ -18,13 +18,13 @@ In the context of Deep Neural Network-based Reinforcement Learning (RL), an **ac
 
 2. **Reward Feedback**: After executing an action, the environment provides feedback in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
 
-3. **Policy Optimization**: The actor updates its policy using reinforcement learning algorithms to maximize cumulative rewards. 
+3. **Policy Optimization**: The actor updates its policy using reinforcement learning algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
 
 4. **Generalization via Deep Neural Networks**: The use of deep neural networks allows the RL agent to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
 
 Through iterative interactions, the actor refines its understanding of the environment and learns to achieve the desired task efficiently, guided by the rewards it accumulates. 
 
-Isaac Lab enables agents to perform actions and execute policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for reinforcement learning tasks.
+Isaac Lab enables **actors** to perform actions and execute policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for reinforcement learning tasks.
 
 To set up a Reinforcement Learning environment in Isaac Lab, familiarize yourself with the following topics.
 
@@ -32,7 +32,7 @@ To set up a Reinforcement Learning environment in Isaac Lab, familiarize yoursel
 
 Assets are objects defined within a 3D scene and can belong to one of the following categories: (1) Articulated Objects, (2) Rigid Objects, or (3) Deformable Objects. These assets are represented in the USD (Universal Scene Description) format. 
 
-Predefined assets configurations are located in the directory in Isaac Lab Repo:  
+Predefined assets configurations are located in the following directory in Isaac Lab Repo:  
 `source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets`.  
 
 This directory contains a range of manipulator robots, including the Franka Panda, Universal Robot UR5E and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
@@ -79,7 +79,7 @@ UR10_CFG = ArticulationCfg(
 In this example, the actuator model is defined using `ImplicitActuatorCfg`. However, actuator models in Isaac Lab can be either implicit or explicit. For more information on configuring actuators, refer to the [Actuators in Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/source/overview/core-concepts/actuators.html).
 
 ### Isaac Nucleus
-Isaac Nucleus is part of NVIDIA’s Omniverse platform and serves as a central repository for assets and utilities used in Isaac Lab. It provides a comprehensive collection of prebuilt USD assets such as objects, tables, and manipulator robots that greatly simplify scene construction. Additionally, Isaac Nucleus streamlines collaboration by storing and sharing all necessary files in one location, making it easier for multiple users to work together on robotics simulations and environments.
+Isaac Nucleus is part of NVIDIA’s Omniverse platform and serves as a central repository for assets and utilities used in Isaac Lab. It provides a comprehensive collection of prebuilt USD assets such as objects, tables, and manipulator robots that greatly simplify scene construction. Additionally, Isaac Nucleus simplifies collaboration by storing and sharing all necessary files in one location, making it easier for multiple users to work together on robotics simulations and environments.
 
 As shown in the example articulation configuration, the relevant USD file is stored in Isaac Nucleus and can be accessed by importing `ISAACLAB_NUCLEUS_DIR` from `omni.isaac.lab.utils.assets` in Isaac Lab.
 
@@ -190,7 +190,7 @@ class ActionsCfg:
     arm_action: ActionTerm = mdp.JointPositionActionCfg(
         asset_name="robot", 
         joint_names=[".*"], 
-        scale=0.5, 
+        scale=1.0, 
         use_default_offset=True
     )
 ```
@@ -279,7 +279,7 @@ In the following, I will outline the necessary configurations for a Reach Task. 
 Begin by creating a new folder under the predefined directory. The folder name should typically correspond to the RL actor (in this case, the robot being used).  
 
 ### Step 2: Define the Required Structure  
-Inside this folder, you need to define **agents** folder and a configuration file for the Manager-Based RL environment.  
+Inside this folder, define the **agents** folder, configuration file (i.e **[control_type]_env_cfg.py**), and **__init__.py** file for the Manager-Based RL environment.  
 
 The **agents** folder contains the configuration file required by the RL wrapper to learn a policy. This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
 
@@ -290,11 +290,32 @@ To understand the structure and parameters, explore these configuration examples
 - Using **RL-Games**: [RL-Games PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)  
 - Using **SK-RL**: [SK-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/skrl_ppo_cfg.yaml)  
 
+### Step 3: Register a Gym Environment
 
-## Training Reinforcement Learning Policies
+To finalize the integration of the new environment with the Reinforcement Learning (RL) wrappers defined earlier, register the environment as shown below:
 
+```python
+gym.register(
+    id="ENVIRONMENT_ID",  # A unique identifier for the environment, used as a reference during training and evaluation
+    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",  # Entry point for the Manager-based RL environment
+    disable_env_checker=True,  # Disable the environment checker for custom setups
+    kwargs={
+        "env_cfg_entry_point": joint_pos_env_cfg.UR5EJointPosReachEnvCfg,  # Configuration for the environment, inheriting from ManagerBasedRLEnv
+        "rl_games_cfg_entry_point": f"{agents.__name__}:rl_games_ppo_cfg.yaml",  # Path to the RL Games configuration file
+        "rsl_rl_cfg_entry_point": f"{agents.__name__}.rsl_rl_ppo_cfg:UR5eReachPPORunnerCfg",  # Path to the RSL-RL configuration file
+        "skrl_cfg_entry_point": f"{agents.__name__}:skrl_ppo_cfg.yaml",  # Path to the SK-RL configuration file
+    }
+)
+```
 
+This code should be included in the **`__init__.py`** file located in the directory specified above.
 
-## Evaluating and Exporting Reinforcement Learning Models
+## Training and Exporting the Reinforcement Learning Policies
+
+After defining the assets, environments, and robot control, creating the necessary training configuration files, and registering the new Gym environment, you can train a new policy by running the appropriate training script for the Reinforcement Learning Wrappers. Detailed instructions are available [here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
+
+Once training is complete and the results meet your expectations, export the model in ONNX format. In RSL-RL, this can be easily achieved using **export_policy_as_onnx**. 
 
 # Next Steps to Execute the Policy on the Robot 
+
+With the ONNX policy in hand, AICA provides an SDK that enables you to take your simulation-trained policy and deploy it onto real hardware. This [README](https://github.com/aica-technology/dynamic-components/tree/main/source/advanced_components/rl_policy_components) offers a step-by-step guide for deploying a learned policy from Isaac Lab Omniverse to various robotic brands and integrating it into any complex application you develop in AICA Studio.
