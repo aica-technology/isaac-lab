@@ -94,7 +94,7 @@ Simulation environments are virtual environments where a reinforcement learning 
 
 Manager-Based RL Environments simplify simulation complexity by using managers that handle tasks such as fetching, updating, and setting the data required by the RL agent (for example, constructing the actor state from observations). These managers are **InteractiveScene**, **ActionManager**, **ObservationManager**, **RewardManager**, **CurriculumManager**, and **EventManager**.  In contrast, Direct-Based RL Environments offer greater flexibility by requiring users to define observations, actions, and rewards directly within the task script.
 
-In what comes next, Managed-Based RL Environments will be explored in more details. 
+In what comes next, Manager-Based RL Environments will be explored in more details. 
 
 ### Manager-Based RL Environment
 
@@ -258,7 +258,7 @@ class CommandsCfg:
         ),
     )
 ```
-The **RewardsCfg** class defines the reward term that the **actor** recieves after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The **actor** aims to maximize it's cummulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the **actor**.
+The **RewardsCfg** class defines the reward term that the **actor** receives after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The **actor** aims to maximize its cumulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the **actor**.
 
 Here is an example of a **RewardsCfg** for a simple end-effector tracking policy.
 
