@@ -6,6 +6,7 @@
 - feat: Develop KUKA (KR210) Assets and RL Reach Environments (#3)
 - feat: Develop UFactory (xArm6) Assets and RL Reach Environment (#5)
 - fix: Support RLGames and SKRL Reinforcement Learning packages for KR210, xArm6, and UR5E (#7)
+- feat: write a detailed README for learning a policy in Isaac Lab (#9)
 
 ### Breaking changes
 
