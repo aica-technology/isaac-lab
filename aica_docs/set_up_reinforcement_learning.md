@@ -2,7 +2,7 @@
 
 This README provides a step-by-step guide for training a Neural Network-based Reinforcement Learning (RL) policy in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
-Isaac Lab is a modular framework designed to simplify robotics research workflows, including reinforcement learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
+Isaac Lab is a modular framework designed to simplify robotics workflows, including reinforcement learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
 
 # Prerequisites
 
@@ -87,12 +87,14 @@ Beyond the default assets, AICA has curated a list of additional resources not i
 
 ## Simulation Environments
 
-Simulation environments are virtual environments where a reinforcement learning (RL) agent takes actions, observes states, receives rewards, and refines its strategy to maximize performance. In Isaac Lab, there are two types of environments:
+Simulation environments are virtual environments where a reinforcement learning (RL) agent takes actions, observes states, and receives rewards. In Isaac Lab, there are two types of environments:
 
 1. [Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html)  
 2. [Direct RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html)
 
-Manager-Based RL Environments simplify simulation complexity by using managers that handle tasks such as fetching, updating, and setting the data required by the RL agent (for example, constructing the actor state from observations). These managers are **InteractiveScene**, **ActionManager**, **ObservationManager**, **RewardManager**, **CurriculumManager**, and **EventManager**.  In contrast, Direct-Based RL Environments offer greater flexibility by requiring users to define observations and rewards directly within the task script.
+Manager-Based RL Environments simplify simulation complexity by using managers that handle tasks such as fetching, updating, and setting the data required by the RL agent (for example, constructing the actor state from observations). These managers are **InteractiveScene**, **ActionManager**, **ObservationManager**, **RewardManager**, **CurriculumManager**, and **EventManager**.  In contrast, Direct-Based RL Environments offer greater flexibility by requiring users to define observations, actions, and rewards directly within the task script.
+
+In what comes next, Managed-Based RL Environments will be explored in more details. 
 
 ### Manager-Based RL Environment
 
@@ -212,7 +214,7 @@ class ActionsCfg:
 ```
 
 ### Example: Cartesian Twist Control
-In this setup, the policy outputs Cartesian twist commands (e.g., velocities in Cartesian space) that are translated into joint commands using an inverse kinematics solver:
+In this setup, the policy outputs Cartesian twist commands (i.e. velocities in Cartesian space) that are translated into joint commands using an inverse kinematics solver:
 
 ```python
 @configclass
@@ -228,10 +230,10 @@ class ActionsCfg:
             use_relative_mode=True, 
             ik_method="dls"
         ),
-        scale=0.5,
+        scale=1.0,
     )
 ```
-The **CommandsCfg** class specifies the commands applied to the robot, which are also referenced in the **ObservationsCfg** to be included in the state vector. For example, the command `ee_pose` can be sampled and referenced in an observation term like `pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})`.
+The **CommandsCfg** class specifies the commands applied to the robot, which are also referenced in the **ObservationsCfg** to be included in the state vector. For example, the command `ee_pose` can be sampled as show in the accompanying example and referenced in an observation term like `pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})`.
 
 Here is an example configuration that defines a Cartesian pose command:
 
@@ -256,6 +258,58 @@ class CommandsCfg:
         ),
     )
 ```
+The **RewardsCfg** class defines the reward term that the **actor** recieves after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The **actor** aims to maximize it's cummulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the **actor**.
+
+Here is an example of a **RewardsCfg** for a simple end-effector tracking policy.
+
+
+```python
+class RewardsCfg:
+    """Reward terms for the MDP."""
+
+    # task terms
+    end_effector_position_tracking = RewTerm(
+        func=mdp.position_command_error,
+        weight=-6.0,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
+    )
+    end_effector_orientation_tracking = RewTerm(
+        func=mdp.orientation_command_error,
+        weight=-4,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
+    )
+    joint_vel = RewTerm(
+        func=mdp.joint_vel_l2,
+        weight=-0.0001,
+        params={"asset_cfg": SceneEntityCfg("robot")},
+    )
+```
+
+As shown in the **RewardsCfg** above, three different reward terms are defined:
+
+- **end_effector_position_tracking**  
+  This term has the largest penalty weight, \(-6.0\). It penalizes any significant deviation between the commanded end-effector position and its actual position. By making this penalty the largest, the policy is more strongly driven to reduce position error, ensuring precise position tracking of the end-effector.
+
+- **end_effector_orientation_tracking**  
+  With a penalty weight of \(-4\), this term penalizes orientation error. While important, it is weighted slightly less than position tracking, reflecting the prioritization of end-effector position over orientation for this specific task. However, the orientation penalty is still considerable enough to ensure stable and controlled orientations.
+
+- **joint_vel**  
+  This term, weighted by \(-0.0001\), imposes a small penalty on joint velocities. Even though the penalty is relatively small, it helps discourage unnecessarily high velocities that could result in unsafe or overly aggressive motion. This gentle penalty contributes to smoother trajectory execution.
+
+Reward tuning is essential for obtaining robust policies and the desired behaviors. Each **RewTerm** uses a **func** parameter that returns a reward value, which is then multiplied by the term's weight before being combined with other reward terms.
+
+To explore additional **ManagerBasedRLEnv** examples, consider the following:
+
+1. [Reach Environment](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/reach_env_cfg.py)  
+   A Robotic arm learning to reach a specified end-effector position and orientation.
+
+2. [Lift Environment](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/lift/lift_env_cfg.py)  
+   A Robotic arm learning to lift an object within the workspace.
+
+3. [Stack Environment](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/stack/stack_env_cfg.py)  
+   A Robotic arm learning to stack multiple objects.
+
+For more details on complex reward terms such as triggering penalties when an object falls out of the workspace—and on curriculum learning, refer to the official [Isaac Lab Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html) documentation.
 
 ## Reinforcement Learning Workflows
 
@@ -273,8 +327,6 @@ To prepare a reinforcement learning environment for use with one of the mentione
 
 `source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach`
 
-In the following, I will outline the necessary configurations for a Reach Task. This approach can be applied to other environments as well.
-
 ### Step 1: Create a New Folder  
 Begin by creating a new folder under the predefined directory. The folder name should typically correspond to the RL actor (in this case, the robot being used).  
 
@@ -283,7 +335,7 @@ Inside this folder, define the **agents** folder, configuration file (i.e **[con
 
 The **agents** folder contains the configuration file required by the RL wrapper to learn a policy. This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
 
-### Examples of Configurations  
+#### Examples of Configurations  
 To understand the structure and parameters, explore these configuration examples for training the UR5E robot for a Reach Task using different RL libraries and refer to the chosen library documentation for more details:
 
 - Using **RSL-RL**: [RSL-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)  
@@ -308,11 +360,11 @@ gym.register(
 )
 ```
 
-This code should be included in the **`__init__.py`** file located in the directory specified above.
+This registration code should be included in the **`__init__.py`** file located in the directory specified above.
 
 ## Training and Exporting the Reinforcement Learning Policies
 
-After defining the assets, environments, and robot control, creating the necessary training configuration files, and registering the new Gym environment, you can train a new policy by running the appropriate training script for the Reinforcement Learning Wrappers. Detailed instructions are available [here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
+After defining the assets, environments, and robot control, creating the necessary training configuration files, and registering the new Gym environment, train a new policy by running the appropriate training script for the Reinforcement Learning Wrappers. Detailed instructions are available [here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
 Once training is complete and the results meet your expectations, export the model in ONNX format. In RSL-RL, this can be easily achieved using **export_policy_as_onnx**. 
 
