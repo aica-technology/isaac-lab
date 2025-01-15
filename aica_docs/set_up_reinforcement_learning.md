@@ -1,6 +1,6 @@
 # Reinforcement Learning with Isaac Lab
 
-This README provides a step-by-step guide for training a Neural Network-based Reinforcement Learning (RL) policy in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
+This document provides a step-by-step guide for training a Reinforcement Learning (RL) policy based on Neural Networks (NN) in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
 Isaac Lab is a modular framework designed to simplify robotics workflows, including reinforcement learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
 
@@ -12,7 +12,7 @@ Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab
 
 # Key Concepts
 
-In the context of Deep Neural Network-based Reinforcement Learning (RL), an **actor**, typically represented by a neural network, learns to perform a specific task by interacting with an environment and optimizing its behavior based on received rewards. This process involves the following steps:
+In the context of Deep Neural Network-based Reinforcement Learning, an **actor**, typically represented by a neural network, learns to perform a specific task by interacting with an environment and optimizing its behavior based on received rewards. This process involves the following steps:
 
 1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy. The policy, often parameterized by a deep neural network, maps observed states to actions.
 
@@ -32,10 +32,10 @@ To set up a Reinforcement Learning environment in Isaac Lab, familiarize yoursel
 
 Assets are objects defined within a 3D scene and can belong to one of the following categories: (1) Articulated Objects, (2) Rigid Objects, or (3) Deformable Objects. These assets are represented in the USD (Universal Scene Description) format. 
 
-Predefined assets configurations are located in the following directory in Isaac Lab Repo:  
+Predefined assets configurations are located in the following directory in the Isaac Lab repository:  
 `source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets`.  
 
-This directory contains a range of manipulator robots, including the Franka Panda, Universal Robot UR5E and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
+This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
 ### Example of Asset Configuration
 Here is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
@@ -87,7 +87,7 @@ Beyond the default assets, AICA has curated a list of additional resources not i
 
 ## Simulation Environments
 
-Simulation environments are virtual environments where a reinforcement learning (RL) agent takes actions, observes states, and receives rewards. In Isaac Lab, there are two types of environments:
+Simulation environments are virtual environments where a RL agent takes actions, observes states, and receives rewards. In Isaac Lab, there are two types of environments:
 
 1. [Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html)  
 2. [Direct RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html)
@@ -98,7 +98,7 @@ In what comes next, Manager-Based RL Environments will be explored in more detai
 
 ### Manager-Based RL Environment
 
-To create your own Manager-Based RL Environment, follow the [tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html). Below is a summary of a basic environment configuration class:
+To create your own Manager-Based RL Environment, follow this [tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html). Below is a summary of a basic environment configuration class:
 
 ```python
 class ReachEnvCfg(ManagerBasedRLEnvCfg):
@@ -288,15 +288,15 @@ class RewardsCfg:
 As shown in the **RewardsCfg** above, three different reward terms are defined:
 
 - **end_effector_position_tracking**  
-  This term has the largest penalty weight, \(-6.0\). It penalizes any significant deviation between the commanded end-effector position and its actual position. By making this penalty the largest, the policy is more strongly driven to reduce position error, ensuring precise position tracking of the end-effector.
+  This term has the largest penalty weight (-6.0). It penalizes any significant deviation between the commanded end-effector position and its actual position. By making this penalty the largest, the policy is more strongly driven to reduce position error, ensuring precise position tracking of the end-effector.
 
 - **end_effector_orientation_tracking**  
-  With a penalty weight of \(-4\), this term penalizes orientation error. While important, it is weighted slightly less than position tracking, reflecting the prioritization of end-effector position over orientation for this specific task. However, the orientation penalty is still considerable enough to ensure stable and controlled orientations.
+  With a penalty weight of -4, this term penalizes orientation error. While important, it is weighted slightly less than position tracking, reflecting the prioritization of end-effector position over orientation for this specific task. However, the orientation penalty is still considerable enough to ensure stable and controlled orientations.
 
 - **joint_vel**  
-  This term, weighted by \(-0.0001\), imposes a small penalty on joint velocities. Even though the penalty is relatively small, it helps discourage unnecessarily high velocities that could result in unsafe or overly aggressive motion. This gentle penalty contributes to smoother trajectory execution.
+  This term, weighted by -0.0001, imposes a small penalty on joint velocities. Even though the penalty is relatively small, it helps discourage unnecessarily high velocities that could result in unsafe or overly aggressive motion. This gentle penalty contributes to smoother trajectory execution.
 
-Reward tuning is essential for obtaining robust policies and the desired behaviors. Each **RewTerm** uses a **func** parameter that returns a reward value, which is then multiplied by the term's weight before being combined with other reward terms.
+Reward tuning is essential for obtaining robust policies and the desired behaviors. Each `RewTerm` uses a `func` parameter that returns a reward value, which is then multiplied by the term's weight before being combined with other reward terms.
 
 To explore additional **ManagerBasedRLEnv** examples, consider the following:
 
@@ -309,7 +309,7 @@ To explore additional **ManagerBasedRLEnv** examples, consider the following:
 3. [Stack Environment](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/stack/stack_env_cfg.py)  
    A Robotic arm learning to stack multiple objects.
 
-For more details on complex reward terms such as triggering penalties when an object falls out of the workspace—and on curriculum learning, refer to the official [Isaac Lab Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html) documentation.
+For more details on complex reward terms, such as triggering penalties when an object falls out of the workspace, and on curriculum learning refer to the official [Isaac Lab Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html) documentation.
 
 ## Reinforcement Learning Workflows
 
@@ -323,7 +323,7 @@ Several open-source reinforcement learning (RL) frameworks facilitate policy lea
 
 For detailed instructions on running the various RL libraries, refer to [Reinforcement Learning Wrappers](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
-To prepare a reinforcement learning environment for use with one of the mentioned wrappers, additional configuration files need to be specified. For an example, check out the directory in the Isaac Lab fork:
+To prepare a reinforcement learning environment for use with one of the mentioned wrappers, additional configuration files need to be specified. For an example, check out the directory in the Isaac Lab repository:
 
 `source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach`
 
@@ -370,4 +370,4 @@ Once training is complete and the results meet your expectations, export the mod
 
 # Next Steps to Execute the Policy on the Robot 
 
-With the ONNX policy in hand, AICA provides an SDK that enables you to take your simulation-trained policy and deploy it onto real hardware. This [README](https://github.com/aica-technology/dynamic-components/tree/main/source/advanced_components/rl_policy_components) offers a step-by-step guide for deploying a learned policy from Isaac Lab Omniverse to various robotic brands and integrating it into any complex application you develop in AICA Studio.
+With the ONNX policy in hand, AICA provides an SDK that enables you to take your simulation-trained policy and deploy it on real hardware. This [README](https://github.com/aica-technology/dynamic-components/tree/main/source/advanced_components/rl_policy_components) offers a step-by-step guide for deploying a learned policy from Isaac Lab Omniverse to various robotic brands and integrating it into any complex application you develop in AICA Studio.
