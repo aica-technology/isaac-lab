@@ -249,7 +249,7 @@ Below is a revised, more fluent version:
 
 The **CommandsCfg** class defines commands applied to the robot, which are also referenced in **ObservationsCfg** and included in the state vector. Isaac Lab provides multiple command configurations that can be sampled and passed to the actor state, such as **UniformPoseCommandCfg**, **UniformVelocityCommandCfg**, **NullCommandCfg**, **UniformPose2dCommandCfg**, and **TerrainBasedPose2dCommandCfg**.
 
-A user can extend these configurations by creating a custom command config (derived from **CommandTermCfg**) and implementing its functionality in a subclass of **CommandTerm**. For example, to sample trajectories, a user might introduce a **UniformTrajectoryCommandCfg** configuration along with a **UniformTrajectoryCommand** class, where the specific trajectory generation would be implemented. For reference, an example of pose command sampling in  
+A user can extend these configurations by creating a custom command config (derived from **CommandTermCfg**) and implementing its functionality in a inherited class of **CommandTerm**. For example, to sample trajectories, a user might introduce a **UniformTrajectoryCommandCfg** configuration along with a **UniformTrajectoryCommand** class, where the specific trajectory generation would be implemented. For reference, an example of pose command sampling in  
 `source/extensions/omni.isaac.lab/omni/isaac/lab/envs/mdp/commands/pose_command.py`.
 
 Here is a reference to a **CommandsCfg** that utilises **UniformPoseCommandCfg** for a robotic arm reach task:
