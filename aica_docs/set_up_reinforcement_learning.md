@@ -2,7 +2,7 @@
 
 This document provides a step-by-step guide for training a Reinforcement Learning (RL) policy based on Neural Networks (NN) in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
-Isaac Lab is a modular framework designed to simplify robotics workflows, including reinforcement learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
+Isaac Lab is a modular framework designed to simplify robotics workflows, including Reinforcement Learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
 
 # Prerequisites
 
@@ -323,17 +323,17 @@ For more details on complex reward terms, such as triggering penalties when an o
 
 ## Reinforcement Learning Workflows
 
-Several open-source reinforcement learning (RL) frameworks facilitate policy learning and optimization. Isaac Lab offers wrappers for various RL libraries, translating environment data into the appropriate formats for each library's functions. The three supported libraries are:
+Several open-source RL frameworks facilitate policy learning and optimization. Isaac Lab offers wrappers for various RL libraries, translating environment data into the appropriate formats for each library's functions. The three supported libraries are:
 
 1. **RSL-RL**: Developed by the Robotic Systems Lab at ETH Zürich, RSL-RL is a fast and straightforward implementation of RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans to incorporate additional algorithms. More details can be found on [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
 
 2. **SKRL**: An open-source modular RL library written in Python, built on top of PyTorch and JAX. SKRL emphasizes modularity, readability, and simplicity, supporting various environments, including NVIDIA Isaac Gym and Omniverse Isaac Gym. It enables simultaneous training of multiple agents with customizable scopes. More details can be found on [SKRL Github](https://github.com/Toni-SM/skrl).
 
-3. **RL Games**: An open-source high-performance reinforcement learning framework implemented in Python, designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
+3. **RL Games**: An open-source high-performance RL framework implemented in Python, designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
 
 For detailed instructions on running the various RL libraries, refer to [Reinforcement Learning Wrappers](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
-To prepare a reinforcement learning environment for use with one of the mentioned wrappers, additional configuration files need to be specified. For an example, check out the directory in the Isaac Lab repository:
+To prepare a RL environment for use with one of the mentioned wrappers, additional configuration files need to be specified. For an example, check out the directory in the Isaac Lab repository:
 
 `source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach`
 
@@ -354,7 +354,7 @@ To understand the structure and parameters, explore these configuration examples
 
 ### Step 3: Register a Gym Environment
 
-To finalize the integration of the new environment with the Reinforcement Learning (RL) wrappers defined earlier, register the environment as shown below:
+To finalize the integration of the new environment with the RL wrappers defined earlier, register the environment as shown below:
 
 ```python
 gym.register(
