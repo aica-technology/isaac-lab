@@ -327,9 +327,9 @@ Several open-source RL frameworks facilitate policy learning and optimization. I
 
 1. **RSL-RL**: Developed by the Robotic Systems Lab at ETH Zürich, RSL-RL is a fast and straightforward implementation of RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans to incorporate additional algorithms. More details can be found on [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
 
-2. **SKRL**: An open-source modular RL library written in Python, built on top of PyTorch and JAX. SKRL emphasizes modularity, readability, and simplicity, supporting various environments, including NVIDIA Isaac Gym and Omniverse Isaac Gym. It enables simultaneous training of multiple agents with customizable scopes. More details can be found on [SKRL Github](https://github.com/Toni-SM/skrl).
+2. **SKRL**: An open-source modular RL library built on top of PyTorch and JAX. SKRL emphasizes modularity, readability, and simplicity, supporting various environments, including NVIDIA Isaac Gym and Omniverse Isaac Gym. It enables simultaneous training of multiple agents with customizable scopes. More details can be found on [SKRL Github](https://github.com/Toni-SM/skrl).
 
-3. **RL Games**: An open-source high-performance RL framework implemented in Python, designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
+3. **RL Games**: An open-source high-performance RL framework designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
 
 For detailed instructions on running the various RL libraries, refer to [Reinforcement Learning Wrappers](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
@@ -338,10 +338,10 @@ To prepare a RL environment for use with one of the mentioned wrappers, addition
 `source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach`
 
 ### Step 1: Create a New Folder  
-Begin by creating a new folder under the predefined directory. The folder name should typically correspond to the RL actor (in this case, the robot being used).  
+Begin by creating a new folder. Its location depends on the simulation environment and the specific task being performed. For example, for a Manager-Based RL robotic arm manipulation reach task, an appropriate location for that folder would be in `/lab_tasks/manager_based/manipulation/reach`. The folder name should typically match the asset that the policy targets, such as `ur5e`, `kr10`, and so on.
 
 ### Step 2: Define the Required Structure  
-Inside this folder, define the **agents** folder, configuration file (i.e **[control_type]_env_cfg.py**), and **__init__.py** file for the Manager-Based RL environment.  
+Inside this folder, define the **agents** folder, the configuration file (i.e **[control_type]_env_cfg.py**), and **__init__.py** file for the Manager-Based RL environment.  
 
 The **agents** folder contains the configuration file required by the RL wrapper to learn a policy. This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
 
@@ -380,4 +380,4 @@ Once training is complete and the results meet your expectations, export the mod
 
 # Next Steps to Execute the Policy on the Robot 
 
-With the ONNX policy in hand, AICA provides an SDK that enables you to take your simulation-trained policy and deploy it on real hardware. This [README](https://github.com/aica-technology/dynamic-components/tree/main/source/advanced_components/rl_policy_components) offers a step-by-step guide for deploying a learned policy from Isaac Lab Omniverse to various robotic brands and integrating it into any complex application you develop in AICA Studio.
+With the ONNX policy in place, AICA provides an SDK that enables users to take a simulation-trained policy and deploy it on real hardware. This [README](https://github.com/aica-technology/dynamic-components/tree/main/source/advanced_components/rl_policy_components) provides a step-by-step guide for deploying a learned policy from Isaac Lab Omniverse to various robotic brands and integrating it into any complex application developed in AICA Studio.
