@@ -243,9 +243,16 @@ class ActionsCfg:
         scale=1.0,
     )
 ```
-The **CommandsCfg** class specifies the commands applied to the robot, which are also referenced in the **ObservationsCfg** to be included in the state vector. For example, the command `ee_pose` can be sampled as show in the accompanying example and referenced in an observation term like `pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})`.
+Below is a revised, more fluent version:
 
-Here is an example configuration that defines a Cartesian pose command:
+---
+
+The **CommandsCfg** class defines commands applied to the robot, which are also referenced in **ObservationsCfg** and included in the state vector. Isaac Lab provides multiple command configurations that can be sampled and passed to the actor state, such as **UniformPoseCommandCfg**, **UniformVelocityCommandCfg**, **NullCommandCfg**, **UniformPose2dCommandCfg**, and **TerrainBasedPose2dCommandCfg**.
+
+A user can extend these configurations by creating a custom command config (derived from **CommandTermCfg**) and implementing its functionality in a subclass of **CommandTerm**. For example, to sample trajectories, a user might introduce a **UniformTrajectoryCommandCfg** configuration along with a **UniformTrajectoryCommand** class, where the specific trajectory generation would be implemented. For reference, an example of pose command sampling in  
+`source/extensions/omni.isaac.lab/omni/isaac/lab/envs/mdp/commands/pose_command.py`.
+
+Here is a reference to a **CommandsCfg** that utilises **UniformPoseCommandCfg** for a robotic arm reach task:
 
 ```python
 @configclass
@@ -268,6 +275,16 @@ class CommandsCfg:
         ),
     )
 ```
+
+The command `ee_pose` can be sampled as demonstrated in the accompanying example and referenced in an observation term like:
+
+```python
+pose_command = ObsTerm(
+    func=mdp.generated_commands,
+    params={"command_name": "ee_pose"}
+)
+```
+
 The **RewardsCfg** class defines the reward term that the **actor** receives after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The **actor** aims to maximize its cumulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the **actor**.
 
 Here is an example of a **RewardsCfg** for a simple end-effector tracking policy.
