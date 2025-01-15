@@ -45,7 +45,7 @@ Assets are objects defined within a 3D scene and can belong to one of the follow
 Predefined assets configurations are located in the following directory in the Isaac Lab repository:  
 `source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets`.  
 
-This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova, uFactory, and Kuka. To define a new asset, an asset configuration file must be created within the predefined directory. This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the predefined directory, refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
+This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova JACO2 (7-Dof), JACO2 (6-Dof) and Gen3 (7-Dof), uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must be created within [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets). This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets), refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
 ### Example of Asset Configuration
 Here is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
