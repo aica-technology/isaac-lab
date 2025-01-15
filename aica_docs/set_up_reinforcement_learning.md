@@ -18,7 +18,7 @@ Once done, verify the installation of Isaac Lab by running the following command
 
 # Key Concepts
 
-In Deep Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** neural network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
+In Deep Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
 
 A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In Deep RL, this function is implemented by a Neural Network whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
 
@@ -182,7 +182,7 @@ class ObservationsCfg:
 
 Each observation term specifies how a particular piece of data, such as joint positions or end-effector orientation, is retrieved, optionally corrupted with noise (for dynamic randomization), and appended to the RL agent’s input vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the configuration dictates their arrangement in the final state input.
 
-The **ActionsCfg** class defines how the outputs of the neural network are translated into actions applied in the simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the policy’s outputs may represent:
+The **ActionsCfg** class defines how the outputs of the Neural Network are translated into actions applied in the simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the policy’s outputs may represent:
 
 - **Joint Position Control**: The policy outputs joint position setpoints.  
 - **Joint Velocity Control**: The policy outputs joint velocity setpoints.  
