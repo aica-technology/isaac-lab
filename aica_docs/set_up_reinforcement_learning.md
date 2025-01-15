@@ -6,9 +6,15 @@ Isaac Lab is a modular framework designed to simplify robotics workflows, includ
 
 # Prerequisites
 
-Before training a new policy, begin by cloning the AICA fork of [Isaac Lab](https://github.com/aica-technology/isaac-lab). 
+Before training a new policy, begin by cloning the AICA fork of [Isaac Lab](https://github.com/aica-technology/isaac-lab).
 
-Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/pip_installation.html) guide for comprehensive instructions on installation and developer setup.
+Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/pip_installation.html) guide for detailed steps on installation and developer setup. Isaac Lab is built on top of Isaac Sim, so first follow the Isaac Sim installation procedure (which can be done through pip). Afterward, install Isaac Lab by adding the necessary development dependencies and running the installation script in the cloned repository (**./isaaclab.sh --install**).
+
+Once done, verify the installation of Isaac Lab by running the following command:
+
+```shell
+./isaaclab.sh -p source/standalone/tutorials/00_sim/create_empty.py
+```
 
 # Key Concepts
 
