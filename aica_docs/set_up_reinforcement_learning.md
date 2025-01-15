@@ -8,7 +8,7 @@ Isaac Lab is a modular framework designed to simplify robotics workflows, includ
 
 Before training a new policy, begin by cloning the AICA fork of [Isaac Lab](https://github.com/aica-technology/isaac-lab).
 
-Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/pip_installation.html) guide for detailed steps on installation and developer setup. Isaac Lab is built on top of Isaac Sim, so first follow the Isaac Sim installation procedure (which can be done through pip). Afterward, install Isaac Lab by adding the necessary development dependencies and running the installation script in the cloned repository (**./isaaclab.sh --install**).
+Next, refer to the [Isaac Lab Installation](https://isaac-sim.github.io/IsaacLab/main/source/setup/installation/pip_installation.html) guide for detailed steps on installation and developer setup. Isaac Lab is built on top of Isaac Sim, so first follow the Isaac Sim installation procedure (which can be done through pip). Afterwards, install Isaac Lab by adding the necessary development dependencies and running the installation script in the cloned repository (`./isaaclab.sh --install`).
 
 Once done, verify the installation of Isaac Lab by running the following command:
 
@@ -18,21 +18,21 @@ Once done, verify the installation of Isaac Lab by running the following command
 
 # Key Concepts
 
-In Deep Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
+In (deep) Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
 
-A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In Deep RL, this function is implemented by a Neural Network whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
+A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In deep RL, this function is implemented by a NN whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
 
  This process involves the following steps:
 
 1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy.
 
-2. **Reward Feedback**: After executing an action, the environment provides feedback in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
+2. **Reward Feedback**: After executing an action in the environment, the resulting interaction is interpreted in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
 
 3. **Policy Optimization**: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
 
 4. **Generalization via Deep Neural Networks**: The use of deep Neural Networks allows the RL actor to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
 
-Through iterative interactions, the actor refines its understanding of the environment and learns to achieve the desired task efficiently, guided by the rewards it accumulates. 
+Through iterative interactions, the actor learns a (near-)optimal policy that maximizes the reward function, that is, the actor learns to achieve the desired task efficiently, guided by the rewards it accumulates. 
 
 Isaac Lab enables **actors** to perform actions and learn policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for RL tasks.
 
@@ -45,7 +45,7 @@ Assets are objects defined within a 3D scene and can belong to one of the follow
 Predefined assets configurations are located in the following directory in the Isaac Lab repository:  
 `source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets`.  
 
-This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova JACO2 (7-Dof), JACO2 (6-Dof) and Gen3 (7-Dof), uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must be created within [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets). This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets), refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
+This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must be created within the [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets). This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets), refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
 ### Example of Asset Configuration
 Here is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
@@ -97,7 +97,7 @@ Beyond the default assets, AICA has curated a list of additional resources not i
 
 ## Simulation Environments
 
-Simulation environments are virtual environments where a RL agent takes actions, observes states, and receives rewards. In Isaac Lab, there are two types of environments:
+Simulation environments are virtual environments with which a RL actor interacts to learn a policy. In Isaac Lab, there are two types of environments:
 
 1. [Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html)  
 2. [Direct RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html)
@@ -128,7 +128,7 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
     events: EventCfg = EventCfg()
     curriculum: CurriculumCfg = CurriculumCfg()
 ```
-As shown in the configuration above, **ReachEnvCfg** inherits from **ManagerBasedRLEnvCfg** and sets up the various managers that define the RL environment. The **ReachSceneCfg** specify the assets in the environment such as the ground, robot, and lights as demonstrated in the snippet below:
+As shown in the configuration above, **ReachEnvCfg** inherits from **ManagerBasedRLEnvCfg** and sets up the various managers that define the environment. The **ReachSceneCfg** specify the assets in the environment such as the ground, robot, and lights as demonstrated in the snippet below:
 
 ```python
 @configclass
@@ -152,7 +152,7 @@ class ReachSceneCfg(InteractiveSceneCfg):
     )
 ```
 
-The **ObservationsCfg** class specifies the observations passed to the RL agent in the form of a state vector, which can include information such as joint positions, joint velocities, and end-effector pose for robotic arms.
+The **ObservationsCfg** class specifies the observations passed to the RL actor in the form of a state vector, which can include information such as joint positions, joint velocities, and end-effector pose for robotic arms.
 
 ```python
 @configclass
@@ -180,7 +180,7 @@ class ObservationsCfg:
     policy: PolicyCfg = PolicyCfg()
 ```
 
-Each observation term specifies how a particular piece of data, such as joint positions or end-effector orientation, is retrieved, optionally corrupted with noise (for dynamic randomization), and appended to the RL agent’s input vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the configuration dictates their arrangement in the final state input.
+Each observation term specifies how a particular piece of data, such as joint positions or end-effector orientation, is 1) retrieved, optionally corrupted with noise (for dynamic randomization), and 2) appended to the RL agent’s input vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the configuration dictates their arrangement in the final state input.
 
 The **ActionsCfg** class defines how the outputs of the Neural Network are translated into actions applied in the simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the policy’s outputs may represent:
 
@@ -243,9 +243,6 @@ class ActionsCfg:
         scale=1.0,
     )
 ```
-Below is a revised, more fluent version:
-
----
 
 The **CommandsCfg** class defines commands applied to the robot, which are also referenced in **ObservationsCfg** and included in the state vector. Isaac Lab provides multiple command configurations that can be sampled and passed to the actor state, such as **UniformPoseCommandCfg**, **UniformVelocityCommandCfg**, **NullCommandCfg**, **UniformPose2dCommandCfg**, and **TerrainBasedPose2dCommandCfg**.
 
@@ -393,9 +390,6 @@ This registration code should be included in the **`__init__.py`** file located 
 
 After defining the assets, environments, and robot control, creating the necessary training configuration files, and registering the new Gym environment, train a new policy by running the appropriate training script for the Reinforcement Learning Wrappers. Detailed instructions are available [here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
-Below is a cleaned-up, more fluent version:
-
----
 
 Once training is complete, you can export your model to ONNX format. In RSL-RL, this is straightforward using **export_policy_as_onnx**. For other libraries or custom policies, you can use the PyTorch ONNX exporter as described in the [official documentation](https://pytorch.org/docs/stable/onnx.html). Note that extra attention is required for recurrent actor-critic models Below are example snippets showing how to export both recurrent and feed-forward actor-critic models:
 
