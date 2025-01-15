@@ -18,21 +18,25 @@ Once done, verify the installation of Isaac Lab by running the following command
 
 # Key Concepts
 
-In the context of Deep Neural Network-based Reinforcement Learning, an **actor**, typically represented by a neural network, learns to perform a specific task by interacting with an environment and optimizing its behavior based on received rewards. This process involves the following steps:
+In Deep Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** neural network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
 
-1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy. The policy, often parameterized by a deep neural network, maps observed states to actions.
+A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In Deep RL, this function is implemented by a Neural Network whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
+
+ This process involves the following steps:
+
+1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy.
 
 2. **Reward Feedback**: After executing an action, the environment provides feedback in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
 
-3. **Policy Optimization**: The actor updates its policy using reinforcement learning algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
+3. **Policy Optimization**: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
 
-4. **Generalization via Deep Neural Networks**: The use of deep neural networks allows the RL agent to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
+4. **Generalization via Deep Neural Networks**: The use of deep Neural Networks allows the RL actor to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
 
 Through iterative interactions, the actor refines its understanding of the environment and learns to achieve the desired task efficiently, guided by the rewards it accumulates. 
 
-Isaac Lab enables **actors** to perform actions and execute policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for reinforcement learning tasks.
+Isaac Lab enables **actors** to perform actions and learn policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for RL tasks.
 
-To set up a Reinforcement Learning environment in Isaac Lab, familiarize yourself with the following topics.
+To set up a RL environment in Isaac Lab, familiarize yourself with the following topics.
 
 ## Asset Management
 
