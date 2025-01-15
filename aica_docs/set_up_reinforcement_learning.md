@@ -393,8 +393,51 @@ This registration code should be included in the **`__init__.py`** file located 
 
 After defining the assets, environments, and robot control, creating the necessary training configuration files, and registering the new Gym environment, train a new policy by running the appropriate training script for the Reinforcement Learning Wrappers. Detailed instructions are available [here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
-Once training is complete and the results meet your expectations, export the model in ONNX format. In RSL-RL, this can be easily achieved using **export_policy_as_onnx**. 
+Below is a cleaned-up, more fluent version:
 
+---
+
+Once training is complete, you can export your model to ONNX format. In RSL-RL, this is straightforward using **export_policy_as_onnx**. For other libraries or custom policies, you can use the PyTorch ONNX exporter as described in the [official documentation](https://pytorch.org/docs/stable/onnx.html). Note that extra attention is required for recurrent actor-critic models Below are example snippets showing how to export both recurrent and feed-forward actor-critic models:
+
+**Recurrent model (Memory Based Models)**:
+
+```python
+obs = torch.zeros(1, self.rnn.input_size)
+h_in = torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size)
+c_in = torch.zeros(self.rnn.num_layers, 1, self.rnn.hidden_size)
+
+actions, h_out, c_out = self(obs, h_in, c_in)
+
+torch.onnx.export(
+    self,
+    (obs, h_in, c_in),
+    os.path.join(path, filename),
+    export_params=True,
+    opset_version=11,
+    verbose=self.verbose,
+    input_names=["obs", "h_in", "c_in"],
+    output_names=["actions", "h_out", "c_out"],
+    dynamic_axes={},
+)
+```
+
+**Feed-forward model (Common Case)**:
+
+```python
+obs = torch.zeros(1, self.actor[0].in_features)
+
+torch.onnx.export(
+    self,
+    obs,
+    os.path.join(path, filename),
+    export_params=True,
+    opset_version=11,
+    verbose=self.verbose,
+    input_names=["obs"],
+    output_names=["actions"],
+    dynamic_axes={},
+)
+```
 # Next Steps to Execute the Policy on the Robot 
 
 With the ONNX policy in place, AICA provides an SDK that enables users to take a simulation-trained policy and deploy it on real hardware. This [README](https://github.com/aica-technology/dynamic-components/tree/main/source/advanced_components/rl_policy_components) provides a step-by-step guide for deploying a learned policy from Isaac Lab Omniverse to various robotic brands and integrating it into any complex application developed in AICA Studio.
