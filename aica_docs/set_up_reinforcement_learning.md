@@ -2,7 +2,7 @@
 
 This document provides a step-by-step guide for training a Reinforcement Learning (RL) policy based on Neural Networks (NN) in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
-Isaac Lab is a modular framework designed to simplify robotics workflows, including Reinforcement Learning, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
+Isaac Lab is a modular framework designed to simplify robotics workflows, including RL, learning from demonstrations, and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments and high-performance capabilities. With end-to-end GPU acceleration, Isaac Lab enables faster and more efficient training of RL policies.
 
 # Prerequisites
 
@@ -18,25 +18,25 @@ Once done, verify the installation of Isaac Lab by running the following command
 
 # Key Concepts
 
-In (deep) Neural Network-based Reinforcement Learning, an `actor`, often represented by a `policy` Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
+In (deep) Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
 
-A `policy` is the function (or mapping) from states in the environment to the actions an `actor` should take. In deep RL, this function is implemented by a NN whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a `policy` in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
+A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In deep RL, this function is implemented by a NN whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
 
  This process involves the following steps:
 
-1. `Interaction with the Environment`: The actor observes the state of the environment and takes actions according to its current policy.
+1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy.
 
-2. `Reward Feedback`: After executing an action in the environment, the resulting interaction is interpreted in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
+2. **Reward Feedback**: After executing an action in the environment, the resulting interaction is interpreted in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
 
-3. `Policy Optimization`: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
+3. **Policy Optimization**: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
 
-4. `Generalization via Neural Networks`: The use of (deep) NN allows the RL actor to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
+4. **Generalization via Neural Networks**: The use of (deep) NN allows the RL actor to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
 
 Through iterative interactions, the actor learns a (near-)optimal policy that maximizes the reward function, that is, the actor learns to achieve the desired task efficiently, guided by the rewards it accumulates. 
 
-Isaac Lab enables `actors` to perform actions and learn policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for RL tasks.
+Isaac Lab enables **actors** to perform actions and learn policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for RL tasks.
 
-To set up a RL environment in Isaac Lab, familiarize yourself with the following topics.
+To set up a RL environment in Isaac Lab, get familiarized with the following topics.
 
 ## Asset Management
 
@@ -282,7 +282,7 @@ pose_command = ObsTerm(
 )
 ```
 
-The `RewardsCfg` class defines the reward term that the `actor` receives after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The `actor` aims to maximize its cumulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the `actor`.
+The `RewardsCfg` class defines the reward term that the actor receives after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The actor aims to maximize its cumulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the actor.
 
 Here is an example of a `RewardsCfg` for a simple end-effector tracking policy.
 
