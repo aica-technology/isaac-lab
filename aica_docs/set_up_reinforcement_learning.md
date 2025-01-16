@@ -18,23 +18,23 @@ Once done, verify the installation of Isaac Lab by running the following command
 
 # Key Concepts
 
-In (deep) Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
+In (deep) Neural Network-based Reinforcement Learning, an `actor`, often represented by a `policy` Neural Network, learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters) based on received rewards.
 
-A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In deep RL, this function is implemented by a NN whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
+A `policy` is the function (or mapping) from states in the environment to the actions an `actor` should take. In deep RL, this function is implemented by a NN whose parameters are tuned to maximize cumulative rewards. Therefore, when we refer to a `policy` in this context, we specifically mean this decision-making function, while the Neural Network itself is just one way of representing the policy.
 
  This process involves the following steps:
 
-1. **Interaction with the Environment**: The actor observes the state of the environment and takes actions according to its current policy.
+1. `Interaction with the Environment`: The actor observes the state of the environment and takes actions according to its current policy.
 
-2. **Reward Feedback**: After executing an action in the environment, the resulting interaction is interpreted in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
+2. `Reward Feedback`: After executing an action in the environment, the resulting interaction is interpreted in the form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
 
-3. **Policy Optimization**: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
+3. `Policy Optimization`: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...) to maximize cumulative rewards. 
 
-4. **Generalization via Deep Neural Networks**: The use of deep Neural Networks allows the RL actor to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
+4. `Generalization via Neural Networks`: The use of (deep) NN allows the RL actor to handle high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
 
 Through iterative interactions, the actor learns a (near-)optimal policy that maximizes the reward function, that is, the actor learns to achieve the desired task efficiently, guided by the rewards it accumulates. 
 
-Isaac Lab enables **actors** to perform actions and learn policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for RL tasks.
+Isaac Lab enables `actors` to perform actions and learn policies within simulated environments, supporting thousands of parallel instances. This parallelization significantly accelerates training cycles, making it highly efficient for RL tasks.
 
 To set up a RL environment in Isaac Lab, familiarize yourself with the following topics.
 
@@ -45,10 +45,10 @@ Assets are objects defined within a 3D scene and can belong to one of the follow
 Predefined assets configurations are located in the following directory in the Isaac Lab repository:  
 `source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets`.  
 
-This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must be created within the [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets). This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the [lab_assets directory](source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets), refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
+This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10, Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must be created within the [lab_assets directory](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets). This file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the [lab_assets directory](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets), refer to [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
 ### Example of Asset Configuration
-Here is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
+[Here](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets/universal_robots.py) is an example of defining an articulation configuration to set up an asset in a Reinforcement Learning environment:
 
 ```python
 UR10_CFG = ArticulationCfg(
@@ -82,9 +82,9 @@ UR10_CFG = ArticulationCfg(
 )
 ```
 
-- **`spawn`**: Defines the USD file path for the asset and specifies its physical properties, such as rigid body settings (e.g., enabling or disabling gravity) and contact sensor activation.
-- **`init_state`**: Configures the initial state of the robot, including specific joint positions, joint velocities, ... to initialize the articulation.
-- **`actuators`**: Sets up the robot's actuator model, specifying parameters such as velocity limits, effort limits, stiffness, and damping.
+- ``spawn``: Defines the USD file path for the asset and specifies its physical properties, such as rigid body settings (e.g., enabling or disabling gravity) and contact sensor activation.
+- ``init_state``: Configures the initial state of the robot, including specific joint positions, joint velocities, ... to initialize the articulation.
+- ``actuators``: Sets up the robot's actuator model, specifying parameters such as velocity limits, effort limits, stiffness, and damping.
 
 In this example, the actuator model is defined using `ImplicitActuatorCfg`. However, actuator models in Isaac Lab can be either implicit or explicit. For more information on configuring actuators, refer to the [Actuators in Isaac Lab](https://isaac-sim.github.io/IsaacLab/main/source/overview/core-concepts/actuators.html).
 
@@ -102,7 +102,7 @@ Simulation environments are virtual environments with which a RL actor interacts
 1. [Manager-Based RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html)  
 2. [Direct RL Environment](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_direct_rl_env.html)
 
-Manager-Based RL Environments simplify simulation complexity by using managers that handle tasks such as fetching, updating, and setting the data required by the RL agent (for example, constructing the actor state from observations). These managers are **InteractiveScene**, **ActionManager**, **ObservationManager**, **RewardManager**, **CurriculumManager**, and **EventManager**.  In contrast, Direct-Based RL Environments offer greater flexibility by requiring users to define observations, actions, and rewards directly within the task script.
+Manager-Based RL Environments simplify simulation complexity by using managers that handle tasks such as fetching, updating, and setting the data required by the RL agent (for example, constructing the actor state from observations). These managers are `InteractiveScene`, `ActionManager`, `ObservationManager`, `RewardManager`, `CurriculumManager`, and `EventManager`.  In contrast, Direct-Based RL Environments offer greater flexibility by requiring users to define observations, actions, and rewards directly within the task script.
 
 In what comes next, Manager-Based RL Environments will be explored in more details. 
 
@@ -128,7 +128,7 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
     events: EventCfg = EventCfg()
     curriculum: CurriculumCfg = CurriculumCfg()
 ```
-As shown in the configuration above, **ReachEnvCfg** inherits from **ManagerBasedRLEnvCfg** and sets up the various managers that define the environment. The **ReachSceneCfg** specify the assets in the environment such as the ground, robot, and lights as demonstrated in the snippet below:
+As shown in the configuration above, `ReachEnvCfg` inherits from `ManagerBasedRLEnvCfg` and sets up the various managers that define the environment. The `ReachSceneCfg` specify the assets in the environment such as the ground, robot, and lights as demonstrated in the snippet below:
 
 ```python
 @configclass
@@ -152,7 +152,7 @@ class ReachSceneCfg(InteractiveSceneCfg):
     )
 ```
 
-The **ObservationsCfg** class specifies the observations passed to the RL actor in the form of a state vector, which can include information such as joint positions, joint velocities, and end-effector pose for robotic arms.
+The `ObservationsCfg` class specifies the observations passed to the RL actor in the form of a state vector, which can include information such as joint positions, joint velocities, and end-effector pose for robotic arms.
 
 ```python
 @configclass
@@ -182,12 +182,12 @@ class ObservationsCfg:
 
 Each observation term specifies how a particular piece of data, such as joint positions or end-effector orientation, is 1) retrieved, optionally corrupted with noise (for dynamic randomization), and 2) appended to the RL agent’s input vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the configuration dictates their arrangement in the final state input.
 
-The **ActionsCfg** class defines how the outputs of the Neural Network are translated into actions applied in the simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the policy’s outputs may represent:
+The `ActionsCfg` class defines how the outputs of the Neural Network are translated into actions applied in the simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the policy’s outputs may represent:
 
-- **Joint Position Control**: The policy outputs joint position setpoints.  
-- **Joint Velocity Control**: The policy outputs joint velocity setpoints.  
-- **Impedance Control**: The policy outputs joint torque setpoints.  
-- **Cartesian Control**: The policy outputs Cartesian pose or Cartesian twist setpoints, often processed through an inverse kinematics solver.  
+- `Joint Position Control`: The policy outputs joint position setpoints.  
+- `Joint Velocity Control`: The policy outputs joint velocity setpoints.  
+- `Impedance Control`: The policy outputs joint torque setpoints.  
+- `Cartesian Control`: The policy outputs Cartesian pose or Cartesian twist setpoints, often processed through an inverse kinematics solver.  
 
 Below are examples of different control configurations:
 
@@ -244,12 +244,12 @@ class ActionsCfg:
     )
 ```
 
-The **CommandsCfg** class defines commands applied to the robot, which are also referenced in **ObservationsCfg** and included in the state vector. Isaac Lab provides multiple command configurations that can be sampled and passed to the actor state, such as **UniformPoseCommandCfg**, **UniformVelocityCommandCfg**, **NullCommandCfg**, **UniformPose2dCommandCfg**, and **TerrainBasedPose2dCommandCfg**.
+The `CommandsCfg` class defines commands applied to the robot, which are also referenced in `ObservationsCfg` and included in the state vector. Isaac Lab provides multiple command configurations that can be sampled and passed to the actor state, such as `UniformPoseCommandCfg`, `UniformVelocityCommandCfg`, `NullCommandCfg`, `UniformPose2dCommandCfg`, and `TerrainBasedPose2dCommandCfg`.
 
-A user can extend these configurations by creating a custom command config (derived from **CommandTermCfg**) and implementing its functionality in a inherited class of **CommandTerm**. For example, to sample trajectories, a user might introduce a **UniformTrajectoryCommandCfg** configuration along with a **UniformTrajectoryCommand** class, where the specific trajectory generation would be implemented. For reference, an example of pose command sampling in  
+A user can extend these configurations by creating a custom command config (derived from `CommandTermCfg`) and implementing its functionality in a inherited class of `CommandTerm`. For example, to sample trajectories, a user might introduce a `UniformTrajectoryCommandCfg` configuration along with a `UniformTrajectoryCommand` class, where the specific trajectory generation would be implemented. For reference, an example of pose command sampling in  
 `source/extensions/omni.isaac.lab/omni/isaac/lab/envs/mdp/commands/pose_command.py`.
 
-Here is a reference to a **CommandsCfg** that utilises **UniformPoseCommandCfg** for a robotic arm reach task:
+Here is a reference to a `CommandsCfg` that utilises `UniformPoseCommandCfg` for a robotic arm reach task:
 
 ```python
 @configclass
@@ -282,9 +282,9 @@ pose_command = ObsTerm(
 )
 ```
 
-The **RewardsCfg** class defines the reward term that the **actor** receives after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The **actor** aims to maximize its cumulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the **actor**.
+The `RewardsCfg` class defines the reward term that the `actor` receives after executing an action in the environment. The reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The `actor` aims to maximize its cumulative reward and accordingly chooses the best actions that would maximize the collected rewards. The higher a reward term range the more it has effect on the behavior and performance of the `actor`.
 
-Here is an example of a **RewardsCfg** for a simple end-effector tracking policy.
+Here is an example of a `RewardsCfg` for a simple end-effector tracking policy.
 
 
 ```python
@@ -309,20 +309,20 @@ class RewardsCfg:
     )
 ```
 
-As shown in the **RewardsCfg** above, three different reward terms are defined:
+As shown in the `RewardsCfg` above, three different reward terms are defined:
 
-- **end_effector_position_tracking**  
+- `end_effector_position_tracking`  
   This term has the largest penalty weight (-6.0). It penalizes any significant deviation between the commanded end-effector position and its actual position. By making this penalty the largest, the policy is more strongly driven to reduce position error, ensuring precise position tracking of the end-effector.
 
-- **end_effector_orientation_tracking**  
+- `end_effector_orientation_tracking`  
   With a penalty weight of -4, this term penalizes orientation error. While important, it is weighted slightly less than position tracking, reflecting the prioritization of end-effector position over orientation for this specific task. However, the orientation penalty is still considerable enough to ensure stable and controlled orientations.
 
-- **joint_vel**  
+- `joint_vel`  
   This term, weighted by -0.0001, imposes a small penalty on joint velocities. Even though the penalty is relatively small, it helps discourage unnecessarily high velocities that could result in unsafe or overly aggressive motion. This gentle penalty contributes to smoother trajectory execution.
 
 Reward tuning is essential for obtaining robust policies and the desired behaviors. Each `RewTerm` uses a `func` parameter that returns a reward value, which is then multiplied by the term's weight before being combined with other reward terms.
 
-To explore additional **ManagerBasedRLEnv** examples, consider the following:
+To explore additional `ManagerBasedRLEnv` examples, consider the following:
 
 1. [Reach Environment](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/reach_env_cfg.py)  
    A Robotic arm learning to reach a specified end-effector position and orientation.
@@ -339,11 +339,11 @@ For more details on complex reward terms, such as triggering penalties when an o
 
 Several open-source RL frameworks facilitate policy learning and optimization. Isaac Lab offers wrappers for various RL libraries, translating environment data into the appropriate formats for each library's functions. The three supported libraries are:
 
-1. **RSL-RL**: Developed by the Robotic Systems Lab at ETH Zürich, RSL-RL is a fast and straightforward implementation of RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans to incorporate additional algorithms. More details can be found on [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
+1. `RSL-RL`: Developed by the Robotic Systems Lab at ETH Zürich, RSL-RL is a fast and straightforward implementation of RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans to incorporate additional algorithms. More details can be found on [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
 
-2. **SKRL**: An open-source modular RL library built on top of PyTorch and JAX. SKRL emphasizes modularity, readability, and simplicity, supporting various environments, including NVIDIA Isaac Gym and Omniverse Isaac Gym. It enables simultaneous training of multiple agents with customizable scopes. More details can be found on [SKRL Github](https://github.com/Toni-SM/skrl).
+2. `SKRL`: An open-source modular RL library built on top of PyTorch and JAX. SKRL emphasizes modularity, readability, and simplicity, supporting various environments, including NVIDIA Isaac Gym and Omniverse Isaac Gym. It enables simultaneous training of multiple agents with customizable scopes. More details can be found on [SKRL Github](https://github.com/Toni-SM/skrl).
 
-3. **RL Games**: An open-source high-performance RL framework designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
+3. `RL Games`: An open-source high-performance RL framework designed for training policies in simulated environments. More details can be found on [RL Games Github](https://github.com/Toni-SM/skrl).
 
 For detailed instructions on running the various RL libraries, refer to [Reinforcement Learning Wrappers](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
@@ -355,16 +355,16 @@ To prepare a RL environment for use with one of the mentioned wrappers, addition
 Begin by creating a new folder. Its location depends on the simulation environment and the specific task being performed. For example, for a Manager-Based RL robotic arm manipulation reach task, an appropriate location for that folder would be in `/lab_tasks/manager_based/manipulation/reach`. The folder name should typically match the asset that the policy targets, such as `ur5e`, `kr10`, and so on.
 
 ### Step 2: Define the Required Structure  
-Inside this folder, define the **agents** folder, the configuration file (i.e **[control_type]_env_cfg.py**), and **__init__.py** file for the Manager-Based RL environment.  
+Inside this folder, define the `agents` folder, the configuration file (i.e `[control_type]_env_cfg.py`), and `__init__.py` file for the Manager-Based RL environment.  
 
-The **agents** folder contains the configuration file required by the RL wrapper to learn a policy. This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
+The `agents` folder contains the configuration file required by the RL wrapper to learn a policy. This file includes all the essential hyperparameters for training, such as `learning_rate`, `batch_size`, `max_epochs`, and others.  
 
 #### Examples of Configurations  
 To understand the structure and parameters, explore these configuration examples for training the UR5E robot for a Reach Task using different RL libraries and refer to the chosen library documentation for more details:
 
-- Using **RSL-RL**: [RSL-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)  
-- Using **RL-Games**: [RL-Games PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)  
-- Using **SK-RL**: [SK-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/skrl_ppo_cfg.yaml)  
+- Using `RSL-RL`: [RSL-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)  
+- Using `RL-Games`: [RL-Games PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)  
+- Using `SK-RL`: [SK-RL PPO Configuration](https://github.com/aica-technology/isaac-lab/blob/main/source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/skrl_ppo_cfg.yaml)  
 
 ### Step 3: Register a Gym Environment
 
@@ -384,16 +384,16 @@ gym.register(
 )
 ```
 
-This registration code should be included in the **`__init__.py`** file located in the directory specified above.
+This registration code should be included in the ``__init__.py`` file located in the directory specified above.
 
 ## Training and Exporting the Reinforcement Learning Policies
 
 After defining the assets, environments, and robot control, creating the necessary training configuration files, and registering the new Gym environment, train a new policy by running the appropriate training script for the Reinforcement Learning Wrappers. Detailed instructions are available [here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
 
 
-Once training is complete, you can export your model to ONNX format. In RSL-RL, this is straightforward using **export_policy_as_onnx**. For other libraries or custom policies, you can use the PyTorch ONNX exporter as described in the [official documentation](https://pytorch.org/docs/stable/onnx.html). Note that extra attention is required for recurrent actor-critic models Below are example snippets showing how to export both recurrent and feed-forward actor-critic models:
+Once training is complete, you can export your model to ONNX format. In RSL-RL, this is straightforward using `export_policy_as_onnx`. For other libraries or custom policies, you can use the PyTorch ONNX exporter as described in the [official documentation](https://pytorch.org/docs/stable/onnx.html). Note that extra attention is required for recurrent actor-critic models Below are example snippets showing how to export both recurrent and feed-forward actor-critic models:
 
-**Recurrent model (Memory Based Models)**:
+`Recurrent model (Memory Based Models)`:
 
 ```python
 obs = torch.zeros(1, self.rnn.input_size)
@@ -415,7 +415,7 @@ torch.onnx.export(
 )
 ```
 
-**Feed-forward model (Common Case)**:
+`Feed-forward model (Common Case)`:
 
 ```python
 obs = torch.zeros(1, self.actor[0].in_features)
