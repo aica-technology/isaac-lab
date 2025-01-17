@@ -245,7 +245,7 @@ is 1) retrieved, optionally corrupted with noise (for dynamic randomization), an
 vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the
 configuration dictates their arrangement in the final state input.
 
-The `ActionsCfg` class defines how the outputs of the Neural Network are translated into actions applied in the
+The `ActionsCfg` class defines how the outputs of the neural network are translated into actions applied in the
 simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the
 policy’s outputs may represent:
 
@@ -431,7 +431,7 @@ Several open-source RL frameworks facilitate policy learning and optimization. I
 libraries, translating environment data into the appropriate formats for each library's functions. The three supported
 libraries are:
 
-1. `RSL-RL`: Developed by the Robotic Systems Lab at ETH Zürich, RSL-RL is a fast and straightforward implementation of
+1. `RSL-RL`: Developed by the Robotic Systems Lab (RSL) at ETH Zürich, RSL-RL is a fast and straightforward implementation of
    RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans
    to incorporate additional algorithms. More details can be found on
    [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
@@ -511,10 +511,10 @@ Learning Wrappers. Detailed instructions are available
 Once training is complete, you can export your model to ONNX format. In RSL-RL, this is straightforward using
 `export_policy_as_onnx`. For other libraries or custom policies, you can use the PyTorch ONNX exporter as described in
 the [official documentation](https://pytorch.org/docs/stable/onnx.html). Note that extra attention is required for
-recurrent actor-critic models Below are example snippets showing how to export both recurrent and feed-forward
+recurrent actor-critic models. Below are example snippets showing how to export both recurrent and feed-forward
 actor-critic models:
 
-`Recurrent model (Memory Based Models)`:
+### Recurrent model (Memory Based Models):
 
 ```python
 obs = torch.zeros(1, self.rnn.input_size)
@@ -536,7 +536,7 @@ torch.onnx.export(
 )
 ```
 
-`Feed-forward model (Common Case)`:
+### Feed-forward model (Common Case):
 
 ```python
 obs = torch.zeros(1, self.actor[0].in_features)
