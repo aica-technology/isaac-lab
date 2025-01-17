@@ -1,7 +1,7 @@
 # Reinforcement Learning with Isaac Lab
 
-This document provides a step-by-step guide for training a Reinforcement Learning (RL) policy based on Neural Networks
-(NN) in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
+This document provides a step-by-step guide for training a reinforcement learning (RL) policy based on neural networks
+in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
 Isaac Lab is a modular framework designed to simplify robotics workflows, including RL, learning from demonstrations,
 and motion planning. Built on NVIDIA Isaac Sim, it leverages PhysX simulation to deliver photo-realistic environments
@@ -28,14 +28,14 @@ Once done, verify the installation of Isaac Lab by running the following command
 
 # Key Concepts
 
-In (deep) Neural Network-based Reinforcement Learning, an **actor**, often represented by a **policy** Neural Network,
+In (deep) neural network-based reinforcement learning, an **actor**, often represented by a **policy** neural network,
 learns to perform a specific task by interacting with an environment and optimizing its behavior (policy parameters)
 based on received rewards.
 
 A **policy** is the function (or mapping) from states in the environment to the actions an **actor** should take. In
-deep RL, this function is implemented by a NN whose parameters are tuned to maximize cumulative rewards. Therefore, when
-we refer to a **policy** in this context, we specifically mean this decision-making function, while the Neural Network
-itself is just one way of representing the policy.
+deep RL, this function is implemented by a neural network whose parameters are tuned to maximize cumulative rewards.
+Therefore, when we refer to a **policy** in this context, we specifically mean this decision-making function, while the
+neural network itself is just one way of representing the policy.
 
 This process involves the following steps:
 
@@ -45,11 +45,12 @@ This process involves the following steps:
 2. **Reward Feedback**: After executing an action in the environment, the resulting interaction is interpreted in the
    form of a reward. This reward signals how favorable the action was toward achieving the overall task objective.
 
-3. **Policy Optimization**: The actor updates its policy (Neural Network parameters) using RL algorithms (A2C, PPO, ...)
+3. **Policy Optimization**: The actor updates its policy (neural network parameters) using RL algorithms (A2C, PPO, ...)
    to maximize cumulative rewards.
 
-4. **Generalization via Neural Networks**: The use of (deep) NN allows the RL actor to handle high-dimensional state and
-   action spaces, enabling it to solve complex tasks such as robotic control, game playing, and autonomous navigation.
+4. **Generalization via Neural Networks**: The use of (deep) neural networks allows the RL actor to handle
+   high-dimensional state and action spaces, enabling it to solve complex tasks such as robotic control, game playing,
+   and autonomous navigation.
 
 Through iterative interactions, the actor learns a (near-)optimal policy that maximizes the reward function, that is,
 the actor learns to achieve the desired task efficiently, guided by the rewards it accumulates.
@@ -79,7 +80,7 @@ file should reference a corresponding USD file. For detailed instructions on imp
 ### Example of Asset Configuration
 
 [Here](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets/universal_robots.py) is an example of defining
-an articulation configuration to set up an asset in a Reinforcement Learning environment:
+an articulation configuration to set up an asset in a reinforcement learning environment:
 
 ```python
 UR10_CFG = ArticulationCfg(
@@ -431,9 +432,9 @@ Several open-source RL frameworks facilitate policy learning and optimization. I
 libraries, translating environment data into the appropriate formats for each library's functions. The three supported
 libraries are:
 
-1. `RSL-RL`: Developed by the Robotic Systems Lab (RSL) at ETH Zürich, RSL-RL is a fast and straightforward implementation of
-   RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization (PPO), with plans
-   to incorporate additional algorithms. More details can be found on
+1. `RSL-RL`: Developed by the Robotic Systems Lab (RSL) at ETH Zürich, RSL-RL is a fast and straightforward
+   implementation of RL algorithms designed to run entirely on GPUs. It currently supports Proximal Policy Optimization
+   (PPO), with plans to incorporate additional algorithms. More details can be found on
    [RSL-RL Github](https://github.com/leggedrobotics/rsl_rl).
 
 2. `SKRL`: An open-source modular RL library built on top of PyTorch and JAX. SKRL emphasizes modularity, readability,
