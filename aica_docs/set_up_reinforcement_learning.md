@@ -1,6 +1,6 @@
 # Reinforcement Learning with Isaac Lab
 
-This document provides a step-by-step guide for training a reinforcement learning (RL) policy based on neural networks
+This document provides a step-by-step guide for training a Reinforcement Learning (RL) policy based on neural networks
 in a simulated environment using Isaac Lab and exporting the trained policy in ONNX format.
 
 Isaac Lab is a modular framework designed to simplify robotics workflows, including RL, learning from demonstrations,
