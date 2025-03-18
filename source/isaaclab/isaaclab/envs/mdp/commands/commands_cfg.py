@@ -14,6 +14,7 @@ from isaaclab.utils import configclass
 from .null_command import NullCommand
 from .pose_2d_command import TerrainBasedPose2dCommand, UniformPose2dCommand
 from .pose_command import UniformPoseCommand
+from .force_pose_command import UniformForcePoseCommand
 from .velocity_command import NormalVelocityCommand, UniformVelocityCommand
 
 
@@ -150,6 +151,73 @@ class UniformPoseCommandCfg(CommandTermCfg):
     @configclass
     class Ranges:
         """Uniform distribution ranges for the pose commands."""
+
+        pos_x: tuple[float, float] = MISSING
+        """Range for the x position (in m)."""
+
+        pos_y: tuple[float, float] = MISSING
+        """Range for the y position (in m)."""
+
+        pos_z: tuple[float, float] = MISSING
+        """Range for the z position (in m)."""
+
+        roll: tuple[float, float] = MISSING
+        """Range for the roll angle (in rad)."""
+
+        pitch: tuple[float, float] = MISSING
+        """Range for the pitch angle (in rad)."""
+
+        yaw: tuple[float, float] = MISSING
+        """Range for the yaw angle (in rad)."""
+
+    ranges: Ranges = MISSING
+    """Ranges for the commands."""
+
+    goal_pose_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(prim_path="/Visuals/Command/goal_pose")
+    """The configuration for the goal pose visualization marker. Defaults to FRAME_MARKER_CFG."""
+
+    current_pose_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(
+        prim_path="/Visuals/Command/body_pose"
+    )
+    """The configuration for the current pose visualization marker. Defaults to FRAME_MARKER_CFG."""
+
+    # Set the scale of the visualization markers to (0.1, 0.1, 0.1)
+    goal_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+    current_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+
+
+@configclass
+class UniformForcePoseCommandCfg(CommandTermCfg):
+    """Configuration for uniform pose command generator."""
+
+    class_type: type = UniformForcePoseCommand
+
+    asset_name: str = MISSING
+    """Name of the asset in the environment for which the commands are generated."""
+
+    body_name: str = MISSING
+    """Name of the body in the asset for which the commands are generated."""
+
+    force_sensor_name: str = MISSING
+    """Name of the force sensor that returns the force values."""
+
+    make_quat_unique: bool = False
+    """Whether to make the quaternion unique or not. Defaults to False.
+
+    If True, the quaternion is made unique by ensuring the real part is positive.
+    """
+
+    @configclass
+    class Ranges:
+        """Uniform distribution ranges for the pose commands."""
+        force_x: tuple[float, float] = MISSING
+        """Range for the force applied in x direction (in N)."""
+
+        force_y: tuple[float, float] = MISSING
+        """Range for the force applied in y direction (in N)."""
+
+        force_z: tuple[float, float] = MISSING
+        """Range for the force applied in z direction (in N)."""
 
         pos_x: tuple[float, float] = MISSING
         """Range for the x position (in m)."""

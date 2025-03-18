@@ -4,11 +4,10 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import MISSING
-import math
+
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
-from isaaclab.managers import ActionTermCfg as ActionTerm
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -17,37 +16,35 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.utils import configclass
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+from isaaclab.sensors import ContactSensorCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
-import isaaclab_tasks.manager_based.manipulation.reach.mdp as mdp
+from isaaclab.sim.spawners.from_files.from_files_cfg import GroundPlaneCfg, UsdFileCfg
+from isaaclab.utils import configclass
+from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 from isaaclab.markers.config import FRAME_MARKER_CFG  
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
+import math
+from . import mdp
 
 ##
 # Scene definition
 ##
 
-
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
 ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
 ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
-
 @configclass
-class ReachSceneCfg(InteractiveSceneCfg):
-    """Configuration for the scene with a robotic arm."""
+class CompliantControlSceneCfg(InteractiveSceneCfg):
+    """Configuration for the lift scene with a robot and a object.
+    This is the abstract base implementation, the exact scene is defined in the derived classes
+    which need to set the target object, robot and end-effector frames
+    """
 
-    # world
-    ground = AssetBaseCfg(
-        prim_path="/World/ground",
-        spawn=sim_utils.GroundPlaneCfg(),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
-    )
-
-    # robots
+    # robots: will be populated by agent env cfg
     robot: ArticulationCfg = MISSING
 
+    # end-effector sensor: will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
             prim_path=MISSING,
             debug_vis=False,
@@ -63,11 +60,30 @@ class ReachSceneCfg(InteractiveSceneCfg):
             ],
         )
 
+    # Table
+    table = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/Table",
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.5, 0, 0], rot=[0.707, 0, 0, 0.707]),
+        spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd"),
+    )
+
+    # plane
+    plane = AssetBaseCfg(
+        prim_path="/World/GroundPlane",
+        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, -1.0]),
+        spawn=GroundPlaneCfg(),
+    )
 
     # lights
     light = AssetBaseCfg(
         prim_path="/World/light",
-        spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
+        spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
+    )
+
+    contact_forces = ContactSensorCfg(
+        prim_path=MISSING,
+        history_length=10,
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Table"],
     )
 
 
@@ -80,30 +96,32 @@ class ReachSceneCfg(InteractiveSceneCfg):
 class CommandsCfg:
     """Command terms for the MDP."""
 
-    ee_pose = mdp.UniformPoseCommandCfg(
+    ee_force_pose = mdp.UniformForcePoseCommandCfg(
         asset_name="robot",
-        body_name=MISSING,
-        resampling_time_range=(2.0, 4.0),
+        force_sensor_name="contact_forces",
+        body_name=MISSING,  # will be set by agent env cfg
+        resampling_time_range=(5.0, 5.0),
         debug_vis=True,
-        make_quat_unique=True,
-        ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.3, 0.5),
-            pos_y=(-0.3, 0.3),
-            pos_z=(0.25, 0.25),
+        ranges=mdp.UniformForcePoseCommandCfg.Ranges(
+            pos_x=(0.4, 0.6),
+            pos_y=(-0.25, 0.25),
+            pos_z=(0.0, 0.1),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(-2*math.pi, 2*math.pi),
+            force_x=(0.0, 0.0),
+            force_y=(0.0, 0.0),
+            force_z=(0.0, 0.0),
         ),
     )
-
 
 
 @configclass
 class ActionsCfg:
     """Action specifications for the MDP."""
 
-    arm_action: ActionTerm = MISSING
-    gripper_action: ActionTerm | None = None
+    # will be set by agent env cfg
+    arm_action: mdp.DifferentialInverseKinematicsActionCfg = MISSING
 
 
 @configclass
@@ -114,14 +132,10 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
 
-        # observation terms (order preserved)
-        joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+        ee_pos = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
-        
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        actions = ObsTerm(func=mdp.last_action)
+        ee_experienced_forces = ObsTerm(func=mdp.ee_experienced_forces)
+        pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -135,44 +149,31 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
-        mode="reset",
-        params={
-            "position_range": (0.9, 1.1),
-            "velocity_range": (0.0, 0.0),
-        },
-    )
+    reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
 
 
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
-
     # task terms
     end_effector_position_tracking = RewTerm(
         func=mdp.position_command_error,
         weight=-6.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
     )
     end_effector_position_tracking_fine_grained = RewTerm(
         func=mdp.position_command_error_tanh,
         weight=3.6,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose"},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_force_pose"},
     )
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
         weight=-4,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
     )
 
-    action_termination_penalty = RewTerm(func=mdp.action_termination, weight=-0.01, params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},)
+    action_termination_penalty = RewTerm(func=mdp.action_termination, weight=-0.01, params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},)
 
-    end_effector_position_tracking = RewTerm(
-        func=mdp.position_command_error,
-        weight=-6.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
-    )
 
     # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
@@ -181,7 +182,6 @@ class RewardsCfg:
         weight=-0.0001,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
-
 
 @configclass
 class TerminationsCfg:
@@ -195,17 +195,12 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.005, "num_steps": 4500}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 10000}
     )
 
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 4500}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 10000}
     )
-
-    action_termination_penalty = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_termination_penalty", "weight": -0.02, "num_steps": 4500}
-    )
-
 
 
 ##
@@ -214,12 +209,11 @@ class CurriculumCfg:
 
 
 @configclass
-class ReachEnvCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the reach end-effector pose tracking environment."""
+class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
+    """Configuration for the lifting environment."""
 
     # Scene settings
-    scene: ReachSceneCfg = ReachSceneCfg(num_envs=4096, env_spacing=2.5)
-
+    scene: CompliantControlSceneCfg = CompliantControlSceneCfg(num_envs=4096, env_spacing=2.5)
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()

@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING
 
 from isaaclab.assets import RigidObject, Articulation
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import ContactSensor
 from isaaclab.utils.math import combine_frame_transforms, quat_error_magnitude, quat_mul
 
 if TYPE_CHECKING:
@@ -32,24 +31,6 @@ def position_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg:
     des_pos_w, _ = combine_frame_transforms(asset.data.root_state_w[:, :3], asset.data.root_state_w[:, 3:7], des_pos_b)
     curr_pos_w = asset.data.body_state_w[:, asset_cfg.body_ids[0], :3]  # type: ignore
     return torch.norm(curr_pos_w - des_pos_w, dim=1)
-
-
-def force_command_tracking_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
-    """Penalize tracking of the position error using L2-norm.
-
-    The function computes the position error between the desired position (from the command) and the
-    current position of the asset's body (in world frame). The position error is computed as the L2-norm
-    of the difference between the desired and current positions.
-    """
-    # extract the asset (to enable type hinting)
-    asset: ContactSensor = env.scene[asset_cfg.name]
-
-    command = env.command_manager.get_command(command_name)
-
-    # obatin the force value reading from the contact sensor
-    des_force_b = command[:, 7:]
-    force_value = torch.mean(asset.data.net_forces_w_history, dim=1) # type: ignore
-    return torch.norm(des_force_b - force_value, dim=1)
 
 
 def position_command_error_tanh(
