@@ -59,7 +59,7 @@ UR5E_CFG = ArticulationCfg(
             disable_gravity=False,
             max_depenetration_velocity=5.0,
         ),
-        activate_contact_sensors=False,
+        activate_contact_sensors=True,
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
@@ -89,12 +89,12 @@ UR5E_CFG_VELOCIY.actuators = {
 
 
 UR5E_CFG_IK = UR5E_CFG.copy()
+UR5E_CFG_IK.spawn.rigid_props.disable_gravity = True
 UR5E_CFG_IK.actuators = {
         "arm": ImplicitActuatorCfg(
             joint_names_expr=[".*"],
-            velocity_limit=100.0,
-            effort_limit=87.0,
-            stiffness=1600.0,
-            damping=200.0,
+            stiffness=400.0,
+            damping=80.0,
+            velocity_limit=3.14
         ),
     }

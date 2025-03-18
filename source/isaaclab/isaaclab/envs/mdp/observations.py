@@ -20,7 +20,7 @@ from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers.manager_base import ManagerTermBase
 from isaaclab.managers.manager_term_cfg import ObservationTermCfg
-from isaaclab.sensors import Camera, Imu, RayCaster, RayCasterCamera, TiledCamera, FrameTransformer
+from isaaclab.sensors import Camera, Imu, RayCaster, RayCasterCamera, TiledCamera, FrameTransformer, ContactSensor
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv, ManagerBasedRLEnv
@@ -189,6 +189,10 @@ def ee_rotation_in_robot_root_frame(env: ManagerBasedRLEnv, robot_cfg: SceneEnti
 """
 Sensors.
 """
+def ee_experienced_forces(env: ManagerBasedRLEnv, contact_force_cfg: SceneEntityCfg = SceneEntityCfg("contact_forces")):
+    contact_forces: ContactSensor = env.scene[contact_force_cfg.name]
+    print(torch.mean(contact_forces.data.net_forces_w_history, dim=1).squeeze())
+    return torch.mean(contact_forces.data.net_forces_w_history, dim=1).squeeze() # type: ignore
 
 
 def height_scan(env: ManagerBasedEnv, sensor_cfg: SceneEntityCfg, offset: float = 0.5) -> torch.Tensor:
