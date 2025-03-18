@@ -1,3 +1,5 @@
+.. _rl-frameworks:
+
 Reinforcement Learning Library Comparison
 =========================================
 
@@ -75,11 +77,11 @@ and logged the total training time for 65.5M steps for each RL library.
 +--------------------+-----------------+
 | RL Library         | Time in seconds |
 +====================+=================+
-| RL-Games           | 216             |
+| RL-Games           | 203             |
 +--------------------+-----------------+
-| RSL RL             | 215             |
+| SKRL               | 204             |
 +--------------------+-----------------+
-| SKRL               | 321             |
+| RSL RL             | 207             |
 +--------------------+-----------------+
 | Stable-Baselines3  | 6320            |
 +--------------------+-----------------+

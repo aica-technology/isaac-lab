@@ -68,18 +68,18 @@ Assets are objects defined within a 3D scene and can belong to one of the follow
 format.
 
 Predefined assets configurations are located in the following
-[directory](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets) in the Isaac Lab repository.
+[directory](../source/isaaclab_assets/isaaclab_assets/robots) in the Isaac Lab repository.
 
 This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10,
 Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must
-be created within the [lab_assets directory](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets). This
+be created within the [lab_assets directory](../source/isaaclab_assets/isaaclab_assets/robots). This
 file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the
-[lab_assets directory](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets), refer to
+[lab_assets directory](..../source/isaaclab_assets/isaaclab_assets/robots), refer to
 [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
 ### Example of Asset Configuration
 
-[Here](../source/extensions/omni.isaac.lab_assets/omni/isaac/lab_assets/universal_robots.py) is an example of defining
+[Here](../source/isaaclab_assets/isaaclab_assets/robots/universal_robots.py) is an example of defining
 an articulation configuration to set up an asset in a reinforcement learning environment:
 
 ```python
@@ -139,7 +139,7 @@ all necessary files in one location, making it easier for multiple users to work
 environments.
 
 As shown in the example articulation configuration, the relevant USD file is stored in Isaac Nucleus and can be accessed
-by importing `ISAACLAB_NUCLEUS_DIR` from `omni.isaac.lab.utils.assets` in Isaac Lab.
+by importing `ISAACLAB_NUCLEUS_DIR` from `isaaclab.utils.assets` in Isaac Lab.
 
 Beyond the default assets, AICA has curated a list of additional resources not included in the default Isaac Sim folder
 on Isaac Nucleus, such as the uFactory xArm 6 and KUKA KR210 robots, which can be made available upon request.
@@ -165,7 +165,7 @@ In what comes next, Manager-Based RL Environments will be explored in more detai
 To create your own Manager-Based RL Environment, follow this
 [tutorial](https://isaac-sim.github.io/IsaacLab/main/source/tutorials/03_envs/create_manager_rl_env.html). Below is a
 summary of a
-[basic environment configuration class](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/reach_env_cfg.py):
+[basic environment configuration class](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/reach_env_cfg.py):
 
 ```python
 class ReachEnvCfg(ManagerBasedRLEnvCfg):
@@ -324,7 +324,7 @@ A user can extend these configurations by creating a custom command config (deri
 implementing its functionality in a inherited class of `CommandTerm`. For example, to sample trajectories, a user might
 introduce a `UniformTrajectoryCommandCfg` configuration along with a `UniformTrajectoryCommand` class, where the
 specific trajectory generation would be implemented. For reference, an example of pose command sampling can be found
-[here](../source/extensions/omni.isaac.lab/omni/isaac/lab/envs/mdp/commands/pose_command.py).
+[here](../source/isaaclab/isaaclab/envs/mdp/commands/pose_command.py).
 
 Here is a reference to a `CommandsCfg` that utilises `UniformPoseCommandCfg` for a robotic arm reach task:
 
@@ -412,13 +412,13 @@ reward terms.
 
 To explore additional `ManagerBasedRLEnv` examples, consider the following:
 
-1. [Reach Environment](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/reach_env_cfg.py)  
+1. [Reach Environment](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/reach_env_cfg.py)  
    A Robotic arm learning to reach a specified end-effector position and orientation.
 
-2. [Lift Environment](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/lift/lift_env_cfg.py)  
+2. [Lift Environment](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/lift/lift_env_cfg.py)  
    A Robotic arm learning to lift an object within the workspace.
 
-3. [Stack Environment](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/stack/stack_env_cfg.py)  
+3. [Stack Environment](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/stack/stack_env_cfg.py)  
    A Robotic arm learning to stack multiple objects.
 
 For more details on complex reward terms, such as triggering penalties when an object falls out of the workspace, and on
@@ -450,7 +450,7 @@ For detailed instructions on running the various RL libraries, refer to
 
 To prepare a RL environment for use with one of the mentioned wrappers, additional configuration files need to be
 specified. For an example, check out the
-[reach directory](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach) in
+[reach directory](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach) in
 the Isaac Lab repository.
 
 ### Step 1: Create a New Folder
@@ -458,7 +458,7 @@ the Isaac Lab repository.
 Begin by creating a new folder. Its location depends on the simulation environment and the specific task being
 performed. For example, for a Manager-Based RL robotic arm manipulation reach task, an appropriate location for that
 folder would be in
-[here](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach). The folder name
+[here](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach). The folder name
 should typically match the asset that the policy is acting on, such as `ur5e`, `kr10`, and so on.
 
 ### Step 2: Define the Required Structure
@@ -475,11 +475,11 @@ To understand the structure and parameters, explore these configuration examples
 Task using different RL libraries and refer to the chosen library documentation for more details:
 
 - Using `RSL-RL`:
-  [RSL-RL PPO Configuration](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)
+  [RSL-RL PPO Configuration](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rsl_rl_ppo_cfg.py)
 - Using `RL-Games`:
-  [RL-Games PPO Configuration](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)
+  [RL-Games PPO Configuration](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/config/ur5e/agents/rl_games_ppo_cfg.yaml)
 - Using `SK-RL`:
-  [SK-RL PPO Configuration](../source/extensions/omni.isaac.lab_tasks/omni/isaac/lab_tasks/manager_based/manipulation/reach/config/ur5e/agents/skrl_ppo_cfg.yaml)
+  [SK-RL PPO Configuration](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/config/ur5e/agents/skrl_ppo_cfg.yaml)
 
 ### Step 3: Register a Gym Environment
 
@@ -489,7 +489,7 @@ shown below:
 ```python
 gym.register(
     id="ENVIRONMENT_ID",  # A unique identifier for the environment, used as a reference during training and evaluation
-    entry_point="omni.isaac.lab.envs:ManagerBasedRLEnv",  # Entry point for the Manager-based RL environment
+    entry_point="isaaclab.envs:ManagerBasedRLEnv",  # Entry point for the Manager-based RL environment
     disable_env_checker=True,  # Disable the environment checker for custom setups
     kwargs={
         "env_cfg_entry_point": joint_pos_env_cfg.UR5EJointPosReachEnvCfg,  # Configuration for the environment, inheriting from ManagerBasedRLEnv
