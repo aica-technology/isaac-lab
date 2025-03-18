@@ -89,20 +89,12 @@ UR5E_CFG_VELOCIY.actuators = {
 
 
 UR5E_CFG_IK = UR5E_CFG.copy()
+UR5E_CFG_IK.spawn.rigid_props.disable_gravity = True
 UR5E_CFG_IK.actuators = {
         "arm": ImplicitActuatorCfg(
             joint_names_expr=[".*"],
-            velocity_limit=100.0,
-            effort_limit=87.0,
-            stiffness=50000.0,
-            damping=20000.0,
-        ),
-    }
-UR5E_CFG_LOW_LEVEL = UR5E_CFG.copy()
-UR5E_CFG_LOW_LEVEL.actuators = {
-        "arm": ImplicitActuatorCfg(
-            joint_names_expr=[".*"],
-            stiffness=100000,
-            damping=50000,
+            stiffness=400.0,
+            damping=80.0,
+            velocity_limit=3.14
         ),
     }
