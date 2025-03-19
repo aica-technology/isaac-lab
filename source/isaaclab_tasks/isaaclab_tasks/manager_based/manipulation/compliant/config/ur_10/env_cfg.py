@@ -4,6 +4,7 @@ from isaaclab_tasks.manager_based.manipulation.compliant.compliant_env_cfg impor
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from isaaclab_assets import UR10_CFG  
+import math
 
 @configclass
 class UR10CompliantEnvCfg(CompliantControlRLCfg):
@@ -30,7 +31,7 @@ class UR10CompliantEnvCfg(CompliantControlRLCfg):
         # override command generator body
         # end-effector is along x-direction
         self.commands.ee_force_pose.body_name = self.ee_str 
-        self.commands.ee_force_pose.ranges.pitch = (0, 0)
+        self.commands.ee_force_pose.ranges.pitch = (math.pi / 2, math.pi / 2)
 
         # override actions
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(

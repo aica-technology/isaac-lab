@@ -191,7 +191,6 @@ Sensors.
 """
 def ee_experienced_forces(env: ManagerBasedRLEnv, contact_force_cfg: SceneEntityCfg = SceneEntityCfg("contact_forces")):
     contact_forces: ContactSensor = env.scene[contact_force_cfg.name]
-    print(torch.mean(contact_forces.data.net_forces_w_history, dim=1).squeeze())
     return torch.mean(contact_forces.data.net_forces_w_history, dim=1).squeeze() # type: ignore
 
 
