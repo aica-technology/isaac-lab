@@ -103,7 +103,7 @@ class CommandsCfg:
         resampling_time_range=(5.0, 5.0),
         debug_vis=True,
         ranges=mdp.UniformForcePoseCommandCfg.Ranges(
-            pos_x=(0.4, 0.6),
+            pos_x=(0.5, 0.8),
             pos_y=(-0.25, 0.25),
             pos_z=(0.0, 0.1),
             roll=(-math.pi, -math.pi),
@@ -134,7 +134,7 @@ class ObservationsCfg:
 
         ee_pos = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_experienced_forces = ObsTerm(func=mdp.ee_experienced_forces)
+        #ee_experienced_forces = ObsTerm(func=mdp.ee_experienced_forces)
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
 
         def __post_init__(self):
