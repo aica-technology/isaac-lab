@@ -1,23 +1,19 @@
-# Copyright (c) 2022-2024, The Isaac Lab Project Developers.
+# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
 from isaaclab.utils import configclass
 
-from isaaclab_rl.rsl_rl import (
-    RslRlOnPolicyRunnerCfg,
-    RslRlPpoActorCriticCfg,
-    RslRlPpoAlgorithmCfg,
-)
+from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, RslRlPpoAlgorithmCfg
 
 
 @configclass
-class UR5eReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
+class UR10CompliantReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1000
     save_interval = 50
-    experiment_name = "reach_ur5e"
+    experiment_name = "reach_ur10"
     run_name = ""
     resume = False
     empirical_normalization = False
