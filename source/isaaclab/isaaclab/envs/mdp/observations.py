@@ -15,7 +15,7 @@ import torch
 from typing import TYPE_CHECKING
 
 import isaaclab.utils.math as math_utils
-from isaaclab.utils.math import subtract_frame_transforms, normalize, quat_unique
+from isaaclab.utils.math import subtract_frame_transforms, normalize, quat_unique, combine_frame_transforms
 from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers.manager_base import ManagerTermBase
@@ -191,7 +191,8 @@ Sensors.
 """
 def ee_experienced_forces(env: ManagerBasedRLEnv, contact_force_cfg: SceneEntityCfg = SceneEntityCfg("contact_forces")):
     contact_forces: ContactSensor = env.scene[contact_force_cfg.name]
-    return torch.mean(contact_forces.data.net_forces_w_history, dim=1).squeeze() # type: ignore
+    experienced_forces, _ = torch.max(torch.mean(contact_forces.data.net_forces_w_history, dim=1), dim=1) # type: ignore
+    return experienced_forces
 
 
 def height_scan(env: ManagerBasedEnv, sensor_cfg: SceneEntityCfg, offset: float = 0.5) -> torch.Tensor:

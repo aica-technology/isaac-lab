@@ -115,7 +115,7 @@ class UniformForcePoseCommand(CommandTerm):
 
         # TODO: check base vs world when it comes to forces
         self.metrics["force_error"] = torch.norm(
-            torch.mean(self.force_sensor.data.net_forces_w_history, dim=1) # type: ignore
+            torch.mean(self.force_sensor.data.net_forces_w, dim=1) # type: ignore
             - self.pose_command_b[:, 7:],
             dim=-1,
         )

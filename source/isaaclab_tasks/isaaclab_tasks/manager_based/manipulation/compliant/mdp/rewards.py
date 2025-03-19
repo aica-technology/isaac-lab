@@ -9,6 +9,7 @@ import torch
 from typing import TYPE_CHECKING
 
 from isaaclab.assets import RigidObject, Articulation
+from isaaclab.sensors import ContactSensor
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import combine_frame_transforms, quat_error_magnitude, quat_mul
 
@@ -52,6 +53,40 @@ def position_command_error_tanh(
     return 1 - torch.tanh(distance / std)
 
 
+def force_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+    """Penalize tracking of the position error using L2-norm.
+
+    The function computes the position error between the desired position (from the command) and the
+    current position of the asset's body (in world frame). The position error is computed as the L2-norm
+    of the difference between the desired and current positions.
+    """
+    contact_sensor: ContactSensor = env.scene[asset_cfg.name]
+
+    command = env.command_manager.get_command(command_name)
+    # obtain the desired and current positions
+    desired_force_command = command[:, 7:]
+
+    return torch.norm(torch.max(torch.mean(contact_sensor.data.net_forces_w_history, dim=1)[0], dim=1) - desired_force_command, dim=1)  # type: ignore
+
+
+def force_command_error_tanh(
+    env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg, std: float
+) -> torch.Tensor:
+    """Reward tracking of the position using the tanh kernel.
+
+    The function computes the position error between the desired position (from the command) and the
+    current position of the asset's body (in world frame) and maps it with a tanh kernel.
+    """
+    contact_sensor: ContactSensor = env.scene[asset_cfg.name]
+
+    command = env.command_manager.get_command(command_name)
+    # obtain the desired and current positions
+    desired_force_command = command[:, 7:]
+    current_force = torch.mean(contact_sensor.data.net_forces_w_history, dim=1).squeeze() # type: ignore
+    distance = torch.norm(desired_force_command - current_force, dim=1)
+    return 1 - torch.tanh(distance / std)
+
+
 def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
     """Penalize tracking orientation error using shortest path.
 
@@ -83,6 +118,5 @@ def action_termination(env: ManagerBasedRLEnv, command_name: str, asset_cfg: Sce
     position_error = position_command_error(env, command_name, asset_cfg)
     
     # Apply a scaling factor that diminishes as the robot approaches the target
-    penalty = velocity * torch.exp(-position_error)
-    
+    penalty = velocity * torch.exp(-10*position_error)
     return penalty

@@ -36,15 +36,10 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class CompliantControlSceneCfg(InteractiveSceneCfg):
-    """Configuration for the lift scene with a robot and a object.
-    This is the abstract base implementation, the exact scene is defined in the derived classes
-    which need to set the target object, robot and end-effector frames
-    """
-
-    # robots: will be populated by agent env cfg
+    """Configuration for a simple scene with a tilted wall."""
+    
     robot: ArticulationCfg = MISSING
 
-    # end-effector sensor: will be populated by agent env cfg
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
             prim_path=MISSING,
             debug_vis=False,
@@ -60,32 +55,38 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
             ],
         )
 
-    # Table
-    table = AssetBaseCfg(
-        prim_path="{ENV_REGEX_NS}/Table",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0.5, 0, 0], rot=[0.707, 0, 0, 0.707]),
-        spawn=UsdFileCfg(usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd"),
-    )
-
-    # plane
-    plane = AssetBaseCfg(
-        prim_path="/World/GroundPlane",
-        init_state=AssetBaseCfg.InitialStateCfg(pos=[0, 0, -1.0]),
-        spawn=GroundPlaneCfg(),
+    # ground plane
+    ground = AssetBaseCfg(
+        prim_path="/World/defaultGroundPlane",
+        spawn=sim_utils.GroundPlaneCfg(),
     )
 
     # lights
-    light = AssetBaseCfg(
-        prim_path="/World/light",
-        spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=3000.0),
+    dome_light = AssetBaseCfg(
+        prim_path="/World/Light", spawn=sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
+    )
+
+    tilted_wall = AssetBaseCfg(
+        prim_path="{ENV_REGEX_NS}/TiltedWall",
+        spawn=sim_utils.CuboidCfg(
+            size=(1.25, 1.0, 0.005),
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            visual_material=sim_utils.PreviewSurfaceCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+            activate_contact_sensors=True,
+        ),
+        init_state=AssetBaseCfg.InitialStateCfg(
+            pos=(1.0, 0.0, 0.30), rot=(1.0, 0.0, 0.0, 0.0)
+        ),
     )
 
     contact_forces = ContactSensorCfg(
-        prim_path=MISSING,
-        history_length=10,
-        filter_prim_paths_expr=["{ENV_REGEX_NS}/Table"],
+        prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
+        update_period=0.0,
+        history_length=6,
+        debug_vis=True,
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/TiltedWall"],
     )
-
 
 ##
 # MDP settings
@@ -103,12 +104,12 @@ class CommandsCfg:
         resampling_time_range=(5.0, 5.0),
         debug_vis=True,
         ranges=mdp.UniformForcePoseCommandCfg.Ranges(
-            pos_x=(0.5, 0.8),
-            pos_y=(-0.25, 0.25),
-            pos_z=(0.0, 0.1),
+            pos_x=(0.5, 0.5),
+            pos_y=(0.0, 0.0),
+            pos_z=(0.45, 0.45),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
-            yaw=(-2*math.pi, 2*math.pi),
+            yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
             force_z=(0.0, 0.0),
@@ -134,7 +135,7 @@ class ObservationsCfg:
 
         ee_pos = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        #ee_experienced_forces = ObsTerm(func=mdp.ee_experienced_forces)
+        ee_experienced_forces = ObsTerm(func=mdp.ee_experienced_forces)
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
 
         def __post_init__(self):
@@ -165,6 +166,11 @@ class RewardsCfg:
         func=mdp.position_command_error_tanh,
         weight=3.6,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_force_pose"},
+    )
+    end_effector_force_tracking = RewTerm(
+        func=mdp.force_command_error,
+        weight=-0.0,
+        params={"asset_cfg": SceneEntityCfg("contact_forces"), "command_name": "ee_force_pose"},
     )
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
@@ -202,6 +208,13 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 10000}
     )
 
+    action_termination_penalty = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "action_termination_penalty", "weight": -1e-1, "num_steps": 10000}
+    )
+
+    end_effector_force_tracking = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_tracking", "weight": -1e-1, "num_steps": 20000}
+    )
 
 ##
 # Environment configuration
@@ -229,7 +242,7 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 2
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 8.0
+        self.episode_length_s = 12.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 60.0
