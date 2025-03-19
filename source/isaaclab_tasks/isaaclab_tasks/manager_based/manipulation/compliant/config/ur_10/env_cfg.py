@@ -16,7 +16,6 @@ class UR10CompliantEnvCfg(CompliantControlRLCfg):
 
         # switch robot to ur5e
         self.scene.robot = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.contact_forces.prim_path = "{ENV_REGEX_NS}/Robot/"+self.ee_str
 
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
