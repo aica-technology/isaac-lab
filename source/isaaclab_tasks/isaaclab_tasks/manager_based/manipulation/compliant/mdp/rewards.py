@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING
 
 from isaaclab.assets import RigidObject, Articulation
 from isaaclab.managers import SceneEntityCfg
+from isaaclab.sensors import FrameTransformer
 from isaaclab.utils.math import combine_frame_transforms, quat_error_magnitude, quat_mul
 from .observations import impedance_law_desired_forces, measured_forces
 if TYPE_CHECKING:
@@ -68,10 +69,15 @@ def force_command_error(
 
     scaling_factor = torch.exp(-torch.norm(experienced_forces, dim=1))
 
+    maximum_force_experienced = torch.maximum(
+        torch.max(experienced_forces, dim=1)[0],
+        torch.ones(experienced_forces.shape[0], device=scaling_factor.device),
+    )
+
     # minimize this error
     return scaling_factor * torch.norm(virtual_forces, dim=1) + (
         1 - scaling_factor
-    ) * torch.norm(desired_contact_force - experienced_forces, dim=1)
+    ) * torch.norm(desired_contact_force - experienced_forces, dim=1) / maximum_force_experienced
 
 
 def force_command_error_tanh(
@@ -130,3 +136,25 @@ def maximum_measured_force(
     desired_contact_force = command[:, 7:]
     force = measured_forces(env, contact_sensor_cfg, end_effector_cfg)
     return torch.norm(torch.maximum(desired_contact_force - force, torch.zeros_like(force)), dim=1)
+
+def in_contact_reward(
+    env: ManagerBasedRLEnv,
+    command_name: str,
+    table_height: float,
+    end_effector_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame")
+):
+    command = env.command_manager.get_command(command_name)
+    end_effector: FrameTransformer = env.scene[end_effector_cfg.name]
+    ee_pose = end_effector.data.target_pos_w[..., 0, :3]
+    desired_z_position = command[:, 2]
+
+    # Create a mask for values where desired_z_position is below the table height
+    below_table_mask = desired_z_position < table_height
+
+    # Initialize output tensor to be the same shape as desired_z_position
+    reward = torch.zeros_like(desired_z_position)
+
+    # Apply the 'if' block for elements below the table height
+    reward[below_table_mask] = 1 - torch.tanh(torch.norm(ee_pose[below_table_mask] - command[:, :3][below_table_mask]))
+
+    return reward
