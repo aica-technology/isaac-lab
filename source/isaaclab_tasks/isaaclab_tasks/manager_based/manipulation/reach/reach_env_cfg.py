@@ -168,12 +168,6 @@ class RewardsCfg:
 
     action_termination_penalty = RewTerm(func=mdp.action_termination, weight=-0.01, params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},)
 
-    end_effector_position_tracking = RewTerm(
-        func=mdp.position_command_error,
-        weight=-6.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
-    )
-
     # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     joint_vel = RewTerm(

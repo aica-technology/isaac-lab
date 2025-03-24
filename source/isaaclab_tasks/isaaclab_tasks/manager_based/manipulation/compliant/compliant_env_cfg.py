@@ -175,7 +175,7 @@ class RewardsCfg:
 
     maximum_measured_force_penalty = RewTerm(
         func = mdp.maximum_measured_force,
-        weight=-10,
+        weight=-0.001,
         params={"command_name": "ee_force_pose"}
     )
 
