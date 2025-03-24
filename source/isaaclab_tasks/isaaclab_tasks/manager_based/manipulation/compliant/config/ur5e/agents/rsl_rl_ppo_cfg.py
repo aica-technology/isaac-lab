@@ -9,11 +9,11 @@ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, R
 
 
 @configclass
-class UR10CompliantPPORunnerCfg(RslRlOnPolicyRunnerCfg):
+class UR5eCompliantPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 1000
     save_interval = 50
-    experiment_name = "reach_ur10"
+    experiment_name = "compliant_ur5e"
     run_name = ""
     resume = False
     empirical_normalization = False
