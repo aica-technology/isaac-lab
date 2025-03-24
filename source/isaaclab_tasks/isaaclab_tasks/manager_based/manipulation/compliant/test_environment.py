@@ -26,7 +26,7 @@ simulation_app = app_launcher.app
 import torch
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import AssetBaseCfg, RigidObjectCfg
+from isaaclab.assets import AssetBaseCfg
 from isaaclab.controllers import DifferentialIKController, DifferentialIKControllerCfg
 from isaaclab.scene import InteractiveScene, InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg
@@ -34,14 +34,18 @@ from isaaclab.utils import configclass
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.markers import VisualizationMarkers
 from isaaclab.markers.config import FRAME_MARKER_CFG
-from isaaclab.utils.math import subtract_frame_transforms
-import matplotlib.pyplot as plt
+from isaaclab.utils.math import subtract_frame_transforms, transform_points
+from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
 
 ##
 # Pre-defined configs
 ##
-from isaaclab_assets.robots.universal_robots import UR10_CFG
+from isaaclab_assets.robots.universal_robots import UR5E_CFG
 
+ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
+ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class ContactSensorSceneCfg(InteractiveSceneCfg):
@@ -56,7 +60,7 @@ class ContactSensorSceneCfg(InteractiveSceneCfg):
     )
 
     # robot
-    robot = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot") # type: ignore
+    robot = UR5E_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot") # type: ignore
 
     tilted_wall = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/TiltedWall",
@@ -71,6 +75,21 @@ class ContactSensorSceneCfg(InteractiveSceneCfg):
             pos=(1.0, 0.0, 0.30), rot=(1.0, 0.0, 0.0, 0.0)
         ),
     )
+
+    ee_frame: FrameTransformerCfg = FrameTransformerCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/base_link",
+            debug_vis=False,
+            visualizer_cfg=ee_frame_cfg,
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
+                    name="end_effector",
+                    offset=OffsetCfg(
+                        pos=(0, 0, 0),
+                    ),
+                ),
+            ],
+        )
 
     contact_forces = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
@@ -96,7 +115,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     ee_marker = VisualizationMarkers(frame_marker_cfg.replace(prim_path="/Visuals/ee_current"))
     goal_marker = VisualizationMarkers(frame_marker_cfg.replace(prim_path="/Visuals/ee_goal"))
 
-    robot_entity_cfg = SceneEntityCfg("robot", joint_names=[".*"], body_names=["ee_link"])
+    robot_entity_cfg = SceneEntityCfg("robot", joint_names=[".*"], body_names=["wrist_3_link"])
 
     # Resolving the scene entities
     robot_entity_cfg.resolve(scene)
@@ -106,7 +125,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     sim_dt = sim.get_physics_dt()
 
     # Initialize variables
-    ik_commands = torch.tensor([[0.4, 0.4, 0.35, 0.707, 0, 0.707, 0]], device=torch.device("cuda"))
+    ik_commands = torch.tensor([[0.45, 0.0, 0.35, 0, 1, 0, 0]], device=torch.device("cuda"))
     count = 1  # iteration count
 
     # reset robot
@@ -120,7 +139,6 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     # Initialize a flag to control incrementing and decrementing
     incrementing = True
     ik_increment = 0.05  # Value to increment/decrement
-    forces = []
 
     # Simulation loop
     while simulation_app.is_running():
@@ -173,9 +191,18 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
         # print information from the sensors
         print("-------------------------------")
         print(scene["contact_forces"])
-        ee_force_w, _ = torch.max(torch.mean(scene["contact_forces"].data.force_matrix_w, dim=1), dim=1)
-        print("observation_forces", ee_force_w)
-        
+        force_w, _ = torch.max(torch.mean(scene["contact_forces"].data.force_matrix_w, dim=1), dim=1)
+        ee_pos_w = scene["ee_frame"].data.target_pos_w[..., 0, :]
+        ee_quat_w = scene["ee_frame"].data.target_quat_w[..., 0, :]
+
+        force_ee = transform_points(
+            force_w, quat=ee_quat_w
+        )
+
+
+        print("observation_forces_w", force_w)
+        print("observation_force_tcp", force_ee)
+
 def main():
     """Main function."""
 

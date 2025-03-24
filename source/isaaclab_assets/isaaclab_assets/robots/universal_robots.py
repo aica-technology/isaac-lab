@@ -36,9 +36,9 @@ UR10_CFG = ArticulationCfg(
             "shoulder_pan_joint": 0.0,
             "shoulder_lift_joint": -1.712,
             "elbow_joint": 1.712,
-            "wrist_1_joint": 0.0,
-            "wrist_2_joint": 0.0,
-            "wrist_3_joint": 0.0,
+            "wrist_1_joint": -1.57,
+            "wrist_2_joint": -1.57,
+            "wrist_3_joint": -1.57
         },
     ),
     actuators={
@@ -95,6 +95,7 @@ UR5E_CFG_IK.actuators = {
             joint_names_expr=[".*"],
             stiffness=400.0,
             damping=80.0,
-            velocity_limit=3.14
+            velocity_limit=100.0,
+            effort_limit=87.0,
         ),
     }
