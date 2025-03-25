@@ -145,16 +145,18 @@ def maximum_measured_force(
 def in_contact_reward(
     env: ManagerBasedRLEnv,
     command_name: str,
-    table_height: float,
+    asset_cfg: SceneEntityCfg,
     end_effector_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame")
 ):
     command = env.command_manager.get_command(command_name)
     end_effector: FrameTransformer = env.scene[end_effector_cfg.name]
+    table: RigidObject = env.scene[asset_cfg.name]
+
     ee_pose = end_effector.data.target_pos_w[..., 0, :3]
     desired_z_position = command[:, 2]
-
+    
     # Create a mask for values where desired_z_position is below the table height
-    below_table_mask = desired_z_position <= table_height
+    below_table_mask = desired_z_position <= table.data.root_pos_w[:, 2]
 
     # Initialize output tensor to be the same shape as desired_z_position
     reward = torch.ones_like(desired_z_position) 

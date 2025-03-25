@@ -6,7 +6,7 @@
 from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
-from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -65,19 +65,20 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
         prim_path="/World/Light", spawn=sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
     )
 
-    tilted_wall = AssetBaseCfg(
+    tilted_wall = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/TiltedWall",
         spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.005),
+            size=(1.25, 1.0, 0.30),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
             activate_contact_sensors=True,
         ),
-        init_state=AssetBaseCfg.InitialStateCfg(
-            pos=(1.0, 0.0, 0.4), rot=(1.0, 0.0, 0.0, 0.0)
+        init_state=RigidObjectCfg.InitialStateCfg(
+            pos=(0.8, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)
         ),
     )
+
 
     contact_forces = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
@@ -96,16 +97,16 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
 class CommandsCfg:
     """Command terms for the MDP."""
 
-    ee_force_pose = mdp.UniformForcePoseCommandCfg(
+    ee_force_pose = mdp.TrackForcePoseCommandCfg(
         asset_name="robot",
         force_sensor_name="contact_forces",
         body_name=MISSING,  # will be set by agent env cfg
-        resampling_time_range=(3.0, 5.0),
+        resampling_time_range=(5.0, 5.0),
         debug_vis=True,
-        ranges=mdp.UniformForcePoseCommandCfg.Ranges(
-            pos_x=(0.4, 0.6),
-            pos_y=(-0.2, 0.2),
-            pos_z=(0.38, 0.40),
+        ranges=mdp.TrackForcePoseCommandCfg.Ranges(
+            pos_x=(0.2, 0.6),
+            pos_y=(-0.3, 0.3),
+            pos_z=(0.2, 0.4),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
@@ -150,6 +151,16 @@ class EventCfg:
 
     reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
 
+    reset_object_position = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.2, 0.1)},
+            "velocity_range": {},
+            "asset_cfg": SceneEntityCfg("tilted_wall"),
+        },
+    )
+
 
 @configclass
 class RewardsCfg:
@@ -169,14 +180,14 @@ class RewardsCfg:
 
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
-        weight=-4,
+        weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
     )
 
     in_contact_reward = RewTerm(
         func = mdp.in_contact_reward,
-        weight = 2,
-        params={"table_height": 0.4, "command_name": "ee_force_pose"}
+        weight = 0.1,
+        params={"asset_cfg": SceneEntityCfg("tilted_wall"), "command_name": "ee_force_pose"}
     )
 
     # action penalty
@@ -205,6 +216,10 @@ class CurriculumCfg:
     joint_vel = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 10000}
     )
+
+    end_effector_orientation_tracking = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_orientation_tracking", "weight": -6.0, "num_steps": 10000}
+    )
 ##
 # Environment configuration
 ##
@@ -231,7 +246,7 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 1
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 10.0
+        self.episode_length_s = 8.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 200.0
