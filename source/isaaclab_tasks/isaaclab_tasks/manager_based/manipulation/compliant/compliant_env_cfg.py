@@ -75,7 +75,7 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
             activate_contact_sensors=True,
         ),
         init_state=AssetBaseCfg.InitialStateCfg(
-            pos=(1.0, 0.0, 0.1), rot=(1.0, 0.0, 0.0, 0.0)
+            pos=(1.0, 0.0, 0.4), rot=(1.0, 0.0, 0.0, 0.0)
         ),
     )
 
@@ -105,13 +105,13 @@ class CommandsCfg:
         ranges=mdp.UniformForcePoseCommandCfg.Ranges(
             pos_x=(0.4, 0.6),
             pos_y=(-0.2, 0.2),
-            pos_z=(0.25, 0.45),
+            pos_z=(0.38, 0.40),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
-            force_z=(0.0, 0.0),
+            force_z=(-5.0, -5.0),
         ),
     )
 
@@ -157,14 +157,14 @@ class RewardsCfg:
     # task terms
     end_effector_force_tracking = RewTerm(
         func=mdp.force_command_error,
-        weight=-6.0,
+        weight=-12.0,
         params={"command_name": "ee_force_pose"},
     )
 
     end_effector_force_tracking_fine_grained = RewTerm(
         func=mdp.force_command_error_tanh,
         weight=3.6,
-        params={"command_name": "ee_force_pose", "std": 30},
+        params={"command_name": "ee_force_pose", "std": 0.1},
     )
 
     end_effector_orientation_tracking = RewTerm(
@@ -173,10 +173,10 @@ class RewardsCfg:
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
     )
 
-    maximum_measured_force_penalty = RewTerm(
-        func = mdp.maximum_measured_force,
-        weight=-0.001,
-        params={"command_name": "ee_force_pose"}
+    in_contact_reward = RewTerm(
+        func = mdp.in_contact_reward,
+        weight = 2,
+        params={"table_height": 0.4, "command_name": "ee_force_pose"}
     )
 
     # action penalty
