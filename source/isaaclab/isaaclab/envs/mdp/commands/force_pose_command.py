@@ -20,10 +20,10 @@ from isaaclab.utils.math import combine_frame_transforms, compute_pose_error, qu
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
 
-    from .commands_cfg import UniformForcePoseCommandCfg
+    from .commands_cfg import TrackForcePoseCommandCfg
 
 
-class UniformForcePoseCommand(CommandTerm):
+class TrackForcePoseCommand(CommandTerm):
     """Command generator for generating force-pose commands uniformly.
 
     The command generator generates forces and poses by sampling positions uniformly within specified
@@ -43,10 +43,10 @@ class UniformForcePoseCommand(CommandTerm):
 
     """
 
-    cfg: UniformForcePoseCommandCfg
+    cfg: TrackForcePoseCommandCfg
     """Configuration for the command generator."""
 
-    def __init__(self, cfg: UniformForcePoseCommandCfg, env: ManagerBasedEnv):
+    def __init__(self, cfg: TrackForcePoseCommandCfg, env: ManagerBasedEnv):
         """Initialize the command generator class.
 
         Args:
@@ -66,10 +66,10 @@ class UniformForcePoseCommand(CommandTerm):
         self.pose_command_b = torch.zeros(self.num_envs, 10, device=self.device)
         self.pose_command_b[:, 3] = 1.0
         self.pose_command_w = torch.zeros_like(self.pose_command_b)
+
         # -- metrics
         self.metrics["position_error"] = torch.zeros(self.num_envs, device=self.device)
         self.metrics["orientation_error"] = torch.zeros(self.num_envs, device=self.device)
-        self.metrics["force_error"] = torch.zeros(self.num_envs, device=self.device)
 
     def __str__(self) -> str:
         msg = "UniformForcePoseCommand:\n"
@@ -112,13 +112,6 @@ class UniformForcePoseCommand(CommandTerm):
 
         self.metrics["position_error"] = torch.norm(pos_error, dim=-1)
         self.metrics["orientation_error"] = torch.norm(rot_error, dim=-1)
-
-        # TODO: check base vs world when it comes to forces
-        self.metrics["force_error"] = torch.norm(
-            torch.mean(self.force_sensor.data.net_forces_w, dim=1) # type: ignore
-            - self.pose_command_b[:, 7:],
-            dim=-1,
-        )
 
     def _resample_command(self, env_ids: Sequence[int]):
         # sample new pose targets
