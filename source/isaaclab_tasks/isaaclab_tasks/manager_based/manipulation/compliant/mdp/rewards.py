@@ -70,14 +70,19 @@ def force_command_error(
     scaling_factor = torch.exp(-torch.norm(experienced_forces, dim=1))
 
     maximum_force_experienced = torch.maximum(
-        torch.max(experienced_forces, dim=1)[0],
+        torch.max(torch.abs(experienced_forces), dim=1)[0],
         torch.ones(experienced_forces.shape[0], device=scaling_factor.device),
+    )
+
+    maximum_desired_contact = torch.maximum(
+        torch.max(torch.abs(desired_contact_force), dim=1)[0],
+        torch.zeros(desired_contact_force.shape[0], device=scaling_factor.device),
     )
 
     # minimize this error
     return scaling_factor * torch.norm(virtual_forces, dim=1) + (
         1 - scaling_factor
-    ) * torch.norm(desired_contact_force - experienced_forces, dim=1) / maximum_force_experienced
+    ) * torch.norm(desired_contact_force - experienced_forces, dim=1) /(maximum_force_experienced + maximum_desired_contact)
 
 
 def force_command_error_tanh(
@@ -149,10 +154,10 @@ def in_contact_reward(
     desired_z_position = command[:, 2]
 
     # Create a mask for values where desired_z_position is below the table height
-    below_table_mask = desired_z_position < table_height
+    below_table_mask = desired_z_position <= table_height
 
     # Initialize output tensor to be the same shape as desired_z_position
-    reward = torch.zeros_like(desired_z_position)
+    reward = torch.ones_like(desired_z_position) 
 
     # Apply the 'if' block for elements below the table height
     reward[below_table_mask] = 1 - torch.tanh(torch.norm(ee_pose[below_table_mask] - command[:, :3][below_table_mask]))
