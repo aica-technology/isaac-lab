@@ -71,9 +71,9 @@ Predefined assets configurations are located in the following
 [directory](../source/isaaclab_assets/isaaclab_assets/robots) in the Isaac Lab repository.
 
 This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10,
-Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, an asset configuration file must
-be created within the [lab_assets directory](../source/isaaclab_assets/isaaclab_assets/robots). This
-file should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the
+Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, a python module defining the asset configuration 
+object must be created within the [lab_assets directory](../source/isaaclab_assets/isaaclab_assets/robots). This module 
+should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the
 [lab_assets directory](..../source/isaaclab_assets/isaaclab_assets/robots), refer to
 [Importing a New Asset](https://isaac-sim.github.io/IsaacLab/main/source/how-to/import_new_asset.html).
 
@@ -167,6 +167,8 @@ To create your own Manager-Based RL Environment, follow this
 summary of a
 [basic environment configuration class](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/reach_env_cfg.py):
 
+#### Defining A Scene
+
 ```python
 class ReachEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the end-effector pose tracking environment."""
@@ -211,9 +213,20 @@ class ReachSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
     )
 ```
+#### Defining the Observations
 
-The `ObservationsCfg` class specifies the observations passed to the RL actor in the form of a state vector, which can
-include information such as joint positions, joint velocities, and end-effector pose for robotic arms.
+The environment's **scene** represents its complete state, while **observations** represent the subset of this state 
+visible to the agent. The agent uses these observations to choose its actions.
+
+The `ObservationsCfg` class defines the observations provided to the RL actor as a state vector. This state vector can 
+contain various details, such as joint positions, joint velocities, or the end-effector pose in robotic arms.
+
+Observations can include multiple terms organized into distinct **observation groups**. Grouping observations in 
+this way allows users to specify separate observation spaces, which is particularly useful in hierarchical control—for instance, 
+defining one group for a high-level controller and another for a low-level controller. Each observation term within a single group
+must have the same dimensions.
+
+In the following example, an observation group named `"policy"` is defined. Note that the `"policy"` observation group is required by the RL wrappers.
 
 ```python
 @configclass
@@ -246,8 +259,41 @@ is 1) retrieved, optionally corrupted with noise (for dynamic randomization), an
 vector. The `func` parameter identifies a callback function that supplies these values, while the order of terms in the
 configuration dictates their arrangement in the final state input.
 
+The `ObsTerm` class is defined as follows:
+
+```python
+class ObsTerm(
+    func: (...) -> Tensor,
+    params: dict[str, Any | SceneEntityCfg] = dict(),
+    modifiers: list[ModifierCfg] | None = None,
+    noise: NoiseCfg | None = None,
+    clip: tuple[float, float] | None = None,
+    scale: tuple[float, ...] | float | None = None,
+    history_length: int = 0,
+    flatten_history_dim: bool = True
+)
+```
+
+Here, the `func` parameter is a function that returns a tensor with shape `(N, d)`, where `N` is the number of environments 
+and `d` is the observation term dimension. Additional parameters for the function can be passed via the `params` dictionary. 
+Optional arguments allow you to add noise, clip the observations, scale the observation, and apply other modifications as needed.
+
+#### Defining the Actions
+
 The `ActionsCfg` class defines how the outputs of the neural network are translated into actions applied in the
-simulation. These action terms depend on the type of control mechanism used to operate the robot. For instance, the
+simulation. 
+
+The `ActionsCfg` configures the action manager can include multiple `managers.ActionTerm` instances. 
+Each action term controls a specific aspect of the environment. For example, a robotic arm could have 
+two action terms, one controlling the arm joints and another controlling the gripper. This modular design allows 
+users to define customized control schemes tailored to different parts of the environment.
+
+An action term processes and applies the actions sent to the environment, directly controlling the asset it manages. This occurs in two steps:
+
+- **Processing actions:** Executed once per environment step, this step pre-processes the raw actions received from the RL policy.
+- **Applying actions:** Executed once per simulation step, this step applies the processed actions to the asset managed by the term.
+
+These action terms depend on the type of control mechanism used to operate the robot. For instance, the
 policy’s outputs may represent:
 
 - `Joint Position Control`: The policy outputs joint position setpoints.
@@ -258,7 +304,7 @@ policy’s outputs may represent:
 
 Below are examples of different control configurations:
 
-### Example: Joint Position Control
+##### Example: Joint Position Control
 
 In this configuration, the policy outputs joint position setpoints that are applied directly to the robot:
 
@@ -275,7 +321,7 @@ class ActionsCfg:
     )
 ```
 
-### Example: Joint Velocity Control
+##### Example: Joint Velocity Control
 
 Here, the policy outputs joint velocity setpoints for controlling the robot's movement:
 
@@ -292,7 +338,7 @@ class ActionsCfg:
     )
 ```
 
-### Example: Cartesian Twist Control
+##### Example: Cartesian Twist Control
 
 In this setup, the policy outputs Cartesian twist commands (i.e. velocities in Cartesian space) that are translated into
 joint commands using an inverse kinematics solver:
@@ -314,9 +360,14 @@ class ActionsCfg:
         scale=1.0,
     )
 ```
+#### Defining the Commands
 
-The `CommandsCfg` class defines commands applied to the robot, which are also referenced in `ObservationsCfg` and
-included in the state vector. Isaac Lab provides multiple command configurations that can be sampled and passed to the
+The `CommandsCfg` class defines commands issued to the articulated assets throughout an episode. These 
+commands can directly influence the simulated environment, for example, opening a gripper or setting desired 
+controller setpoints. Commands can also guide the RL agent by being included as observation terms 
+within the `ObservationsCfg` and integrated into the agent's state vector.
+
+Isaac Lab provides multiple command configurations that can be sampled and passed to the
 actor state, such as `UniformPoseCommandCfg`, `UniformVelocityCommandCfg`, `NullCommandCfg`, `UniformPose2dCommandCfg`,
 and `TerrainBasedPose2dCommandCfg`.
 
@@ -359,6 +410,9 @@ pose_command = ObsTerm(
     params={"command_name": "ee_pose"}
 )
 ```
+where in this case, the `mdp.generated_commands` helper function simply reads out the commands given by the command manager.
+
+#### Defining the Rewards
 
 The `RewardsCfg` class defines the reward term that the actor receives after executing an action in the environment. The
 reward value is a scalar that is formed by combining various reward terms with there appropriate scaling factor. The
@@ -410,6 +464,15 @@ Reward tuning is essential for obtaining robust policies and the desired behavio
 parameter that returns a reward value, which is then multiplied by the term's weight before being combined with other
 reward terms.
 
+#### MDP module
+
+The `mdp` (Markov Decision Process) module provides convenient helper functions and classes for defining common 
+components used in reinforcement learning, including observations, actions, rewards, curricula, and commands. 
+Leveraging these helpers simplifies configuration and promotes consistency across environments. The full list of 
+available functions and classes can be found [here](source/isaaclab/isaaclab/envs/mdp).
+
+#### Additional Examples
+
 To explore additional `ManagerBasedRLEnv` examples, consider the following:
 
 1. [Reach Environment](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach/reach_env_cfg.py)  
@@ -452,6 +515,8 @@ To prepare a RL environment for use with one of the mentioned wrappers, addition
 specified. For an example, check out the
 [reach directory](../source/isaaclab_tasks/isaaclab_tasks/manager_based/manipulation/reach) in
 the Isaac Lab repository.
+
+We recommend using `RSL-RL` because it supports automatic policy export into ONNX format, which is required for deployment with AICA.
 
 ### Step 1: Create a New Folder
 
@@ -506,8 +571,13 @@ This registration code should be included in the `__init__.py` file located in t
 
 After defining the assets, environments, and robot control, creating the necessary training configuration files, and
 registering the new Gym environment, train a new policy by running the appropriate training script for the Reinforcement
-Learning Wrappers. Detailed instructions are available
-[here](https://isaac-sim.github.io/IsaacLab/main/source/overview/reinforcement-learning/rl_existing_scripts.html).
+Learning Wrappers. 
+
+```shell
+./isaaclab.sh -p scripts/reinforcement_learning/rsl_rl/train.py --task ENVIRONMENT_ID --headless
+# run script for playing with 32 environments
+./isaaclab.sh -p scripts/reinforcement_learning/rsl_rl/play.py --task ENVIRONMENT_ID --num_envs 32 --checkpoint /PATH/TO/model.pth
+```
 
 Once training is complete, you can export your model to ONNX format. In RSL-RL, this is straightforward using
 `export_policy_as_onnx`. For other libraries or custom policies, you can use the PyTorch ONNX exporter as described in
