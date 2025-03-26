@@ -65,17 +65,17 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
         prim_path="/World/Light", spawn=sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
     )
 
-    tilted_wall = RigidObjectCfg(
+    table = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/TiltedWall",
         spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.30),
+            size=(1.25, 1.0, 0.40),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
             activate_contact_sensors=True,
         ),
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=(0.8, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)
+            pos=(0.8, 0.0, 0.2), rot=(1.0, 0.0, 0.0, 0.0)
         ),
     )
 
@@ -102,11 +102,11 @@ class CommandsCfg:
         force_sensor_name="contact_forces",
         body_name=MISSING,  # will be set by agent env cfg
         resampling_time_range=(5.0, 5.0),
-        debug_vis=True,
+        debug_vis=True, # type: ignore
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
             pos_x=(0.2, 0.6),
             pos_y=(-0.3, 0.3),
-            pos_z=(0.2, 0.4),
+            pos_z=(0.35, 0.35),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
@@ -155,9 +155,9 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.2, 0.1)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
             "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("tilted_wall"),
+            "asset_cfg": SceneEntityCfg("table"),
         },
     )
 
@@ -182,12 +182,6 @@ class RewardsCfg:
         func=mdp.orientation_command_error,
         weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
-    )
-
-    in_contact_reward = RewTerm(
-        func = mdp.in_contact_reward,
-        weight = 0.1,
-        params={"asset_cfg": SceneEntityCfg("tilted_wall"), "command_name": "ee_force_pose"}
     )
 
     # action penalty
