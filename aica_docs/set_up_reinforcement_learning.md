@@ -222,8 +222,7 @@ The `ObservationsCfg` class defines the observations provided to the RL actor as
 contain various details, such as joint positions, joint velocities, or the end-effector pose in robotic arms.
 
 Observations can include multiple terms organized into distinct **observation groups**. Grouping observations in 
-this way allows users to specify separate observation spaces, which is particularly useful in hierarchical control—for instance, 
-defining one group for a high-level controller and another for a low-level controller. Each observation term within a single group
+this way allows users to specify separate observation spaces. Each observation term within a single group
 must have the same dimensions.
 
 In the following example, an observation group named `"policy"` is defined. Note that the `"policy"` observation group is required by the RL wrappers.
@@ -283,7 +282,7 @@ Optional arguments allow you to add noise, clip the observations, scale the obse
 The `ActionsCfg` class defines how the outputs of the neural network are translated into actions applied in the
 simulation. 
 
-The `ActionsCfg` configures the action manager can include multiple `managers.ActionTerm` instances. 
+The `ActionsCfg` configures the action manager can include multiple `ActionTerm` instances. 
 Each action term controls a specific aspect of the environment. For example, a robotic arm could have 
 two action terms, one controlling the arm joints and another controlling the gripper. This modular design allows 
 users to define customized control schemes tailored to different parts of the environment.
