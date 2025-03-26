@@ -66,7 +66,6 @@ def force_command_error(
 
     virtual_forces = impedance_law_desired_forces(env, command_name)
     experienced_forces = measured_forces(env, contact_sensor_config, end_effector_config)
-
     scaling_factor = torch.exp(-torch.norm(experienced_forces, dim=1))
 
     maximum_force_experienced = torch.maximum(
