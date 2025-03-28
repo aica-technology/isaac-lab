@@ -65,14 +65,14 @@ class ContactSensorSceneCfg(InteractiveSceneCfg):
     tilted_wall = AssetBaseCfg(
         prim_path="{ENV_REGEX_NS}/TiltedWall",
         spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.005),
+            size=(1.25, 1.0, 0.8),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
             activate_contact_sensors=True,
         ),
         init_state=AssetBaseCfg.InitialStateCfg(
-            pos=(1.0, 0.0, 0.30), rot=(1.0, 0.0, 0.0, 0.0)
+            pos=(1.0, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)
         ),
     )
 
@@ -125,7 +125,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     sim_dt = sim.get_physics_dt()
 
     # Initialize variables
-    ik_commands = torch.tensor([[0.45, 0.0, 0.35, 0, 1, 0, 0]], device=torch.device("cuda"))
+    ik_commands = torch.tensor([[0.45, 0.0, 0.45, 0, 1, 0, 0]], device=torch.device("cuda"))
     count = 1  # iteration count
 
     # reset robot
@@ -143,7 +143,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
     # Simulation loop
     while simulation_app.is_running():
         # reset
-        if count % 40 == 0:
+        if count % 200 == 0:
             if incrementing:
                 ik_commands[0, 2] += ik_increment
                 if ik_commands[0, 2] >= 0.6:
@@ -151,7 +151,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
             else:
                 ik_commands[0, 2] -= ik_increment
                 
-                if ik_commands[0, 2] <= 0.29:
+                if ik_commands[0, 2] <= 0.4:
                     incrementing = True
             count = 0
             joint_pos_des =  robot.data.joint_pos[:, robot_entity_cfg.joint_ids]
@@ -192,7 +192,8 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
         print("-------------------------------")
         print(scene["contact_forces"])
         force_w, _ = torch.max(torch.mean(scene["contact_forces"].data.force_matrix_w, dim=1), dim=1)
-        ee_pos_w = scene["ee_frame"].data.target_pos_w[..., 0, :]
+
+        print(robot.root_physx_view.get_link_incoming_joint_force()[: , [robot.body_names.index("wrist_3_link")]])
         ee_quat_w = scene["ee_frame"].data.target_quat_w[..., 0, :]
 
         force_ee = transform_points(
