@@ -213,10 +213,11 @@ class ReachSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
     )
 ```
+
 #### Defining the Observations
 
-The environment's **scene** represents its complete state, while **observations** represent the subset of this state 
-visible to the agent. The agent uses these observations to choose its actions.
+While the environment's **scene** represents its complete state, the **observations** represent 
+the subset of this state visible to the agent. The agent uses these observations to choose its actions.
 
 The `ObservationsCfg` class defines the observations provided to the RL actor as a state vector. This state vector can 
 contain various details, such as joint positions, joint velocities, or the end-effector pose in robotic arms.
@@ -225,7 +226,7 @@ Observations can include multiple terms organized into distinct **observation gr
 this way allows users to specify separate observation spaces. Each observation term within a single group
 must have the same dimensions.
 
-In the following example, an observation group named `"policy"` is defined. Note that the `"policy"` observation group is required by the RL wrappers.
+In the following example, an observation group named `policy` is defined. Note that the `policy` observation group is required by the RL wrappers.
 
 ```python
 @configclass
