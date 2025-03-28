@@ -71,7 +71,7 @@ Predefined assets configurations are located in the following
 [directory](../source/isaaclab_assets/isaaclab_assets/robots) in the Isaac Lab repository.
 
 This directory contains a range of manipulator robots, including the Franka Emika Panda, Universal Robot UR5e and UR10,
-Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, a python module defining the asset configuration 
+Kinova JACO2, JACO2 and Gen3, uFactory xArm 6, and Kuka KR210. To define a new asset, a Python module defining the asset configuration 
 object must be created within the [lab_assets directory](../source/isaaclab_assets/isaaclab_assets/robots). This module 
 should reference a corresponding USD file. For detailed instructions on importing a new robot not included in the
 [lab_assets directory](..../source/isaaclab_assets/isaaclab_assets/robots), refer to
@@ -282,7 +282,7 @@ Optional arguments allow you to add noise, clip the observations, scale the obse
 The `ActionsCfg` class defines how the outputs of the neural network are translated into actions applied in the
 simulation. 
 
-The `ActionsCfg` configures the action manager can include multiple `ActionTerm` instances. 
+The `ActionsCfg` configures the action manager that can include multiple `ActionTerm` instances. 
 Each action term controls a specific aspect of the environment. For example, a robotic arm could have 
 two action terms, one controlling the arm joints and another controlling the gripper. This modular design allows 
 users to define customized control schemes tailored to different parts of the environment.
