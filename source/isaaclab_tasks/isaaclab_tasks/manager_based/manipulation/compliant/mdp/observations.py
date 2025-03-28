@@ -28,10 +28,13 @@ def command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEnt
         current_setpoint = asset.data.body_state_w[:, 6, 7:10]  # type: ignore
     return current_setpoint - desired_setpoint
 
-def impedance_law_desired_forces(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), stiffness: float = 300, damping: float = 10) -> torch.Tensor:
+def impedance_law_desired_forces(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), stiffness: float = 300, damping: float = 10, use_velocity: bool = False) -> torch.Tensor:
     position_error = command_error(env, command_name, robot_cfg, error_type="position")
-    velocity_error = command_error(env, command_name, robot_cfg, error_type="velocity")
-    return position_error + damping/stiffness * velocity_error
+    if use_velocity:
+        velocity_error = command_error(env, command_name, robot_cfg, error_type="velocity")
+        return position_error + damping/stiffness * velocity_error
+    else:
+        return position_error
 
 
 def measured_forces(

@@ -58,6 +58,7 @@ def force_command_error(
     command_name: str,
     contact_sensor_config: SceneEntityCfg = SceneEntityCfg("contact_forces"),
     end_effector_config: SceneEntityCfg = SceneEntityCfg("ee_frame"),
+    position_to_force: float = 100
 ) -> torch.Tensor:
     command = env.command_manager.get_command(command_name)
 
@@ -66,23 +67,13 @@ def force_command_error(
 
     virtual_forces = impedance_law_desired_forces(env, command_name)
     experienced_forces = measured_forces(env, contact_sensor_config, end_effector_config)
-    scaling_factor = torch.exp(-torch.norm(experienced_forces, dim=1))
+    scaling_factor = torch.exp(-0.01*torch.norm(experienced_forces, dim=1))
 
-    maximum_force_experienced = torch.maximum(
-        torch.max(torch.abs(experienced_forces), dim=1)[0],
-        torch.ones(experienced_forces.shape[0], device=scaling_factor.device),
-    )
+    no_contact_error = torch.norm(virtual_forces, dim=1) + torch.norm(desired_contact_force) / position_to_force
+    contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1)
+    contact_tracking_error = contact_force_error / position_to_force + torch.norm(virtual_forces, dim=1)
 
-    maximum_desired_contact = torch.maximum(
-        torch.max(torch.abs(desired_contact_force), dim=1)[0],
-        torch.zeros(desired_contact_force.shape[0], device=scaling_factor.device),
-    )
-
-    # minimize this error
-    return scaling_factor * torch.norm(virtual_forces, dim=1) + (
-        1 - scaling_factor
-    ) * torch.norm(desired_contact_force - experienced_forces, dim=1) /(maximum_force_experienced + maximum_desired_contact)
-
+    return scaling_factor * no_contact_error + (1 - scaling_factor) * contact_tracking_error
 
 def force_command_error_tanh(
     env: ManagerBasedRLEnv,
