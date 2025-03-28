@@ -8,6 +8,7 @@ from dataclasses import MISSING
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.managers import ActionTermCfg as ActionTerm
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
@@ -68,14 +69,14 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
     table = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/TiltedWall",
         spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.40),
+            size=(1.25, 1.0, 0.3),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
             activate_contact_sensors=True,
         ),
         init_state=RigidObjectCfg.InitialStateCfg(
-            pos=(0.8, 0.0, 0.2), rot=(1.0, 0.0, 0.0, 0.0)
+            pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)
         ),
     )
 
@@ -104,15 +105,15 @@ class CommandsCfg:
         resampling_time_range=(5.0, 5.0),
         debug_vis=True, # type: ignore
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
-            pos_x=(0.2, 0.6),
-            pos_y=(-0.3, 0.3),
-            pos_z=(0.35, 0.35),
+            pos_x=(0.5, 0.5),
+            pos_y=(0.0, 0.0),
+            pos_z=(0.2, 0.2),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
-            force_z=(-5.0, -5.0),
+            force_z=(-200.0, -200.0),
         ),
     )
 
@@ -122,7 +123,7 @@ class ActionsCfg:
     """Action specifications for the MDP."""
 
     # will be set by agent env cfg
-    arm_action: mdp.DifferentialInverseKinematicsActionCfg = MISSING
+    arm_action: ActionTerm = MISSING
 
 
 @configclass
@@ -133,8 +134,11 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
         ee_impedance_low_forces = ObsTerm(func = mdp.impedance_law_desired_forces, params={"command_name": "ee_force_pose"})
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-0.01, n_max=0.01))
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-0.01, n_max=0.01))
         desired_force_in_contact = ObsTerm(func=mdp.desired_contact_force, params={"command_name": "ee_force_pose"})
 
         def __post_init__(self):
@@ -209,10 +213,6 @@ class CurriculumCfg:
 
     joint_vel = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 10000}
-    )
-
-    end_effector_orientation_tracking = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_orientation_tracking", "weight": -6.0, "num_steps": 10000}
     )
 ##
 # Environment configuration
