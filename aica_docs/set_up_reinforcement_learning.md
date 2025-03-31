@@ -214,6 +214,8 @@ class ReachSceneCfg(InteractiveSceneCfg):
     )
 ```
 
+The scene specifies the environment's assets and consequently determines its complete state.
+
 #### Defining the Observations
 
 While the environment's **scene** represents its complete state, the **observations** represent 
