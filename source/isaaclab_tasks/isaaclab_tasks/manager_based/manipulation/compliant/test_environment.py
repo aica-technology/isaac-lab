@@ -191,9 +191,12 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
         # print information from the sensors
         print("-------------------------------")
         print(scene["contact_forces"])
-        force_w, _ = torch.max(torch.mean(scene["contact_forces"].data.force_matrix_w, dim=1), dim=1)
+        force_w, _ = torch.max(torch.mean(scene["contact_forces"].data.net_forces_w_history, dim=1), dim=1)
+        force_gradient = torch.gradient(scene["contact_forces"].data.net_forces_w_history, dim=1)[0]
+        print("force_gradient", force_gradient)
+        print("force_max", torch.max(torch.norm(force_gradient, dim=-1), dim=1)) # type: ignore
 
-        print(robot.root_physx_view.get_link_incoming_joint_force()[: , [robot.body_names.index("wrist_3_link")]])
+        #print(robot.root_physx_view.get_link_incoming_joint_force()[: , [robot.body_names.index("wrist_3_link")]])
         ee_quat_w = scene["ee_frame"].data.target_quat_w[..., 0, :]
 
         force_ee = transform_points(

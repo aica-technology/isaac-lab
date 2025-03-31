@@ -28,7 +28,7 @@ def command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEnt
         current_setpoint = asset.data.body_state_w[:, 6, 7:10]  # type: ignore
     return current_setpoint - desired_setpoint
 
-def impedance_law_desired_forces(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), stiffness: float = 300, damping: float = 10, use_velocity: bool = False) -> torch.Tensor:
+def setpoint_error(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), stiffness: float = 300, damping: float = 10, use_velocity: bool = False) -> torch.Tensor:
     position_error = command_error(env, command_name, robot_cfg, error_type="position")
     if use_velocity:
         velocity_error = command_error(env, command_name, robot_cfg, error_type="velocity")
@@ -49,7 +49,17 @@ def measured_forces(
     force_ee = transform_points(
         force_w.unsqueeze(1), quat=ee_quat_w
     )
-    return force_ee.squeeze()
+    return force_ee.squeeze() if not force_ee.shape[0] == 1 else force_ee
+
+def measured_force_gradient(
+    env: ManagerBasedRLEnv,
+    contact_sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_forces"),
+) -> torch.Tensor:
+    contact_sensor: ContactSensor = env.scene[contact_sensor_cfg.name]
+    force_w = contact_sensor.data.net_forces_w_history
+    force_gradient = torch.gradient(force_w, dim=1)[0] # type: ignore
+
+    return  torch.max(torch.norm(force_gradient, dim=-1).squeeze(), dim=1)[0]
 
 
 def desired_contact_force(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:

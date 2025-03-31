@@ -107,13 +107,13 @@ class CommandsCfg:
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
             pos_x=(0.5, 0.5),
             pos_y=(0.0, 0.0),
-            pos_z=(0.2, 0.2),
+            pos_z=(0.3, 0.3),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
-            force_z=(-200.0, -200.0),
+            force_z=(-100.0, -100.0),
         ),
     )
 
@@ -133,7 +133,7 @@ class ObservationsCfg:
     @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
-        ee_impedance_low_forces = ObsTerm(func = mdp.impedance_law_desired_forces, params={"command_name": "ee_force_pose"})
+        setpoint_error = ObsTerm(func = mdp.setpoint_error, params={"command_name": "ee_force_pose"})
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
@@ -171,21 +171,32 @@ class RewardsCfg:
     """Reward terms for the MDP."""
     # task terms
     end_effector_force_tracking = RewTerm(
-        func=mdp.force_command_error,
-        weight=-12.0,
+        func=mdp.force_pose_command_error,
+        weight=-24.0,
         params={"command_name": "ee_force_pose"},
     )
 
     end_effector_force_tracking_fine_grained = RewTerm(
-        func=mdp.force_command_error_tanh,
+        func=mdp.force_pose_command_error_tanh,
         weight=3.6,
         params={"command_name": "ee_force_pose", "std": 0.1},
+    )
+    
+    end_effector_force_gradient_penalty = RewTerm(
+        func=mdp.measured_force_gradient,
+        weight=0.0,
     )
 
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
         weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
+    )
+
+    force_limit_penalty = RewTerm(
+        func=mdp.force_limit_penalty,
+        weight=0,
+        params={"command_name": "ee_force_pose"},
     )
 
     # action penalty
@@ -213,6 +224,22 @@ class CurriculumCfg:
 
     joint_vel = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 10000}
+    )
+
+    end_effector_force_gradient_penalty_level_1 = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.01, "num_steps": 14400}
+    )
+
+    end_effector_force_gradient_penalty_level_2 = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 19200}
+    )
+
+    force_limit_penalty_level_1 = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.2, "num_steps": 19200}
+    )
+
+    force_limit_penalty_level_2 = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.4, "num_steps": 28800}
     )
 ##
 # Environment configuration
