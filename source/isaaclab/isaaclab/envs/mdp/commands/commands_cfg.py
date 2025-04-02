@@ -195,6 +195,9 @@ class TrackForcePoseCommandCfg(CommandTermCfg):
     asset_name: str = MISSING
     """Name of the asset in the environment for which the commands are generated."""
 
+    surface_name: str = MISSING
+    """Name of the table in the environment for which the commands are generated."""    
+
     body_name: str = MISSING
     """Name of the body in the asset for which the commands are generated."""
 
@@ -224,9 +227,6 @@ class TrackForcePoseCommandCfg(CommandTermCfg):
 
         pos_y: tuple[float, float] = MISSING
         """Range for the y position (in m)."""
-
-        pos_z: tuple[float, float] = MISSING
-        """Range for the z position (in m)."""
 
         roll: tuple[float, float] = MISSING
         """Range for the roll angle (in rad)."""

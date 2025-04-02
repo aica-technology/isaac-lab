@@ -101,13 +101,13 @@ class CommandsCfg:
     ee_force_pose = mdp.TrackForcePoseCommandCfg(
         asset_name="robot",
         force_sensor_name="contact_forces",
+        surface_name="table",
         body_name=MISSING,  # will be set by agent env cfg
         resampling_time_range=(5.0, 5.0),
         debug_vis=True, # type: ignore
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
             pos_x=(0.5, 0.5),
             pos_y=(0.0, 0.0),
-            pos_z=(0.3, 0.3),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
@@ -159,7 +159,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.15)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },
@@ -195,7 +195,7 @@ class RewardsCfg:
 
     force_limit_penalty = RewTerm(
         func=mdp.force_limit_penalty,
-        weight=0,
+        weight=0.0,
         params={"command_name": "ee_force_pose"},
     )
 
@@ -219,28 +219,29 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 10000}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 28800}
     )
 
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 10000}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 28800}
     )
 
     end_effector_force_gradient_penalty_level_1 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.01, "num_steps": 14400}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.01, "num_steps": 72000}
     )
 
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 19200}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 84000}
     )
 
     force_limit_penalty_level_1 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.2, "num_steps": 19200}
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.1, "num_steps": 84000}
     )
 
     force_limit_penalty_level_2 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.4, "num_steps": 28800}
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.2, "num_steps": 96000}
     )
+
 ##
 # Environment configuration
 ##

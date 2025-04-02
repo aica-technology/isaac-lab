@@ -43,7 +43,7 @@ def measured_forces(
     end_effector_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
 ) -> torch.Tensor:
     contact_sensor: ContactSensor = env.scene[contact_sensor_cfg.name]
-    force_w, _ = torch.max(torch.mean(contact_sensor.data.force_matrix_w, dim=1), dim=1) # type: ignore
+    force_w, _ = torch.max(torch.mean(contact_sensor.data.net_forces_w_history, dim=1), dim=1) # type: ignore
     end_effector: FrameTransformer = env.scene[end_effector_cfg.name]
     ee_quat_w = end_effector.data.target_quat_w[..., 0, :]
     force_ee = transform_points(
