@@ -113,7 +113,7 @@ class CommandsCfg:
             yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
-            force_z=(-100.0, -100.0),
+            force_z=(-100.0, 0.0),
         ),
     )
 
@@ -227,13 +227,14 @@ class CurriculumCfg:
     )
 
     end_effector_force_gradient_penalty_level_1 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.01, "num_steps": 72000}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.01, "num_steps": 60000}
     )
 
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 84000}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 72000}
     )
 
+    """
     force_limit_penalty_level_1 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.1, "num_steps": 84000}
     )
@@ -241,6 +242,7 @@ class CurriculumCfg:
     force_limit_penalty_level_2 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.2, "num_steps": 96000}
     )
+    """
 
 ##
 # Environment configuration
