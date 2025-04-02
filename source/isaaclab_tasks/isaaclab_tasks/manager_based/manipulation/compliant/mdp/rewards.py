@@ -58,7 +58,7 @@ def force_pose_command_error(
     command_name: str,
     contact_sensor_config: SceneEntityCfg = SceneEntityCfg("contact_forces"),
     end_effector_config: SceneEntityCfg = SceneEntityCfg("ee_frame"),
-    position_to_force: float = 0.5
+    position_to_force: float = 0.35
 ) -> torch.Tensor:
     command = env.command_manager.get_command(command_name)
 
@@ -71,12 +71,13 @@ def force_pose_command_error(
     contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1)
     contact_tracking_error = position_to_force * (contact_force_error/ mean_desired_force) + (1 - position_to_force) * torch.norm(position_error, dim=1)
 
-
-    with open("logs.txt", "a") as file:
+    with open("logs_play.txt", "a") as file:
         exp_forces = experienced_forces.cpu().numpy()
         position_err = position_error.cpu().numpy()
-        file.write(f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]}, {position_err[0][0]}, {position_err[0][1]}, {position_err[0][2]}\n")
-
+        desired_contact = desired_contact_force.cpu().numpy()
+        file.write(
+            f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]}, {position_err[0][0]}, {position_err[0][1]}, {position_err[0][2]}, {desired_contact[0][0]}, {desired_contact[0][1]}, {desired_contact[0][2]}\n"
+        )
 
     return contact_tracking_error
 
@@ -138,8 +139,8 @@ def force_limit_penalty(
     force = torch.abs(measured_forces(env, contact_sensor_cfg, end_effector_cfg))
 
     mask = torch.max(force > desired_contact_force, dim=1)[0]
-    reward = torch.zeros_like(mask)
-    reward[mask] = 1.0
+    reward = torch.norm(force) / torch.max(desired_contact_force, dim=1)[0]
+    reward[mask] = 0
     
     return reward
 

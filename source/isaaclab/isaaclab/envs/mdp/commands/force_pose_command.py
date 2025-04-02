@@ -11,11 +11,11 @@ import torch
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from isaaclab.assets import Articulation
+from isaaclab.assets import Articulation, RigidObject
 from isaaclab.sensors import ContactSensor
 from isaaclab.managers import CommandTerm
 from isaaclab.markers import VisualizationMarkers
-from isaaclab.utils.math import combine_frame_transforms, compute_pose_error, quat_from_euler_xyz, quat_unique
+from isaaclab.utils.math import combine_frame_transforms, compute_pose_error, quat_from_euler_xyz, quat_unique, transform_points
 
 if TYPE_CHECKING:
     from isaaclab.envs import ManagerBasedEnv
@@ -58,6 +58,7 @@ class TrackForcePoseCommand(CommandTerm):
 
         # extract the robot and body index for which the command is generated
         self.robot: Articulation = env.scene[cfg.asset_name]
+        self.surface: RigidObject = env.scene[cfg.surface_name]
         self.force_sensor: ContactSensor = env.scene[cfg.force_sensor_name]
         self.body_idx = self.robot.find_bodies(cfg.body_name)[0][0]
 
@@ -110,16 +111,25 @@ class TrackForcePoseCommand(CommandTerm):
             self.robot.data.body_state_w[:, self.body_idx, 3:7],
         )
 
+        force_w, _ = torch.max(torch.mean(self.force_sensor.data.net_forces_w_history, dim=1), dim=1) # type: ignore
+        ee_quat_w = self.robot.data.body_state_w[:, self.body_idx, 3:7]
+        force_ee = transform_points(
+            force_w.unsqueeze(1), quat=ee_quat_w
+        )
+
         self.metrics["position_error"] = torch.norm(pos_error, dim=-1)
         self.metrics["orientation_error"] = torch.norm(rot_error, dim=-1)
+        self.metrics["exhibited_forces"] = torch.norm(self.pose_command_w[:, 7:10] - force_ee.squeeze() , dim=1)
 
     def _resample_command(self, env_ids: Sequence[int]):
+        surface_height = self.surface.data.body_state_w[env_ids, 0, 2] + 0.15
+
         # sample new pose targets
         # -- position
         r = torch.empty(len(env_ids), device=self.device)
         self.pose_command_b[env_ids, 0] = r.uniform_(*self.cfg.ranges.pos_x)
         self.pose_command_b[env_ids, 1] = r.uniform_(*self.cfg.ranges.pos_y)
-        self.pose_command_b[env_ids, 2] = r.uniform_(*self.cfg.ranges.pos_z)
+        self.pose_command_b[env_ids, 2] = surface_height
         # -- orientation
         euler_angles = torch.zeros_like(self.pose_command_b[env_ids, :3])
         euler_angles[:, 0].uniform_(*self.cfg.ranges.roll)
