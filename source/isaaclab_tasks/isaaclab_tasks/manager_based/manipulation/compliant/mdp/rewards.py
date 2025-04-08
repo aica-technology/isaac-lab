@@ -70,6 +70,7 @@ def force_pose_command_error(
     experienced_forces = measured_forces(env, contact_sensor_config, end_effector_config)
     contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1)
     contact_tracking_error = position_to_force * (contact_force_error/ mean_desired_force) + (1 - position_to_force) * torch.norm(position_error, dim=1)
+
     """"
     with open("logs_play.txt", "a") as file:
         exp_forces = experienced_forces.cpu().numpy()
@@ -79,7 +80,6 @@ def force_pose_command_error(
             f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]}, {position_err[0][0]}, {position_err[0][1]}, {position_err[0][2]}, {desired_contact[0][0]}, {desired_contact[0][1]}, {desired_contact[0][2]}\n"
         )
     """
-
     return contact_tracking_error
 
 def force_pose_command_error_tanh(
