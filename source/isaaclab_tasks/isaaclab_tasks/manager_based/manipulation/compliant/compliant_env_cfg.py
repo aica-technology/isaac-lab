@@ -227,11 +227,11 @@ class CurriculumCfg:
     )
 
     end_effector_force_gradient_penalty_level_1 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.01, "num_steps": 60000}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 60000}
     )
 
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 72000}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.06, "num_steps": 72000}
     )
 
     """
