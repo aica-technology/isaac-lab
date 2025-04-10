@@ -1,12 +1,10 @@
 import isaaclab.sim as sim_utils
 from isaaclab.assets import AssetBaseCfg, RigidObjectCfg
 from isaaclab.managers import EventTermCfg as EventTerm
-from isaaclab.managers import SceneEntityCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
-from isaaclab_assets import UR10_CFG 
 import isaaclab_tasks.manager_based.manipulation.throw.mdp as mdp
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
@@ -19,10 +17,6 @@ from isaaclab.markers.config import FRAME_MARKER_CFG
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
 ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
 ee_frame_cfg.prim_path = "/Visuals/EEFrame"
-
-spoon_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
-spoon_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
-spoon_frame_cfg.prim_path = "/Visuals/SpoonEEFrame"
 
 @configclass
 class ThrowSceneCfg(InteractiveSceneCfg):
@@ -46,9 +40,6 @@ class ThrowSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-    # robot
-    robot = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-
     # bin to throw the ball in
     bin = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
@@ -67,18 +58,28 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             ),
         )
 
-    # ball object that is manipulated
-    ball =  RigidObjectCfg(
+    object_cfg: RigidObjectCfg = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Ball",
         spawn=sim_utils.SphereCfg(
-            radius=0.035,
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(),
-            mass_props=sim_utils.MassPropertiesCfg(mass=0.05),
-            collision_props=sim_utils.CollisionPropertiesCfg(),
-            physics_material=sim_utils.RigidBodyMaterialCfg(static_friction=1.0),
-            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.0, 0.0, 1.0), metallic=0.2),
+            radius=0.025,
+            visual_material=sim_utils.PreviewSurfaceCfg(diffuse_color=(0.8, 1.0, 0.0)),
+            physics_material=sim_utils.RigidBodyMaterialCfg(static_friction=0.7),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                disable_gravity=False,
+                max_depenetration_velocity=0.1,
+                linear_damping=0.0,
+                angular_damping=0.0,
+                max_linear_velocity=100.0,
+                max_angular_velocity=3666.0,
+                enable_gyroscopic_forces=True,
+                solver_position_iteration_count=192,
+                solver_velocity_iteration_count=1,
+                max_contact_impulse=1e32,
+            ),
+            mass_props=sim_utils.MassPropertiesCfg(mass=0.056),
+            collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0, rest_offset=0.0),
         ),
-        init_state=RigidObjectCfg.InitialStateCfg(pos=(3.0, 0.0, 2.0)),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8797, 0.13321, 0.640)),
     )
 
     # end-effector frame
@@ -104,10 +105,10 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             visualizer_cfg=ee_frame_cfg,
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/spoon_frame",
+                    prim_path="{ENV_REGEX_NS}/Robot/robo_spoon",
                     name="end_effector",
                     offset=OffsetCfg(
-                        pos=(0, 0, 0),
+                        pos=(0.2259, -0.024, 0),
                     ),
                 ),
             ],
@@ -140,17 +141,8 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     """Configuration for events."""
-    reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
-        mode="reset",
-        params={
-            "position_range": (1.0, 1.0),
-            "velocity_range": (0.0, 0.0),
-        },
-    )
-
-    reset_ball_in_spoon = EventTerm(
-        func=mdp.reset_ball_in_spoon,
+    reset_scene = EventTerm(
+        func=mdp.reset_scene_to_default,
         mode="reset"
     )
 

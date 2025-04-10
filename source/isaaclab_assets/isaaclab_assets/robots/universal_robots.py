@@ -24,21 +24,35 @@ from isaaclab_assets.custom_actuator_models.actuator_model_parsers import parse_
 
 UR10_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"{ISAACLAB_NUCLEUS_DIR}/Robots/UniversalRobots/UR10/ur10_instanceable.usd",
-        rigid_props=sim_utils.RigidBodyPropertiesCfg(
-            disable_gravity=False,
+        usd_path=f"assets/data/universal_robots/ur10_with_spoon.usd",
+        rigid_props=sim_utils.RigidBodyPropertiesCfg(  # Factory settings
+            disable_gravity=True,
             max_depenetration_velocity=5.0,
+            linear_damping=0.0,
+            angular_damping=0.0,
+            max_linear_velocity=1000.0,
+            max_angular_velocity=3666.0,
+            enable_gyroscopic_forces=True,
+            solver_position_iteration_count=192,
+            solver_velocity_iteration_count=1,
+            max_contact_impulse=1e32,
         ),
+        articulation_props=sim_utils.ArticulationRootPropertiesCfg(  # Factory settings
+            enabled_self_collisions=False,
+            solver_position_iteration_count=192,
+            solver_velocity_iteration_count=1,
+        ),
+        collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0, rest_offset=0.0),
         activate_contact_sensors=False,
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
             "shoulder_pan_joint": 0.0,
-            "shoulder_lift_joint": -1.712,
-            "elbow_joint": 1.712,
-            "wrist_1_joint": 0.0,
-            "wrist_2_joint": 0.0,
-            "wrist_3_joint": 0.0,
+            "shoulder_lift_joint": -1.57,
+            "elbow_joint": 1.57,
+            "wrist_1_joint": -1.57,
+            "wrist_2_joint": -1.57,
+            "wrist_3_joint": 1.57,
         },
     ),
     actuators={
@@ -46,7 +60,7 @@ UR10_CFG = ArticulationCfg(
             joint_names_expr=[".*"],
             velocity_limit=100.0,
             effort_limit=87.0,
-            stiffness=800.0,
+            stiffness=200.0,
             damping=40.0,
         ),
     },
