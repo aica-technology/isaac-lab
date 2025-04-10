@@ -68,7 +68,7 @@ class UniformObjectLocationCommand(CommandTerm):
     """
 
     def _update_metrics(self):
-        self.metrics["position_error"] = torch.norm(self.object.data.root_pos_w - self.pose_command_w, dim=-1)
+        self.metrics["position_error"] = torch.norm(self.object.data.root_pos_w - self.pose_command_w, dim=1)
 
     def _resample_command(self, env_ids: Sequence[int]):
         # sample new pose targets

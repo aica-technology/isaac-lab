@@ -68,7 +68,7 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             physics_material=sim_utils.RigidBodyMaterialCfg(static_friction=0.7),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(
                 disable_gravity=False,
-                max_depenetration_velocity=0.1,
+                max_depenetration_velocity=0.2,
                 linear_damping=0.0,
                 angular_damping=0.0,
                 max_linear_velocity=100.0,
@@ -79,7 +79,7 @@ class ThrowSceneCfg(InteractiveSceneCfg):
                 max_contact_impulse=1e32,
             ),
             mass_props=sim_utils.MassPropertiesCfg(mass=0.056),
-            collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0, rest_offset=0.0),
+            collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0005, rest_offset=0.0),
         ),
         init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8797, 0.13321, 0.640)),
     )
@@ -111,12 +111,12 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 class CommandsCfg:
     object_location = mdp.UniformObjectLocationCfg(
         asset_name="ball",
-        resampling_time_range=(2.0, 4.0),
+        resampling_time_range= (5.0, 5.0),
         debug_vis=True,
         ranges=mdp.UniformObjectLocationCfg.Ranges(
-            pos_x=(3.0, 5.0),
+            pos_x=(4.0, 4.0),
             pos_y=(0.0, 0.0),
-            pos_z=(0.0, 0.0)
+            pos_z=(-1.0, -1.0)
         ),
     )
 
@@ -165,29 +165,26 @@ class EventCfg:
 @configclass
 class RewardsCfg:
     # task terms
-    object_distance_to_goal = RewTerm(
-        func=mdp.object_goal_distance,
-        weight=-6.0,
-        params={"command_name": "ee_pose"},
+    object_distance_to_goal_incentive = RewTerm(
+        func=mdp.object_goal_distance_incentive,
+        weight=48.0,
+        params={"command_name": "object_location"},
     )
+
 
     object_distance_to_goal_fine_grained = RewTerm(
         func=mdp.object_goal_distance_fine_grained,
-        weight=3.6,
-        params={"std": 1.5, "command_name": "ee_pose"},
-    )
-    object_height = RewTerm(
-        func=mdp.object_throwing_height,
-        weight=0.2
+        weight=48,
+        params={"std": 1.5, "command_name": "object_location"},
     )
 
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.05)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=0.0)
 
     # smooth velocity
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2,
-        weight=-0.0001,
+        weight=0.0,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
 
@@ -197,7 +194,7 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-    object_obn_ground = DoneTerm(func=mdp.root_height_below_minimum, params={"minimum_height": -0.95}, time_out=True)
+    object_on_ground = DoneTerm(func=mdp.root_height_below_minimum, params={"minimum_height": -0.95, "asset_cfg": SceneEntityCfg("ball")}, time_out=True)
 
 
 @configclass
@@ -205,11 +202,11 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.1, "num_steps": 4500}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.1, "num_steps": 72000}
     )
 
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 4500}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 72000}
     )
 
 
@@ -240,7 +237,7 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 1
-        self.episode_length_s = 10.0
+        self.episode_length_s = 5.0
 
         # simulation settings
         self.sim.dt = 0.01  # 100Hz
@@ -251,6 +248,6 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
         self.sim.physx.bounce_threshold_velocity=0.2
         self.sim.physx.friction_offset_threshold=0.1
         self.sim.physx.friction_correlation_distance=0.00625
-        self.sim.physx.gpu_max_rigid_contact_count=2**23
-        self.sim.physx.gpu_max_rigid_patch_count=2**23
+        self.sim.physx.gpu_max_rigid_contact_count=85605616
+        self.sim.physx.gpu_max_rigid_patch_count=85605616
         self.sim.physx.gpu_max_num_partitions=1

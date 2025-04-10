@@ -28,6 +28,6 @@ class UR10ThrowEnvCfg(ThrowEnvCfg):
             joint_names=[".*"],
             body_name="ee_link",
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
-            scale=0.1,
+            scale=0.5,
         )
 

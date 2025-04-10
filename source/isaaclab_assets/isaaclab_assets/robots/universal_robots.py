@@ -42,7 +42,7 @@ UR10_CFG = ArticulationCfg(
             solver_position_iteration_count=192,
             solver_velocity_iteration_count=1,
         ),
-        collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0, rest_offset=0.0),
+        collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0001, rest_offset=0.0),
         activate_contact_sensors=False,
     ),
     init_state=ArticulationCfg.InitialStateCfg(
