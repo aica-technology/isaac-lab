@@ -165,17 +165,18 @@ class EventCfg:
 @configclass
 class RewardsCfg:
     # task terms
-    end_effector_position_tracking = RewTerm(
+    object_distance_to_goal = RewTerm(
         func=mdp.object_goal_distance,
         weight=-6.0,
         params={"command_name": "ee_pose"},
     )
-    end_effector_position_tracking_fine_grained = RewTerm(
+
+    object_distance_to_goal_fine_grained = RewTerm(
         func=mdp.object_goal_distance_fine_grained,
         weight=3.6,
         params={"std": 1.5, "command_name": "ee_pose"},
     )
-    end_effector_orientation_tracking = RewTerm(
+    object_height = RewTerm(
         func=mdp.object_throwing_height,
         weight=0.2
     )
@@ -218,7 +219,7 @@ class CurriculumCfg:
 
 
 @configclass
-class ReachEnvCfg(ManagerBasedRLEnvCfg):
+class ThrowEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the reach end-effector pose tracking environment."""
 
     # Scene settings
