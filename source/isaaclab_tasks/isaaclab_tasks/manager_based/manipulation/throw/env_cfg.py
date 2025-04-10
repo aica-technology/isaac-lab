@@ -1,27 +1,31 @@
-# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
 import isaaclab.sim as sim_utils
 from isaaclab.assets import AssetBaseCfg, RigidObjectCfg
+from isaaclab.managers import EventTermCfg as EventTerm
+from isaaclab.managers import SceneEntityCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 from isaaclab_assets import UR10_CFG 
-##
+import isaaclab_tasks.manager_based.manipulation.throw.mdp as mdp
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
+from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
+from isaaclab.markers.config import FRAME_MARKER_CFG  
+
 # Scene definition
 ##
 
+# Frame Definitions
+ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
+ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
+spoon_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
+spoon_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+spoon_frame_cfg.prim_path = "/Visuals/SpoonEEFrame"
 
 @configclass
 class ThrowSceneCfg(InteractiveSceneCfg):
-    """Configuration for the scene with a robotic arm."""
-
-    """Configuration for a cart-pole scene."""
-
     # ground plane
     ground = AssetBaseCfg(
         prim_path="/World/defaultGroundPlane",
@@ -42,8 +46,10 @@ class ThrowSceneCfg(InteractiveSceneCfg):
         ),
     )
 
+    # robot
     robot = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
+    # bin to throw the ball in
     bin = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
             init_state=RigidObjectCfg.InitialStateCfg(pos=[3, 0, -1.05], rot=[1, 0, 0, 0]),
@@ -61,8 +67,9 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             ),
         )
 
+    # ball object that is manipulated
     ball =  RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Cube",
+        prim_path="{ENV_REGEX_NS}/Ball",
         spawn=sim_utils.SphereCfg(
             radius=0.035,
             rigid_props=sim_utils.RigidBodyPropertiesCfg(),
@@ -74,6 +81,37 @@ class ThrowSceneCfg(InteractiveSceneCfg):
         init_state=RigidObjectCfg.InitialStateCfg(pos=(3.0, 0.0, 2.0)),
     )
 
+    # end-effector frame
+    ee_frame: FrameTransformerCfg = FrameTransformerCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/base_link",
+            debug_vis=False,
+            visualizer_cfg=ee_frame_cfg,
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot/ee_link",
+                    name="end_effector",
+                    offset=OffsetCfg(
+                        pos=(0, 0, 0),
+                    ),
+                ),
+            ],
+        )
+
+    # spoon frame
+    spoon_frame: FrameTransformerCfg = FrameTransformerCfg(
+            prim_path="{ENV_REGEX_NS}/Robot/base_link",
+            debug_vis=False,
+            visualizer_cfg=ee_frame_cfg,
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path="{ENV_REGEX_NS}/Robot/spoon_frame",
+                    name="end_effector",
+                    offset=OffsetCfg(
+                        pos=(0, 0, 0),
+                    ),
+                ),
+            ],
+        )
 
 ##
 # MDP settings
@@ -102,7 +140,20 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     """Configuration for events."""
-    pass
+    reset_robot_joints = EventTerm(
+        func=mdp.reset_joints_by_scale,
+        mode="reset",
+        params={
+            "position_range": (1.0, 1.0),
+            "velocity_range": (0.0, 0.0),
+        },
+    )
+
+    reset_ball_in_spoon = EventTerm(
+        func=mdp.reset_ball_in_spoon,
+        mode="reset"
+    )
+
 
 @configclass
 class RewardsCfg:
