@@ -1,14 +1,31 @@
+from dataclasses import MISSING
+
+# simulation scenes
 import isaaclab.sim as sim_utils
-from isaaclab.assets import AssetBaseCfg, RigidObjectCfg
-from isaaclab.managers import EventTermCfg as EventTerm
-from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.scene import InteractiveSceneCfg
+from isaaclab.envs import ManagerBasedRLEnvCfg
+
+# manager imports
+from isaaclab.managers import ActionTermCfg as ActionTerm
+from isaaclab.managers import EventTermCfg as EventTerm
+from isaaclab.managers import ObservationGroupCfg as ObsGroup
+from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import SceneEntityCfg
+
+# markers
+from isaaclab.markers.config import FRAME_MARKER_CFG
+from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
+
+# utils
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
+from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+
+# markov desicion process files
 import isaaclab_tasks.manager_based.manipulation.throw.mdp as mdp
-from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
-from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from isaaclab.markers.config import FRAME_MARKER_CFG  
 
 # Scene definition
 ##
@@ -39,24 +56,6 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/Stand/stand_instanceable.usd", scale=(2.0, 2.0, 2.0)
         ),
     )
-
-    # bin to throw the ball in
-    bin = RigidObjectCfg(
-            prim_path="{ENV_REGEX_NS}/Object",
-            init_state=RigidObjectCfg.InitialStateCfg(pos=[3, 0, -1.05], rot=[1, 0, 0, 0]),
-            spawn=sim_utils.UsdFileCfg(
-                usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Beaker/beaker_500ml.usd",
-                scale=(2, 2, 2),
-                rigid_props=sim_utils.RigidBodyPropertiesCfg(
-                    solver_position_iteration_count=16,
-                    solver_velocity_iteration_count=1,
-                    max_angular_velocity=1000.0,
-                    max_linear_velocity=1000.0,
-                    max_depenetration_velocity=5.0,
-                    disable_gravity=False,
-                ),
-            ),
-        )
 
     # rigid ball
     ball: RigidObjectCfg = RigidObjectCfg(
@@ -99,6 +98,8 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             ],
         )
 
+    # robot articulation
+    robot: ArticulationCfg = MISSING
 ##
 # MDP settings
 ##
@@ -106,7 +107,7 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 
 @configclass
 class CommandsCfg:
-    ee_pose = mdp.UniformObjectLocationCfg(
+    object_location = mdp.UniformObjectLocationCfg(
         asset_name="ball",
         resampling_time_range=(2.0, 4.0),
         debug_vis=True,
@@ -121,13 +122,33 @@ class CommandsCfg:
 @configclass
 class ActionsCfg:
     """Action specifications for the MDP."""
-    pass
-
+    arm_action: ActionTerm = MISSING
 
 @configclass
 class ObservationsCfg:
     """Observation specifications for the MDP."""
-    pass
+
+    @configclass
+    class PolicyCfg(ObsGroup):
+        """Observations for policy group."""
+
+        # observation terms (order preserved)
+
+        # robot state
+        ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        actions = ObsTerm(func=mdp.last_action)
+
+        # throwing location
+        object_location = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_location"})
+
+        def __post_init__(self):
+            self.enable_corruption = True
+            self.concatenate_terms = True
+
+    # observation groups
+    policy: PolicyCfg = PolicyCfg()
 
 
 @configclass
@@ -141,9 +162,31 @@ class EventCfg:
 
 @configclass
 class RewardsCfg:
-    """Reward terms for the MDP."""
+    # task terms
+    end_effector_position_tracking = RewTerm(
+        func=mdp.object_goal_distance,
+        weight=-6.0,
+        params={"command_name": "ee_pose"},
+    )
+    end_effector_position_tracking_fine_grained = RewTerm(
+        func=mdp.object_goal_distance_fine_grained,
+        weight=3.6,
+        params={"std": 1.5, "command_name": "ee_pose"},
+    )
+    end_effector_orientation_tracking = RewTerm(
+        func=mdp.object_throwing_height,
+        weight=0.2
+    )
+    
+    # action penalty
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.05)
 
-    pass
+    # smooth velocity
+    joint_vel = RewTerm(
+        func=mdp.joint_vel_l2,
+        weight=-0.0001,
+        params={"asset_cfg": SceneEntityCfg("robot")},
+    )
 
 @configclass
 class TerminationsCfg:
