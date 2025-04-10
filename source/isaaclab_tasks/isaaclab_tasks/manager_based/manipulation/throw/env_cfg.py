@@ -13,6 +13,8 @@ from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
+from isaaclab.managers import TerminationTermCfg as DoneTerm
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
 
 # markers
 from isaaclab.markers.config import FRAME_MARKER_CFG
@@ -177,7 +179,7 @@ class RewardsCfg:
         func=mdp.object_throwing_height,
         weight=0.2
     )
-    
+
     # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.05)
 
@@ -192,13 +194,22 @@ class RewardsCfg:
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    pass
+    time_out = DoneTerm(func=mdp.time_out, time_out=True)
+
+    object_obn_ground = DoneTerm(func=mdp.root_height_below_minimum, params={"minimum_height": -0.95}, time_out=True)
 
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
-    pass
+
+    action_rate = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.1, "num_steps": 4500}
+    )
+
+    joint_vel = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 4500}
+    )
 
 
 ##
@@ -212,3 +223,33 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
 
     # Scene settings
     scene: ThrowSceneCfg = ThrowSceneCfg(num_envs=4096, env_spacing=2.5)
+    
+    # Basic settings
+    observations: ObservationsCfg = ObservationsCfg()
+    actions: ActionsCfg = ActionsCfg()
+    commands: CommandsCfg = CommandsCfg()
+    
+    # MDP settings
+    rewards: RewardsCfg = RewardsCfg()
+    terminations: TerminationsCfg = TerminationsCfg()
+    events: EventCfg = EventCfg()
+    curriculum: CurriculumCfg = CurriculumCfg()
+
+    def __post_init__(self):
+        """Post initialization."""
+        # general settings
+        self.decimation = 1
+        self.episode_length_s = 10.0
+
+        # simulation settings
+        self.sim.dt = 0.01  # 100Hz
+        self.sim.render_interval = self.decimation
+        self.sim.physx.solver_type=1
+        self.sim.physx.max_position_iteration_count=192  # Important to avoid interpenetration.
+        self.sim.physx.max_velocity_iteration_count=1
+        self.sim.physx.bounce_threshold_velocity=0.2
+        self.sim.physx.friction_offset_threshold=0.1
+        self.sim.physx.friction_correlation_distance=0.00625
+        self.sim.physx.gpu_max_rigid_contact_count=2**23
+        self.sim.physx.gpu_max_rigid_patch_count=2**23
+        self.sim.physx.gpu_max_num_partitions=1
