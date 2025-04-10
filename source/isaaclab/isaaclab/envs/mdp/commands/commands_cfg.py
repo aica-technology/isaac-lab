@@ -128,6 +128,42 @@ class NormalVelocityCommandCfg(UniformVelocityCommandCfg):
     ranges: Ranges = MISSING
     """Distribution ranges for the velocity commands."""
 
+@configclass
+class UniformObjectLocationCfg(CommandTermCfg):
+    """Configuration for uniform pose command generator."""
+
+    class_type: type = UniformPoseCommand
+
+    asset_name: str = MISSING
+    """Name of the asset in the environment for which the commands are generated."""
+
+    @configclass
+    class Ranges:
+        """Uniform distribution ranges for the object commands."""
+
+        pos_x: tuple[float, float] = MISSING
+        """Range for the x position (in m)."""
+
+        pos_y: tuple[float, float] = MISSING
+        """Range for the y position (in m)."""
+
+        pos_z: tuple[float, float] = MISSING
+        """Range for the z position (in m)."""
+
+    ranges: Ranges = MISSING
+    """Ranges for the commands."""
+
+    goal_pose_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(prim_path="/Visuals/Command/goal_pose")
+    """The configuration for the goal pose visualization marker. Defaults to FRAME_MARKER_CFG."""
+
+    current_pose_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(
+        prim_path="/Visuals/Command/object_pose"
+    )
+    """The configuration for the current pose visualization marker. Defaults to FRAME_MARKER_CFG."""
+
+    # Set the scale of the visualization markers to (0.1, 0.1, 0.1)
+    goal_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+    current_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
 
 @configclass
 class UniformPoseCommandCfg(CommandTermCfg):

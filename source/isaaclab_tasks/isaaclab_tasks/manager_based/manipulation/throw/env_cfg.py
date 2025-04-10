@@ -58,7 +58,8 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             ),
         )
 
-    object_cfg: RigidObjectCfg = RigidObjectCfg(
+    # rigid ball
+    ball: RigidObjectCfg = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Ball",
         spawn=sim_utils.SphereCfg(
             radius=0.025,
@@ -98,22 +99,6 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             ],
         )
 
-    # spoon frame
-    spoon_frame: FrameTransformerCfg = FrameTransformerCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/base_link",
-            debug_vis=False,
-            visualizer_cfg=ee_frame_cfg,
-            target_frames=[
-                FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/robo_spoon",
-                    name="end_effector",
-                    offset=OffsetCfg(
-                        pos=(0.2259, -0.024, 0),
-                    ),
-                ),
-            ],
-        )
-
 ##
 # MDP settings
 ##
@@ -121,9 +106,16 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 
 @configclass
 class CommandsCfg:
-    """Command terms for the MDP."""
-    pass
-
+    ee_pose = mdp.UniformObjectLocationCfg(
+        asset_name="ball",
+        resampling_time_range=(2.0, 4.0),
+        debug_vis=True,
+        ranges=mdp.UniformObjectLocationCfg.Ranges(
+            pos_x=(3.0, 5.0),
+            pos_y=(0.0, 0.0),
+            pos_z=(0.0, 0.0)
+        ),
+    )
 
 
 @configclass
