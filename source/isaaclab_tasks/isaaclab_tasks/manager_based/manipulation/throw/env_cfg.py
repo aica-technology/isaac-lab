@@ -24,7 +24,7 @@ from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransf
 # utils
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+import math
 
 # markov desicion process files
 import isaaclab_tasks.manager_based.manipulation.throw.mdp as mdp
@@ -81,8 +81,27 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             mass_props=sim_utils.MassPropertiesCfg(mass=0.056),
             collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0005, rest_offset=0.0),
         ),
-        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8797, 0.13321, 0.640)),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.76619, 0.16414, 0.28)),
     )
+
+    # bin to throw the ball in
+    bin = AssetBaseCfg(
+            prim_path="{ENV_REGEX_NS}/Object",
+            init_state=AssetBaseCfg.InitialStateCfg(pos=[2.0, 0, -1.00], rot=[1, 0, 0, 0]),
+            spawn=sim_utils.UsdFileCfg(
+                usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Beaker/beaker_500ml.usd",
+                scale=(4, 4, 4),
+                rigid_props=sim_utils.RigidBodyPropertiesCfg(
+                    solver_position_iteration_count=16,
+                    solver_velocity_iteration_count=1,
+                    max_angular_velocity=1000.0,
+                    max_linear_velocity=1000.0,
+                    max_depenetration_velocity=5.0,
+                    disable_gravity=False,
+                ),
+            ),
+        )
+
 
     # end-effector frame
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
@@ -109,17 +128,32 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 
 @configclass
 class CommandsCfg:
+    ee_pose_velocity = mdp.UniformPoseCommandCfg(
+        asset_name="robot",
+        body_name="ee_link",
+        resampling_time_range=(3.0, 3.0),
+        debug_vis=True,
+        make_quat_unique=True,
+        ranges=mdp.UniformPoseCommandCfg.Ranges(
+            pos_x=(0.9, 0.95),
+            pos_y=(0.1, 0.1),
+            pos_z=(0.55, 0.75),
+            roll=(-math.pi, -math.pi),
+            pitch=(math.pi / 2, math.pi / 2),
+            yaw=(0, 0)
+        ),
+    )
+
     object_location = mdp.UniformObjectLocationCfg(
         asset_name="ball",
-        resampling_time_range= (5.0, 5.0),
+        resampling_time_range= (3.0, 3.0),
         debug_vis=True,
         ranges=mdp.UniformObjectLocationCfg.Ranges(
-            pos_x=(4.0, 4.0),
+            pos_x=(2.0, 2.0),
             pos_y=(0.0, 0.0),
             pos_z=(-1.0, -1.0)
         ),
     )
-
 
 @configclass
 class ActionsCfg:
@@ -139,11 +173,10 @@ class ObservationsCfg:
         # robot state
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        actions = ObsTerm(func=mdp.last_action)
+        ee_linear_velocity = ObsTerm(func=mdp.ee_linear_velocity)
 
         # throwing location
-        object_location = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_location"})
+        throwing_location = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_location"})
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -161,55 +194,98 @@ class EventCfg:
         mode="reset"
     )
 
-
+    reset_robot_joints = EventTerm(
+        func=mdp.reset_joints_by_scale,
+        mode="reset",
+        params={
+            "position_range": (0.998, 1.000),
+            "velocity_range": (0.0, 0.0),
+        },
+    )
 @configclass
 class RewardsCfg:
-    # task terms
-    object_distance_to_goal_incentive = RewTerm(
-        func=mdp.object_goal_distance_incentive,
-        weight=48.0,
-        params={"command_name": "object_location"},
+    end_effector_position_tracking = RewTerm(
+        func=mdp.position_command_error,
+        weight=-6.0,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
     )
 
+    end_effector_position_tracking_fine_grained = RewTerm(
+        func=mdp.position_command_error_tanh,
+        weight=3.6,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "std": 0.1, "command_name": "ee_pose_velocity"},
+    )
 
-    object_distance_to_goal_fine_grained = RewTerm(
-        func=mdp.object_goal_distance_fine_grained,
-        weight=48,
-        params={"std": 1.5, "command_name": "object_location"},
+    end_effector_velocity_tracking = RewTerm(
+        func=mdp.velocity_command_reward,
+        weight=1.0,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
+    )
+
+    end_effector_orientation_tracking = RewTerm(
+        func=mdp.orientation_command_error,
+        weight=-4,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
+    )
+
+    object_goal_target = RewTerm(
+        func=mdp.object_near_target,
+        weight=100.0,
+        params={"command_name": "object_location", "minimum_height": -0.3}
+    )
+
+    object_goal_penalty = RewTerm(
+        func=mdp.object_goal_distance_penalty,
+        params={"command_name": "object_location"},
+        weight=-0.01
     )
 
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=0.0)
-
-    # smooth velocity
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2,
-        weight=0.0,
+        weight=-0.0001,
         params={"asset_cfg": SceneEntityCfg("robot")},
     )
+
+    # reward on success
+    in_bin = RewTerm(func=mdp.is_terminated, weight=1e6)
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
+    object_on_ground = DoneTerm(func=mdp.root_in_bin, params={"position": [2.0, 0, -1.00], "asset_cfg": SceneEntityCfg("ball")})
+
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
-
-    object_on_ground = DoneTerm(func=mdp.root_height_below_minimum, params={"minimum_height": -0.95, "asset_cfg": SceneEntityCfg("ball")}, time_out=True)
-
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
+    # ensure smoothness
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.1, "num_steps": 72000}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.005, "num_steps": 24000}
     )
 
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 72000}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 24000}
+    )
+
+    # incentivize velocity on reach point
+    end_effector_velocity_tracking_level_1 = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_velocity_tracking", "weight": 0.25, "num_steps": 4500}
     )
 
 
+    # goal targets
+    object_goal_target = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "object_goal_target", "weight": 20.0, "num_steps": 7200}
+    )
+
+    object_goal_penalty = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "object_goal_penalty", "weight": -0.1, "num_steps": 7200}
+    )
 ##
 # Environment configuration
 ##
@@ -220,7 +296,7 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the reach end-effector pose tracking environment."""
 
     # Scene settings
-    scene: ThrowSceneCfg = ThrowSceneCfg(num_envs=4096, env_spacing=2.5)
+    scene: ThrowSceneCfg = ThrowSceneCfg(num_envs=128, env_spacing=6.0)
     
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
@@ -237,17 +313,17 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 1
-        self.episode_length_s = 5.0
+        self.episode_length_s = 3.0
 
         # simulation settings
         self.sim.dt = 0.01  # 100Hz
         self.sim.render_interval = self.decimation
         self.sim.physx.solver_type=1
-        self.sim.physx.max_position_iteration_count=192  # Important to avoid interpenetration.
+        self.sim.physx.max_position_iteration_count=128  # Important to avoid interpenetration.
         self.sim.physx.max_velocity_iteration_count=1
         self.sim.physx.bounce_threshold_velocity=0.2
         self.sim.physx.friction_offset_threshold=0.1
         self.sim.physx.friction_correlation_distance=0.00625
-        self.sim.physx.gpu_max_rigid_contact_count=85605616
-        self.sim.physx.gpu_max_rigid_patch_count=85605616
+        self.sim.physx.gpu_max_rigid_contact_count=2**23
+        self.sim.physx.gpu_max_rigid_patch_count=2**23
         self.sim.physx.gpu_max_num_partitions=1

@@ -186,6 +186,8 @@ def ee_rotation_in_robot_root_frame(env: ManagerBasedRLEnv, robot_cfg: SceneEnti
     ee_quat_b = normalize(ee_quat_b)
     ee_quat_b = quat_unique(ee_quat_b)
     return ee_quat_b
+
+
 """
 Sensors.
 """

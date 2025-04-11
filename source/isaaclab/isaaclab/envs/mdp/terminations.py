@@ -12,7 +12,7 @@ the termination introduced by the function.
 from __future__ import annotations
 
 import torch
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Union
 
 from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import SceneEntityCfg
@@ -71,6 +71,20 @@ def root_height_below_minimum(
     asset: RigidObject = env.scene[asset_cfg.name]
     return asset.data.root_pos_w[:, 2] < minimum_height
 
+def root_in_bin(
+    env: ManagerBasedRLEnv, position: Union[float, float, float], asset_cfg: SceneEntityCfg = SceneEntityCfg("ball")
+) -> torch.Tensor:
+    """Terminate when the asset's root height is below the minimum height.
+
+    Note:
+        This is currently only supported for flat terrains, i.e. the minimum height is in the world frame.
+    """
+    # extract the used quantities (to enable type-hinting)
+    asset: RigidObject = env.scene[asset_cfg.name]
+    x_condition = torch.abs(asset.data.root_pos_w[:, 0] - position[0]) < 0.3
+    y_condition = torch.abs(asset.data.root_pos_w[:, 1] - position[1]) < 0.3
+    z_condition = torch.abs(asset.data.root_pos_w[:, 2] - position[2]) < 0.3
+    return x_condition & y_condition & z_condition
 
 """
 Joint terminations.
