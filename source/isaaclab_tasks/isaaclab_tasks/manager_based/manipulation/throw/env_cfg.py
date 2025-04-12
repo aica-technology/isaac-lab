@@ -85,18 +85,19 @@ class ThrowSceneCfg(InteractiveSceneCfg):
     )
 
     # bin to throw the ball in
-    bin = AssetBaseCfg(
+    bin = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
-            init_state=AssetBaseCfg.InitialStateCfg(pos=[2.0, 0, -1.00], rot=[1, 0, 0, 0]),
+            init_state=RigidObjectCfg.InitialStateCfg(pos=[2.0, 0, -0.90], rot=[1, 0, 0, 0]),
             spawn=sim_utils.UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Beaker/beaker_500ml.usd",
                 scale=(4, 4, 4),
+                mass_props=sim_utils.MassPropertiesCfg(mass=1000),
                 rigid_props=sim_utils.RigidBodyPropertiesCfg(
                     solver_position_iteration_count=16,
                     solver_velocity_iteration_count=1,
                     max_angular_velocity=1000.0,
                     max_linear_velocity=1000.0,
-                    max_depenetration_velocity=5.0,
+                    max_depenetration_velocity=0.0,
                     disable_gravity=False,
                 ),
             ),
@@ -105,12 +106,12 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 
     # end-effector frame
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/base_link",
+            prim_path=MISSING,
             debug_vis=False,
             visualizer_cfg=ee_frame_cfg,
             target_frames=[
                 FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/ee_link",
+                    prim_path=MISSING,
                     name="end_effector",
                     offset=OffsetCfg(
                         pos=(0, 0, 0),
@@ -130,7 +131,7 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 class CommandsCfg:
     ee_pose_velocity = mdp.UniformPoseCommandCfg(
         asset_name="robot",
-        body_name="ee_link",
+        body_name=MISSING,
         resampling_time_range=(3.0, 3.0),
         debug_vis=True,
         make_quat_unique=True,
@@ -141,17 +142,6 @@ class CommandsCfg:
             roll=(-math.pi, -math.pi),
             pitch=(math.pi / 2, math.pi / 2),
             yaw=(0, 0)
-        ),
-    )
-
-    object_location = mdp.UniformObjectLocationCfg(
-        asset_name="ball",
-        resampling_time_range= (3.0, 3.0),
-        debug_vis=True,
-        ranges=mdp.UniformObjectLocationCfg.Ranges(
-            pos_x=(2.0, 2.0),
-            pos_y=(0.0, 0.0),
-            pos_z=(-1.0, -1.0)
         ),
     )
 
@@ -175,8 +165,8 @@ class ObservationsCfg:
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         ee_linear_velocity = ObsTerm(func=mdp.ee_linear_velocity)
 
-        # throwing location
-        throwing_location = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_location"})
+        # bin location
+        throwing_location = ObsTerm(func=mdp.bin_position_in_robot_root_frame)
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -204,16 +194,17 @@ class EventCfg:
     )
 @configclass
 class RewardsCfg:
+    # incentivize reaching a throw point
     end_effector_position_tracking = RewTerm(
         func=mdp.position_command_error,
         weight=-6.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose_velocity"},
     )
 
     end_effector_position_tracking_fine_grained = RewTerm(
         func=mdp.position_command_error_tanh,
         weight=3.6,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "std": 0.1, "command_name": "ee_pose_velocity"},
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose_velocity"},
     )
 
     end_effector_velocity_tracking = RewTerm(
@@ -228,15 +219,14 @@ class RewardsCfg:
         params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
     )
 
+    # ensuring reaching goal
     object_goal_target = RewTerm(
         func=mdp.object_near_target,
-        weight=100.0,
-        params={"command_name": "object_location", "minimum_height": -0.3}
+        weight=100.0
     )
 
     object_goal_penalty = RewTerm(
         func=mdp.object_goal_distance_penalty,
-        params={"command_name": "object_location"},
         weight=-0.01
     )
 
@@ -255,7 +245,7 @@ class RewardsCfg:
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    object_on_ground = DoneTerm(func=mdp.root_in_bin, params={"position": [2.0, 0, -1.00], "asset_cfg": SceneEntityCfg("ball")})
+    object_on_ground = DoneTerm(func=mdp.ball_in_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
@@ -296,7 +286,7 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
     """Configuration for the reach end-effector pose tracking environment."""
 
     # Scene settings
-    scene: ThrowSceneCfg = ThrowSceneCfg(num_envs=128, env_spacing=6.0)
+    scene: ThrowSceneCfg = ThrowSceneCfg(num_envs=912, env_spacing=6.0)
     
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
@@ -313,7 +303,7 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
         """Post initialization."""
         # general settings
         self.decimation = 1
-        self.episode_length_s = 3.0
+        self.episode_length_s = 4.0
 
         # simulation settings
         self.sim.dt = 0.01  # 100Hz

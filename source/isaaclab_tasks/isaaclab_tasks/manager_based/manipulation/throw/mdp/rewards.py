@@ -3,7 +3,7 @@ from isaaclab.assets import RigidObject
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.assets import RigidObject
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.utils.math import combine_frame_transforms, quat_error_magnitude, quat_mul
+from isaaclab.utils.math import subtract_frame_transforms, combine_frame_transforms, quat_error_magnitude, quat_mul
 
 def position_command_error(env, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
     """Penalize tracking of the position error using L2-norm.
@@ -21,7 +21,7 @@ def position_command_error(env, command_name: str, asset_cfg: SceneEntityCfg) ->
 def position_command_error_tanh(
     env, std: float, command_name: str, asset_cfg: SceneEntityCfg
 ) -> torch.Tensor:
-    """Reward tracking of the position and velocity using the tanh kernel.
+    """Reward tracking of the position using the tanh kernel.
     """
     
     # extract the asset (to enable type hinting)
@@ -62,53 +62,39 @@ def orientation_command_error(env, command_name: str, asset_cfg: SceneEntityCfg)
     return quat_error_magnitude(curr_quat_w, des_quat_w)
 
 
-def object_distance_from_robot(
-    env,
-    object_cfg: SceneEntityCfg = SceneEntityCfg("ball"),    
-) -> torch.Tensor:
-
-    object: RigidObject = env.scene[object_cfg.name]
-    rewards = torch.zeros_like(object.data.root_pos_w[:, 0]) 
-    mask = object.data.root_pos_w[:, 0] > 2.0
-    rewards[mask] = (torch.norm(object.data.root_pos_w[:, :3], dim=1)*object.data.root_pos_w[:, 2])[mask]
-    return rewards
-
-
 def object_goal_distance_penalty(
     env,
-    command_name: str,
-    object_cfg: SceneEntityCfg = SceneEntityCfg("ball"),
+    bin_cfg:  SceneEntityCfg = SceneEntityCfg("bin"),
+    ball_cfg: SceneEntityCfg = SceneEntityCfg("ball"),
 ) -> torch.Tensor:
 
-    object: RigidObject = env.scene[object_cfg.name]
-    command = env.command_manager.get_command(command_name)
-    return torch.norm(command - object.data.root_pos_w[:, :3], dim=1)
+    ball: RigidObject = env.scene[ball_cfg.name]
+    bin: RigidObject = env.scene[bin_cfg.name]
+
+    return torch.norm(bin.data.root_pos_w[:, :3] - ball.data.root_pos_w[:, :3], dim=1)
 
 
 def object_goal_distance_fine_grained(
     env,
     std: float,
-    command_name: str,
-    object_cfg: SceneEntityCfg = SceneEntityCfg("ball"),
+    bin_cfg:  SceneEntityCfg = SceneEntityCfg("bin"),
+    ball_cfg: SceneEntityCfg = SceneEntityCfg("ball"),
 ) -> torch.Tensor:
 
-    object: RigidObject = env.scene[object_cfg.name]
-    command = env.command_manager.get_command(command_name)
-    return 1 - torch.tanh(torch.norm(command - object.data.root_pos_w[:, :3], dim=1)/std)
+    ball: RigidObject = env.scene[ball_cfg.name]
+    bin: RigidObject = env.scene[bin_cfg.name]
+    
+    return 1 - torch.tanh(torch.norm(bin.data.root_pos_w[:, :3] - ball.data.root_pos_w[:, :3], dim=1)/std)
 
 
 def object_near_target(
     env,
-    minimum_height: float,
-    command_name: str,
-    object_cfg: SceneEntityCfg = SceneEntityCfg("ball"),
+    bin_cfg:  SceneEntityCfg = SceneEntityCfg("bin"),
+    ball_cfg: SceneEntityCfg = SceneEntityCfg("ball"),
 ) -> torch.Tensor:
 
-    object: RigidObject = env.scene[object_cfg.name]
-    command = env.command_manager.get_command(command_name)
+    ball: RigidObject = env.scene[ball_cfg.name]
+    bin: RigidObject = env.scene[bin_cfg.name]
     
-    mask = (object.data.root_pos_w[:, 2] < minimum_height) & (object.data.root_pos_w[:, 0] > 2.0)
-    rewards = torch.zeros_like(object.data.root_pos_w[:, 2])
-    rewards[mask] = (1 / (torch.norm(command - object.data.root_pos_w[:, :3], dim=1) + 0.1))[mask]
-    return rewards
+    return (1 / (torch.norm(bin.data.root_pos_w[:, :3] - ball.data.root_pos_w[:, :3], dim=1) + 0.1))
 
