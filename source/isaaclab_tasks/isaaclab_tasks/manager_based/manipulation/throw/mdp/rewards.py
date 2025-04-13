@@ -96,5 +96,5 @@ def object_near_target(
     ball: RigidObject = env.scene[ball_cfg.name]
     bin: RigidObject = env.scene[bin_cfg.name]
     
-    return (1 / (torch.norm(bin.data.root_pos_w[:, :3] - ball.data.root_pos_w[:, :3], dim=1) + 0.1))
-
+    enter_bin_offset = torch.tensor([0.3, 0.3, -0.3], device=bin.device)
+    return torch.exp(-torch.norm(bin.data.root_pos_w[:, :3] - enter_bin_offset - ball.data.root_pos_w[:, :3], dim=1)*3) - 0.03

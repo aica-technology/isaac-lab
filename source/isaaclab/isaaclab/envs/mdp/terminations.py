@@ -74,11 +74,6 @@ def root_height_below_minimum(
 def ball_in_bin(
     env: ManagerBasedRLEnv, bin_cfg: SceneEntityCfg = SceneEntityCfg("bin"), ball_cfg: SceneEntityCfg = SceneEntityCfg("ball")
 ) -> torch.Tensor:
-    """Terminate when the asset's root height is below the minimum height.
-
-    Note:
-        This is currently only supported for flat terrains, i.e. the minimum height is in the world frame.
-    """
     # extract the used quantities (to enable type-hinting)
     ball: RigidObject = env.scene[ball_cfg.name]
     bin: RigidObject = env.scene[bin_cfg.name]
@@ -87,6 +82,16 @@ def ball_in_bin(
     y_condition = torch.abs(ball.data.root_pos_w[:, 1] - bin.data.root_pos_w[:, 1]) < 0.3
     z_condition = torch.abs(ball.data.root_pos_w[:, 2] - bin.data.root_pos_w[:, 2]) < 0.3
     return x_condition & y_condition & z_condition
+
+def ball_away_from_bin(
+    env: ManagerBasedRLEnv, bin_cfg: SceneEntityCfg = SceneEntityCfg("bin"), ball_cfg: SceneEntityCfg = SceneEntityCfg("ball")
+) -> torch.Tensor:
+
+    # extract the used quantities (to enable type-hinting)
+    ball: RigidObject = env.scene[ball_cfg.name]
+    bin: RigidObject = env.scene[bin_cfg.name]
+    
+    return  ball.data.root_pos_w[:, 0] - bin.data.root_pos_w[:, 0] > 0.6
 
 """
 Joint terminations.

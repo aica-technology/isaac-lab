@@ -26,9 +26,6 @@ class UR10ThrowEnvCfg(ThrowEnvCfg):
         self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.end_effector_frame_name 
 
-        # command config
-        self.commands.ee_pose_velocity.body_name=self.end_effector_frame_name 
-
         # arm config
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
@@ -37,9 +34,3 @@ class UR10ThrowEnvCfg(ThrowEnvCfg):
             controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
             scale=1.0,
         )
-
-        # rewards config
-        self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.end_effector_frame_name]
-        self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.end_effector_frame_name]
-        self.rewards.end_effector_velocity_tracking.params["asset_cfg"].body_names = [self.end_effector_frame_name]
-        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.end_effector_frame_name]

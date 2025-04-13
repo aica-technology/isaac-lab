@@ -87,7 +87,7 @@ class ThrowSceneCfg(InteractiveSceneCfg):
     # bin to throw the ball in
     bin = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
-            init_state=RigidObjectCfg.InitialStateCfg(pos=[2.0, 0, -0.90], rot=[1, 0, 0, 0]),
+            init_state=RigidObjectCfg.InitialStateCfg(pos=[2.5, 0, -0.68], rot=[1, 0, 0, 0]),
             spawn=sim_utils.UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Beaker/beaker_500ml.usd",
                 scale=(4, 4, 4),
@@ -127,23 +127,6 @@ class ThrowSceneCfg(InteractiveSceneCfg):
 ##
 
 
-@configclass
-class CommandsCfg:
-    ee_pose_velocity = mdp.UniformPoseCommandCfg(
-        asset_name="robot",
-        body_name=MISSING,
-        resampling_time_range=(3.0, 3.0),
-        debug_vis=True,
-        make_quat_unique=True,
-        ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.9, 0.95),
-            pos_y=(0.1, 0.1),
-            pos_z=(0.55, 0.75),
-            roll=(-math.pi, -math.pi),
-            pitch=(math.pi / 2, math.pi / 2),
-            yaw=(0, 0)
-        ),
-    )
 
 @configclass
 class ActionsCfg:
@@ -184,98 +167,60 @@ class EventCfg:
         mode="reset"
     )
 
+    """"
     reset_robot_joints = EventTerm(
         func=mdp.reset_joints_by_scale,
         mode="reset",
         params={
-            "position_range": (0.998, 1.000),
+            "position_range": (0.998, 1.00),
             "velocity_range": (0.0, 0.0),
         },
     )
+
+    """
+    reset_object_position = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {"x": (-0.5, 0.5), "y": (0.00, 0.00), "z": (0.0, 0.0)},
+            "velocity_range": {},
+            "asset_cfg": SceneEntityCfg("bin"),
+        },
+    )
+
+
 @configclass
 class RewardsCfg:
-    # incentivize reaching a throw point
-    end_effector_position_tracking = RewTerm(
-        func=mdp.position_command_error,
-        weight=-6.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose_velocity"},
+    # reward on moving the ball to the proximity of the bin
+    ball_proximity_reward = RewTerm(func=mdp.object_near_target, weight=100)
+
+    object_in_bin = RewTerm(
+         func=mdp.is_terminated_term,
+         weight=1e6,
+         params={"term_keys": "object_in_bin"},
     )
 
-    end_effector_position_tracking_fine_grained = RewTerm(
-        func=mdp.position_command_error_tanh,
-        weight=3.6,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose_velocity"},
+    object_away_penalty = RewTerm(
+         func=mdp.is_terminated_term,
+         weight=-100,
+         params={"term_keys": "object_away_from_bin"},
     )
 
-    end_effector_velocity_tracking = RewTerm(
-        func=mdp.velocity_command_reward,
-        weight=1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
-    )
+    # is alive penalty
+    is_alive = RewTerm(func=mdp.is_alive, weight= -100)
 
-    end_effector_orientation_tracking = RewTerm(
-        func=mdp.orientation_command_error,
-        weight=-4,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
-    )
-
-    # ensuring reaching goal
-    object_goal_target = RewTerm(
-        func=mdp.object_near_target,
-        weight=100.0
-    )
-
-    object_goal_penalty = RewTerm(
-        func=mdp.object_goal_distance_penalty,
-        weight=-0.01
-    )
-
-    # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
-    joint_vel = RewTerm(
-        func=mdp.joint_vel_l2,
-        weight=-0.0001,
-        params={"asset_cfg": SceneEntityCfg("robot")},
-    )
-
-    # reward on success
-    in_bin = RewTerm(func=mdp.is_terminated, weight=1e6)
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    object_on_ground = DoneTerm(func=mdp.ball_in_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
+    object_in_bin = DoneTerm(func=mdp.ball_in_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
+
+    object_away_from_bin = DoneTerm(func=mdp.ball_away_from_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-@configclass
-class CurriculumCfg:
-    """Curriculum terms for the MDP."""
 
-    # ensure smoothness
-    action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.005, "num_steps": 24000}
-    )
-
-    joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 24000}
-    )
-
-    # incentivize velocity on reach point
-    end_effector_velocity_tracking_level_1 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_velocity_tracking", "weight": 0.25, "num_steps": 4500}
-    )
-
-
-    # goal targets
-    object_goal_target = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "object_goal_target", "weight": 20.0, "num_steps": 7200}
-    )
-
-    object_goal_penalty = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "object_goal_penalty", "weight": -0.1, "num_steps": 7200}
-    )
 ##
 # Environment configuration
 ##
@@ -291,13 +236,11 @@ class ThrowEnvCfg(ManagerBasedRLEnvCfg):
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
-    commands: CommandsCfg = CommandsCfg()
     
     # MDP settings
     rewards: RewardsCfg = RewardsCfg()
     terminations: TerminationsCfg = TerminationsCfg()
     events: EventCfg = EventCfg()
-    curriculum: CurriculumCfg = CurriculumCfg()
 
     def __post_init__(self):
         """Post initialization."""
