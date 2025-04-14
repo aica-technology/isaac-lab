@@ -23,8 +23,9 @@ necessary development dependencies and running the installation script in the cl
 Once done, verify the installation of Isaac Lab by running the following command:
 
 ```shell
-./isaaclab.sh -p source/standalone/tutorials/00_sim/create_empty.py
+./isaaclab.sh -p scripts/tutorials/00_sim/create_empty.py
 ```
+
 
 # Key Concepts
 
@@ -403,8 +404,7 @@ class CommandsCfg:
     )
 ```
 
-The command `ee_pose` can be sampled as demonstrated in the accompanying example and referenced in an observation term
-like:
+The command `ee_pose` can be sampled as demonstrated in the accompanying example and referenced in an observation term:
 
 ```python
 pose_command = ObsTerm(
