@@ -20,7 +20,8 @@ from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
-
+from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
+from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 # utils
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
@@ -81,13 +82,12 @@ class ThrowSceneCfg(InteractiveSceneCfg):
             mass_props=sim_utils.MassPropertiesCfg(mass=0.056),
             collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.0005, rest_offset=0.0),
         ),
-        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.76619, 0.16414, 0.28)),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.16414, -0.76619, 0.28)),
     )
-
     # bin to throw the ball in
     bin = AssetBaseCfg(
             prim_path="{ENV_REGEX_NS}/Object",
-            init_state=AssetBaseCfg.InitialStateCfg(pos=[2.0, 0, -1.00], rot=[1, 0, 0, 0]),
+            init_state=AssetBaseCfg.InitialStateCfg(pos=[0.0, -2.0, -1.00], rot=[1, 0, 0, 0]),
             spawn=sim_utils.UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Beaker/beaker_500ml.usd",
                 scale=(4, 4, 4),
@@ -135,10 +135,10 @@ class CommandsCfg:
         debug_vis=True,
         make_quat_unique=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.9, 0.95),
-            pos_y=(0.1, 0.1),
-            pos_z=(0.55, 0.75),
-            roll=(-math.pi, -math.pi),
+            pos_x=(0.1, 0.1),
+            pos_y=(-0.88, -0.80),
+            pos_z=(0.55, 0.65),
+            roll=(3/2 * math.pi, 3/2 * math.pi),
             pitch=(math.pi / 2, math.pi / 2),
             yaw=(0, 0)
         ),
@@ -149,8 +149,8 @@ class CommandsCfg:
         resampling_time_range= (3.0, 3.0),
         debug_vis=True,
         ranges=mdp.UniformObjectLocationCfg.Ranges(
-            pos_x=(2.0, 2.0),
-            pos_y=(0.0, 0.0),
+            pos_x=(0.0, 0.0),
+            pos_y=(-2.0, -2.0),
             pos_z=(-1.0, -1.0)
         ),
     )
@@ -158,7 +158,13 @@ class CommandsCfg:
 @configclass
 class ActionsCfg:
     """Action specifications for the MDP."""
-    arm_action: ActionTerm = MISSING
+    arm_action: ActionTerm = DifferentialInverseKinematicsActionCfg(
+            asset_name="robot",
+            joint_names=[".*"],
+            body_name="ee_link",
+            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
+            scale=1.0,
+        )
 
 @configclass
 class ObservationsCfg:
@@ -173,7 +179,6 @@ class ObservationsCfg:
         # robot state
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_linear_velocity = ObsTerm(func=mdp.ee_linear_velocity)
 
         # throwing location
         throwing_location = ObsTerm(func=mdp.generated_commands, params={"command_name": "object_location"})
@@ -255,7 +260,7 @@ class RewardsCfg:
 class TerminationsCfg:
     """Termination terms for the MDP."""
 
-    object_on_ground = DoneTerm(func=mdp.root_in_bin, params={"position": [2.0, 0, -1.00], "asset_cfg": SceneEntityCfg("ball")})
+    object_on_ground = DoneTerm(func=mdp.root_in_bin, params={"position": [0.0, -2, -1.00], "asset_cfg": SceneEntityCfg("ball")})
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 

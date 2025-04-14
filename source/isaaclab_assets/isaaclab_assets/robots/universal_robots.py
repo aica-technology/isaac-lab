@@ -15,7 +15,7 @@ Reference: https://github.com/ros-industrial/universal_robot
 import isaaclab.sim as sim_utils
 from isaaclab.actuators import ImplicitActuatorCfg
 from isaaclab.assets.articulation import ArticulationCfg
-from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
+from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 from isaaclab_assets.custom_actuator_models.actuator_model_parsers import parse_actuator_model
 
 ##
@@ -47,7 +47,7 @@ UR10_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
-            "shoulder_pan_joint": 0.0,
+            "shoulder_pan_joint": -1.57,
             "shoulder_lift_joint": -1.57,
             "elbow_joint": 2.2,
             "wrist_1_joint": -2.1,
