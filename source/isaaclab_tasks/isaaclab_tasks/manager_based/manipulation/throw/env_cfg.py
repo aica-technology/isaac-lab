@@ -146,6 +146,7 @@ class ObservationsCfg:
         # robot state
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        ee_linear_velocity = ObsTerm(func=mdp.ee_linear_velocity)
 
         # bin location
         throwing_location = ObsTerm(func=mdp.bin_position_in_robot_root_frame)
@@ -190,33 +191,7 @@ class EventCfg:
 
 @configclass
 class RewardsCfg:
-    # Make sure the robot is able to move
-    end_effector_position_tracking = RewTerm(
-        func=mdp.position_command_error,
-        weight=-6.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
-    )
-
-    end_effector_position_tracking_fine_grained = RewTerm(
-        func=mdp.position_command_error_tanh,
-        weight=3.6,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "std": 0.1, "command_name": "ee_pose_velocity"},
-    )
-
-    end_effector_velocity_tracking = RewTerm(
-        func=mdp.velocity_command_reward,
-        weight=1.0,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
-    )
-
-    end_effector_orientation_tracking = RewTerm(
-        func=mdp.orientation_command_error,
-        weight=-4,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names="ee_link"), "command_name": "ee_pose_velocity"},
-    )
-
-
-    # Reward ball based on Proximity
+    # reward on moving the ball to the proximity of the bin
     ball_proximity_reward = RewTerm(func=mdp.object_near_target, weight=100)
 
     object_in_bin = RewTerm(
