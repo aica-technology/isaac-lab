@@ -91,7 +91,7 @@ def ball_away_from_bin(
     ball: RigidObject = env.scene[ball_cfg.name]
     bin: RigidObject = env.scene[bin_cfg.name]
     
-    return  ball.data.root_pos_w[:, 0] - bin.data.root_pos_w[:, 0] > 0.6
+    return  torch.norm(ball.data.root_pos_w - bin.data.root_pos_w, dim=1) > 4.0
 
 """
 Joint terminations.

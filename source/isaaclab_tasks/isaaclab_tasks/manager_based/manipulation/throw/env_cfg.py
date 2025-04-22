@@ -85,7 +85,7 @@ class ThrowSceneCfg(InteractiveSceneCfg):
     # bin to throw the ball in
     bin = RigidObjectCfg(
             prim_path="{ENV_REGEX_NS}/Object",
-            init_state=RigidObjectCfg.InitialStateCfg(pos=[2.5, 0, -0.68], rot=[1, 0, 0, 0]),
+            init_state=RigidObjectCfg.InitialStateCfg(pos=[2.0, 0, -0.68], rot=[1, 0, 0, 0]),
             spawn=sim_utils.UsdFileCfg(
                 usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Beaker/beaker_500ml.usd",
                 scale=(4, 4, 4),
@@ -168,7 +168,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (-0.5, 0.5), "y": (0.00, 0.00), "z": (0.0, 0.0)},
+            "pose_range": {"x": (-0.05, 0.05), "y": (0.00, 0.00), "z": (0.0, 0.0)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("bin"),
         },
@@ -202,7 +202,7 @@ class RewardsCfg:
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
-    
+
     object_in_bin = DoneTerm(func=mdp.ball_in_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
 
     object_away_from_bin = DoneTerm(func=mdp.ball_away_from_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
