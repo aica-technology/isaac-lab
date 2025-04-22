@@ -1,6 +1,6 @@
 from dataclasses import MISSING
 
-# simulation scenes
+# simulation configuration classes
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.scene import InteractiveSceneCfg
@@ -14,9 +14,8 @@ from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
-from isaaclab.managers import CurriculumTermCfg as CurrTerm
 
-# markers
+# frames
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
@@ -24,7 +23,6 @@ from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransf
 # utils
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
-import math
 
 # markov desicion process files
 import isaaclab_tasks.manager_based.manipulation.throw.mdp as mdp
@@ -146,7 +144,6 @@ class ObservationsCfg:
         # robot state
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_linear_velocity = ObsTerm(func=mdp.ee_linear_velocity)
 
         # bin location
         throwing_location = ObsTerm(func=mdp.bin_position_in_robot_root_frame)
@@ -167,17 +164,6 @@ class EventCfg:
         mode="reset"
     )
 
-    """"
-    reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
-        mode="reset",
-        params={
-            "position_range": (0.998, 1.00),
-            "velocity_range": (0.0, 0.0),
-        },
-    )
-
-    """
     reset_object_position = EventTerm(
         func=mdp.reset_root_state_uniform,
         mode="reset",
@@ -191,29 +177,32 @@ class EventCfg:
 
 @configclass
 class RewardsCfg:
-    # reward on moving the ball to the proximity of the bin
+    # reward on moving the ball to the proximity of the bin (continuous reward)
     ball_proximity_reward = RewTerm(func=mdp.object_near_target, weight=100)
 
+    # penalty to avoid staying alive in a local minima (continuous penalty)
+    is_alive = RewTerm(func=mdp.is_alive, weight= -100)
+
+    # reward for terminating the episode with the ball in the bin (sparse reward)
     object_in_bin = RewTerm(
          func=mdp.is_terminated_term,
          weight=1e6,
          params={"term_keys": "object_in_bin"},
     )
 
+    # reward for terminating the episode with the ball away from the bin (sparse reward)
     object_away_penalty = RewTerm(
          func=mdp.is_terminated_term,
          weight=-100,
          params={"term_keys": "object_away_from_bin"},
     )
 
-    # is alive penalty
-    is_alive = RewTerm(func=mdp.is_alive, weight= -100)
 
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
-
+    
     object_in_bin = DoneTerm(func=mdp.ball_in_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})
 
     object_away_from_bin = DoneTerm(func=mdp.ball_away_from_bin, params={"bin_cfg":  SceneEntityCfg("bin"), "ball_cfg": SceneEntityCfg("ball")})

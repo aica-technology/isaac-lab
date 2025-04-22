@@ -16,13 +16,9 @@ class UR10ThrowEnvCfg(ThrowEnvCfg):
         # post init of parent
         super().__post_init__()
 
-        # end effector frame name
         self.end_effector_frame_name = "ee_link"
-
-        # switch robot to ur10
         self.scene.robot = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
-        # set end-effector frame in scene
         self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.end_effector_frame_name 
 
