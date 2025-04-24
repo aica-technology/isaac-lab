@@ -169,6 +169,14 @@ class RslRlVecEnvWrapper(VecEnv):
         return obs_dict["policy"], {"observations": obs_dict}
 
     def step(self, actions: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor, dict]:
+        """
+        with open("source/isaaclab_tasks/logs_actions.txt", "a") as file:
+            exp_forces = actions.cpu().numpy()
+
+            file.write(
+                f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]},{exp_forces[0][3]}, {exp_forces[0][4]}, {exp_forces[0][5]},\n"
+            )
+        """
         # clip actions
         if self.clip_actions is not None:
             actions = torch.clamp(actions, -self.clip_actions, self.clip_actions)

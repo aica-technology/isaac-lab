@@ -28,13 +28,10 @@ def command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEnt
         current_setpoint = asset.data.body_state_w[:, 6, 7:10]  # type: ignore
     return current_setpoint - desired_setpoint
 
-def setpoint_error(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), stiffness: float = 300, damping: float = 10, use_velocity: bool = False) -> torch.Tensor:
+def setpoint_error(env: ManagerBasedRLEnv, command_name: str, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot"), stiffness: float = 50, damping: float = 20) -> torch.Tensor:
     position_error = command_error(env, command_name, robot_cfg, error_type="position")
-    if use_velocity:
-        velocity_error = command_error(env, command_name, robot_cfg, error_type="velocity")
-        return position_error + damping/stiffness * velocity_error
-    else:
-        return position_error
+    velocity_error = command_error(env, command_name, robot_cfg, error_type="velocity")
+    return stiffness * torch.norm(position_error, dim=1) + damping * torch.norm(velocity_error, dim=1)
 
 
 def measured_forces(
@@ -43,7 +40,7 @@ def measured_forces(
     end_effector_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
 ) -> torch.Tensor:
     contact_sensor: ContactSensor = env.scene[contact_sensor_cfg.name]
-    force_w, _ = torch.max(torch.mean(contact_sensor.data.net_forces_w_history, dim=1), dim=1) # type: ignore
+    force_w, _ = torch.max(torch.mean(contact_sensor.data.force_matrix_w, dim=1), dim=1) # type: ignore
     end_effector: FrameTransformer = env.scene[end_effector_cfg.name]
     ee_quat_w = end_effector.data.target_quat_w[..., 0, :]
     force_ee = transform_points(
@@ -59,7 +56,7 @@ def measured_force_gradient(
     force_w = contact_sensor.data.net_forces_w_history
     force_gradient = torch.gradient(force_w, dim=1)[0] # type: ignore
 
-    return  torch.max(torch.norm(force_gradient, dim=-1).squeeze(), dim=1)[0]
+    return torch.max(torch.norm(force_gradient, dim=-1).squeeze(), dim=1)[0]
 
 
 def desired_contact_force(env: ManagerBasedRLEnv, command_name: str) -> torch.Tensor:
