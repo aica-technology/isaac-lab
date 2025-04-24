@@ -1,8 +1,3 @@
-# Copyright (c) 2022-2025, The Isaac Lab Project Developers.
-# All rights reserved.
-#
-# SPDX-License-Identifier: BSD-3-Clause
-
 from dataclasses import MISSING
 
 import isaaclab.sim as sim_utils
@@ -72,7 +67,7 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
             size=(1.25, 1.0, 0.3),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
-            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
             activate_contact_sensors=True,
         ),
         init_state=RigidObjectCfg.InitialStateCfg(
@@ -80,11 +75,10 @@ class CompliantControlSceneCfg(InteractiveSceneCfg):
         ),
     )
 
-
     contact_forces = ContactSensorCfg(
         prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
         update_period=0.0,
-        history_length=6,
+        history_length=2,
         debug_vis=True,
         filter_prim_paths_expr=["{ENV_REGEX_NS}/TiltedWall"],
     )
@@ -113,7 +107,7 @@ class CommandsCfg:
             yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
-            force_z=(-100.0, 0.0),
+            force_z=(-25.0, -25.0),
         ),
     )
 
@@ -133,13 +127,15 @@ class ObservationsCfg:
     @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
-        setpoint_error = ObsTerm(func = mdp.setpoint_error, params={"command_name": "ee_force_pose"})
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
 
         ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-0.01, n_max=0.01))
-        desired_force_in_contact = ObsTerm(func=mdp.desired_contact_force, params={"command_name": "ee_force_pose"})
+        desired_state = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
+
+        # FIXME: experimental
+        actions = ObsTerm(func=mdp.last_action)
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -159,7 +155,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.15)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },
@@ -171,41 +167,35 @@ class RewardsCfg:
     """Reward terms for the MDP."""
     # task terms
     end_effector_force_tracking = RewTerm(
-        func=mdp.force_pose_command_error,
-        weight=-24.0,
+        func=mdp.force_state_command_error,
+        weight=-5.0,
         params={"command_name": "ee_force_pose"},
     )
 
     end_effector_force_tracking_fine_grained = RewTerm(
-        func=mdp.force_pose_command_error_tanh,
+        func=mdp.force_state_command_error_tanh,
         weight=3.6,
-        params={"command_name": "ee_force_pose", "std": 0.1},
+        params={"command_name": "ee_force_pose", "std": 0.6},
     )
     
-    end_effector_force_gradient_penalty = RewTerm(
-        func=mdp.measured_force_gradient,
-        weight=0.0,
-    )
-
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
         weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
     )
 
-    force_limit_penalty = RewTerm(
-        func=mdp.force_limit_penalty,
-        weight=0.0,
-        params={"command_name": "ee_force_pose"},
-    )
-
     # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
-    joint_vel = RewTerm(
-        func=mdp.joint_vel_l2,
-        weight=-0.0001,
-        params={"asset_cfg": SceneEntityCfg("robot")},
-    )
+
+    # joint velocity
+    joint_vel = RewTerm(func=mdp.joint_vel_l2, weight=-0.0001, params={"asset_cfg": SceneEntityCfg("robot")})
+
+    # joint acceleration
+    joint_acceleration = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7, params={"asset_cfg": SceneEntityCfg("robot")})
+    
+    # termination on force limit exceeded
+    #termination_force_limit = RewTerm(func=mdp.is_terminated_term, weight=-1e4, params={"term_keys": "force_limit_exceeded"})
+
 
 @configclass
 class TerminationsCfg:
@@ -213,19 +203,22 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
+    #force_limit_exceeded = DoneTerm(func=mdp.illegal_contact, params={"sensor_cfg": SceneEntityCfg("contact_forces"), "threshold": 150})
+
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 28800}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 60000}
     )
 
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 28800}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 60000}
     )
 
+    """"
     end_effector_force_gradient_penalty_level_1 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 60000}
     )
@@ -234,7 +227,7 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.06, "num_steps": 72000}
     )
 
-    """
+
     force_limit_penalty_level_1 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -0.1, "num_steps": 84000}
     )
@@ -274,3 +267,4 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 200.0
+

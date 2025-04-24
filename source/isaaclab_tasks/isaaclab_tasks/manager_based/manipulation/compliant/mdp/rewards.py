@@ -53,43 +53,44 @@ def position_command_error_tanh(
     return 1 - torch.tanh(distance / std)
 
 
-def force_pose_command_error(
+def force_state_command_error(
     env: ManagerBasedRLEnv,
     command_name: str,
     contact_sensor_config: SceneEntityCfg = SceneEntityCfg("contact_forces"),
     end_effector_config: SceneEntityCfg = SceneEntityCfg("ee_frame"),
-    position_to_force: float = 0.35
+    stiffness: float = 50,
+    damping: float = 5,
 ) -> torch.Tensor:
     command = env.command_manager.get_command(command_name)
 
     # obtain the desired and current positions
-    desired_contact_force = command[:, 7:]
-    mean_desired_force = torch.norm(desired_contact_force, dim=1)
+    desired_contact_force = command[:, 7:] # Nx3
 
-    position_error = setpoint_error(env, command_name)
-    experienced_forces = measured_forces(env, contact_sensor_config, end_effector_config)
-    contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1)
-    contact_tracking_error = position_to_force * (contact_force_error/ mean_desired_force) + (1 - position_to_force) * torch.norm(position_error, dim=1)
+    impedance_law_error = setpoint_error(env, command_name, stiffness=stiffness, damping=damping) # Nx3
+    experienced_forces = measured_forces(env, contact_sensor_config, end_effector_config) # Nx3
+    contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1) # Nx1
+    contact_tracking_error = 1 / stiffness * contact_force_error +  1 / stiffness * impedance_law_error
 
-    """"
-    with open("logs_play.txt", "a") as file:
+    """
+    with open("source/isaaclab_tasks/logs_reward.txt", "a") as file:
         exp_forces = experienced_forces.cpu().numpy()
-        position_err = position_error.cpu().numpy()
+        #position_err = position_error.cpu().numpy()
         desired_contact = desired_contact_force.cpu().numpy()
         file.write(
-            f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]}, {position_err[0][0]}, {position_err[0][1]}, {position_err[0][2]}, {desired_contact[0][0]}, {desired_contact[0][1]}, {desired_contact[0][2]}\n"
+            f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]}, {desired_contact[0][0]}, {desired_contact[0][1]}, {desired_contact[0][2]}\n"
         )
     """
+    
     return contact_tracking_error
 
-def force_pose_command_error_tanh(
+def force_state_command_error_tanh(
     env: ManagerBasedRLEnv,
     command_name: str,
     contact_sensor_config: SceneEntityCfg = SceneEntityCfg("contact_forces"),
     end_effector_config: SceneEntityCfg = SceneEntityCfg("ee_frame"),
-    std: float = 0.1,
+    std: float = 0.5,
 ) -> torch.Tensor:
-    return 1 - torch.tanh(force_pose_command_error(env, command_name, contact_sensor_config, end_effector_config) / std)
+    return 1 - torch.tanh(force_state_command_error(env, command_name, contact_sensor_config, end_effector_config) / std)
 
 
 def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
@@ -128,20 +129,16 @@ def action_termination(env: ManagerBasedRLEnv, command_name: str, asset_cfg: Sce
 
 def force_limit_penalty(
     env: ManagerBasedRLEnv,
-    command_name: str,
     contact_sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_forces"),
     end_effector_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
-    upper_limit: float = 1.5
+    maximum_limit: float = 100
 ) -> torch.Tensor:
-    command = env.command_manager.get_command(command_name)
 
-    # obtain the desired and current positions
-    desired_contact_force = torch.abs(upper_limit * command[:, 7:])
     force = torch.abs(measured_forces(env, contact_sensor_cfg, end_effector_cfg))
 
-    mask = torch.max(force > desired_contact_force, dim=1)[0]
-    reward = torch.norm(force) / torch.max(desired_contact_force, dim=1)[0]
-    reward[mask] = 0
+    mask = torch.max(force > maximum_limit * torch.ones_like(force), dim=1)[0]
+    reward = torch.zeros_like(mask)
+    reward[mask] = -1
     
     return reward
 
