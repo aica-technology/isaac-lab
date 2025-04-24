@@ -119,7 +119,7 @@ class TrackForcePoseCommand(CommandTerm):
 
         self.metrics["position_error"] = torch.norm(pos_error, dim=-1)
         self.metrics["orientation_error"] = torch.norm(rot_error, dim=-1)
-        self.metrics["exhibited_forces"] = torch.norm(self.pose_command_w[:, 7:10] - force_ee.squeeze() , dim=1)
+        self.metrics["exhibited_forces"] = torch.norm(force_ee.squeeze() , dim=1)
 
     def _resample_command(self, env_ids: Sequence[int]):
         surface_height = self.surface.data.body_state_w[env_ids, 0, 2] + 0.15
