@@ -100,14 +100,14 @@ class CommandsCfg:
         resampling_time_range=(5.0, 5.0),
         debug_vis=True, # type: ignore
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
-            pos_x=(0.5, 0.5),
-            pos_y=(0.0, 0.0),
+            pos_x=(0.3, 0.5),
+            pos_y=(-0.2, 0.2),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
             yaw=(0, 0),
             force_x=(0.0, 0.0),
             force_y=(0.0, 0.0),
-            force_z=(-25.0, -25.0),
+            force_z=(-50.0, -25.0),
         ),
     )
 
@@ -167,21 +167,33 @@ class RewardsCfg:
     """Reward terms for the MDP."""
     # task terms
     end_effector_force_tracking = RewTerm(
-        func=mdp.force_state_command_error,
-        weight=-5.0,
+        func=mdp.force_command_error,
+        weight=-0.1,
+        params={"command_name": "ee_force_pose"},
+    )
+
+    end_effector_state_tracking = RewTerm(
+        func=mdp.state_command_error,
+        weight=-10.0,
         params={"command_name": "ee_force_pose"},
     )
 
     end_effector_force_tracking_fine_grained = RewTerm(
-        func=mdp.force_state_command_error_tanh,
+        func=mdp.force_command_error_tanh,
         weight=3.6,
-        params={"command_name": "ee_force_pose", "std": 0.6},
+        params={"command_name": "ee_force_pose", "std": 0.2},
     )
     
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
         weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
+    )
+
+    # force gradient penalty
+    force_gradient = RewTerm(
+        func=mdp.measured_force_gradient,
+        weight=0
     )
 
     # action penalty
@@ -194,7 +206,7 @@ class RewardsCfg:
     joint_acceleration = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7, params={"asset_cfg": SceneEntityCfg("robot")})
     
     # termination on force limit exceeded
-    #termination_force_limit = RewTerm(func=mdp.is_terminated_term, weight=-1e4, params={"term_keys": "force_limit_exceeded"})
+    #termination_force_limit = RewTerm(func=mdp.is_terminated_term, weight=-50, params={"term_keys": "force_limit_exceeded"})
 
 
 @configclass
@@ -210,6 +222,10 @@ class TerminationsCfg:
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
+    force_tracking = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_tracking", "weight": -5.0, "num_steps": 24000}
+    )
+
     action_rate = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 60000}
     )
@@ -218,11 +234,12 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 60000}
     )
 
-    """"
-    end_effector_force_gradient_penalty_level_1 = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.04, "num_steps": 60000}
+
+    end_effector_force_gradient = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "force_gradient", "weight": -0.04, "num_steps": 72000}
     )
 
+    """"
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.06, "num_steps": 72000}
     )
@@ -261,10 +278,10 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 1
+        self.decimation = 2
         self.sim.render_interval = self.decimation
         self.episode_length_s = 8.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 200.0
+        self.sim.dt = 1.0 / 100.0
 

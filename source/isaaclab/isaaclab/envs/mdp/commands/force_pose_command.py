@@ -111,7 +111,7 @@ class TrackForcePoseCommand(CommandTerm):
             self.robot.data.body_state_w[:, self.body_idx, 3:7],
         )
 
-        force_w, _ = torch.max(torch.mean(self.force_sensor.data.net_forces_w_history, dim=1), dim=1) # type: ignore
+        force_w, _ = torch.max(torch.mean(self.force_sensor.data.force_matrix_w, dim=1), dim=1) # type: ignore
         ee_quat_w = self.robot.data.body_state_w[:, self.body_idx, 3:7]
         force_ee = transform_points(
             force_w.unsqueeze(1), quat=ee_quat_w
