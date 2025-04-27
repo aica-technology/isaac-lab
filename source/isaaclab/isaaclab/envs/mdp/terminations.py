@@ -156,3 +156,17 @@ def illegal_contact(env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneE
     return torch.any(
         torch.max(torch.norm(net_contact_forces[:, :, sensor_cfg.body_ids], dim=-1), dim=1)[0] > threshold, dim=1
     )
+
+def high_contact_force(env: ManagerBasedRLEnv, threshold: float, sensor_cfg: SceneEntityCfg, num_steps: float) -> torch.Tensor:
+    """Terminate when the contact force on the sensor exceeds the force threshold."""
+    # extract the used quantities (to enable type-hinting)
+    contact_sensor: ContactSensor = env.scene.sensors[sensor_cfg.name]
+    net_contact_forces = contact_sensor.data.force_matrix_w
+    # check if any contact force exceeds the threshold
+    if env.common_step_counter > num_steps:
+        return torch.any(
+            torch.max(torch.norm(net_contact_forces, dim=-1), dim=1)[0] > threshold, dim=1
+        )
+    else:
+        batch_size = net_contact_forces.shape[0]
+        return torch.zeros(batch_size, dtype=torch.bool, device=net_contact_forces.device)
