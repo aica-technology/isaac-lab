@@ -69,7 +69,6 @@ def force_command_error(
     contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1) # Nx1
 
     # FIXME: remove
-    """"
     with open("source/isaaclab_tasks/logs_reward.txt", "a") as file:
         exp_forces = experienced_forces.cpu().numpy()
         #position_err = position_error.cpu().numpy()
@@ -77,7 +76,7 @@ def force_command_error(
         file.write(
             f"{exp_forces[0][0]}, {exp_forces[0][1]}, {exp_forces[0][2]}, {desired_contact[0][0]}, {desired_contact[0][1]}, {desired_contact[0][2]}\n"
         )
-    """
+
     return contact_force_error / stiffness
 
 def state_command_error(
