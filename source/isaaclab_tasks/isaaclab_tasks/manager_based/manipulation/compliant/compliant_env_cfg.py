@@ -162,7 +162,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.15)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },
