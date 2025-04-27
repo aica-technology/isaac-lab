@@ -97,7 +97,7 @@ class CommandsCfg:
         force_sensor_name="contact_forces",
         surface_name="table",
         body_name=MISSING,  # will be set by agent env cfg
-        resampling_time_range=(5.0, 5.0),
+        resampling_time_range=(10.0, 10.0),
         debug_vis=True, # type: ignore
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
             pos_x=(0.3, 0.5),
@@ -149,7 +149,14 @@ class ObservationsCfg:
 class EventCfg:
     """Configuration for events."""
 
-    reset_all = EventTerm(func=mdp.reset_scene_to_default, mode="reset")
+    reset_robot_joints = EventTerm(
+        func=mdp.reset_joints_by_scale,
+        mode="reset",
+        params={
+            "position_range": (0.9, 1.1),
+            "velocity_range": (0.0, 0.0),
+        },
+    )
 
     reset_object_position = EventTerm(
         func=mdp.reset_root_state_uniform,
@@ -223,7 +230,7 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     force_tracking = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_tracking", "weight": -5.0, "num_steps": 24000}
+        func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_tracking", "weight": -0.2, "num_steps": 24000}
     )
 
     action_rate = CurrTerm(
@@ -234,12 +241,12 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 60000}
     )
 
-
+    """"
     end_effector_force_gradient = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_gradient", "weight": -0.04, "num_steps": 72000}
     )
 
-    """"
+
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.06, "num_steps": 72000}
     )
@@ -280,7 +287,7 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 2
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 8.0
+        self.episode_length_s = 10.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 100.0
