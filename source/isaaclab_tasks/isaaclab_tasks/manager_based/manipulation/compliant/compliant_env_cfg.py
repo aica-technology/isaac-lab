@@ -130,12 +130,12 @@ class ObservationsCfg:
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
 
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-0.01, n_max=0.01))
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-1, n_max=1))
         desired_state = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
 
         # FIXME: experimental
         actions = ObsTerm(func=mdp.last_action)
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.1, n_max=0.1))
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -211,6 +211,8 @@ class RewardsCfg:
 
     # joint acceleration
     joint_acceleration = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7, params={"asset_cfg": SceneEntityCfg("robot")})
+
+    force_limit_penalty = RewTerm(func=mdp.force_limit_penalty, weight=0)
     
     # termination on force limit exceeded
     #termination_force_limit = RewTerm(func=mdp.is_terminated_term, weight=-50, params={"term_keys": "force_limit_exceeded"})
@@ -242,6 +244,11 @@ class CurriculumCfg:
     )
 
     """"
+    force_limit_penalty = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -1e-1, "num_steps": 72000}
+    )
+
+
     end_effector_force_gradient = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_gradient", "weight": -0.04, "num_steps": 72000}
     )
