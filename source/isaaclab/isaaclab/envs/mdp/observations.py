@@ -238,6 +238,24 @@ def ee_rotation_in_robot_root_frame(env: ManagerBasedRLEnv, robot_cfg: SceneEnti
     ee_quat_b = normalize(ee_quat_b)
     ee_quat_b = quat_unique(ee_quat_b)
     return ee_quat_b
+
+def joint_effort(env: ManagerBasedEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
+    """The joint applied effort of the robot.
+
+    NOTE: Only the joints configured in :attr:`asset_cfg.joint_ids` will have their effort returned.
+
+    Args:
+        env: The environment.
+        asset_cfg: The SceneEntity associated with this observation.
+
+    Returns:
+        The joint effort (N or N-m) for joint_names in asset_cfg, shape is [num_env,num_joints].
+    """
+    # extract the used quantities (to enable type-hinting)
+    asset: Articulation = env.scene[asset_cfg.name]
+    return asset.data.applied_torque[:, asset_cfg.joint_ids]
+
+
 """
 Sensors.
 """
