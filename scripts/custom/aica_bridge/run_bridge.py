@@ -5,7 +5,7 @@ app_launcher = AppLauncher()
 simulation_app = app_launcher.app
 
 from typing import Optional, Union
-
+import argparse
 import torch
 from isaaclab.assets import Articulation
 from isaaclab.managers import SceneEntityCfg
@@ -17,21 +17,18 @@ from scripts.custom.aica_bridge.scenes import scenes
 from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
 from scripts.custom.aica_bridge.bridge.config_classes import ZMQConfig, SimulationParameters
 
-
 class Simulator:
     def __init__(
         self,
         zmq_config: ZMQConfig,
         scene_name: str,
         end_effector: str,
-        force_sensor_name: Union[str, None] = None,
-        num_envs: int = 1,
-        spacing: float = 2.0
+        force_sensor_name: Union[str, None] = None
     ):
         sim_cfg = SimulationCfg(device=SimulationParameters().device, dt=SimulationParameters().dt)
         self._sim = SimulationContext(sim_cfg)
 
-        scene_cfg = scenes[scene_name](num_envs=num_envs, env_spacing=spacing)
+        scene_cfg = scenes[scene_name](num_envs=1, env_spacing=2)
         self._scene = InteractiveScene(scene_cfg)
         self._robot: Articulation = self._scene["robot"]
         self._robot_joint_ids = SceneEntityCfg("robot", joint_names=[".*"], body_names=[end_effector]).joint_ids
@@ -53,8 +50,8 @@ class Simulator:
                 self._setup_done = True
             else:
                 self._bridge.send_states(self._robot, self._scene)
-                pos_cmd, vel_cmd = self._bridge.receive_commands()
-                self._apply_command(pos_cmd, vel_cmd)
+                position_command, velocity_command = self._bridge.receive_commands()
+                self._apply_command(position_command, velocity_command)
 
             self._scene.write_data_to_sim()
             self._sim.step()
@@ -71,22 +68,21 @@ class Simulator:
 
     def _apply_command(
         self,
-        pos_cmd: Optional[sr.JointState],
-        vel_cmd: Optional[sr.JointState],
+        position_command: Optional[sr.JointState],
+        velocity_command: Optional[sr.JointState],
     ) -> None:
         """
         Apply the received position or velocity command to the robot.
 
         Args:
-            pos_cmd: Joint position command, if any.
-            vel_cmd: Joint velocity command, if any.
+            position_command: Joint position command, if any.
+            velocity_command: Joint velocity command, if any.
         """
-        if pos_cmd:
-            target = torch.tensor(pos_cmd.get_positions(), device=self._robot.device)
+        if position_command:
+            target = torch.tensor(position_command.get_positions(), device=self._robot.device)
             self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
-        elif vel_cmd:
-            raw_vel = torch.tensor(vel_cmd.get_velocities(), device=self._robot.device)
-            # scale hack to match simulation range
+        elif velocity_command:
+            raw_vel = torch.tensor(velocity_command.get_velocities(), device=self._robot.device)
             scaled = raw_vel * (1.0 / 60.0) + self._robot.data.default_joint_pos
             self._robot.set_joint_position_target(scaled, joint_ids=self._robot_joint_ids)
         else:
@@ -96,14 +92,36 @@ class Simulator:
 
 
 def main() -> None:
-    zmq_cfg = ZMQConfig()
-    sim = Simulator(
+    # create a argparse that takes as input the scene name and the end effector name
+    parser = argparse.ArgumentParser(description="Run the AICA bridge.")
+    parser.add_argument("--scene", type=str, default="lift_scene", help="Scene name to load.")
+    parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
+    parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
+    parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
+    parser.add_argument("--state_port", type=int, default="1801", help="Port for the state socket.")
+    parser.add_argument("--command_port", type=str, default="1802", help="Port for the command socket.")
+    parser.add_argument("--force_port", type=str, default="1803", help="Port for the force sensor.")
+    
+    # parse the arguments
+    arguments = parser.parse_args()
+    
+    # check if the scene name is valid
+    if arguments.scene not in scenes:
+        raise ValueError(f"Invalid scene name: {arguments.scene}. Available scenes are: {list(scenes.keys())}")
+
+    # create zmq config
+    zmq_cfg = ZMQConfig(
+        address=arguments.ip_address,
+        state_port=arguments.state_port,
+        command_port=arguments.command_port,
+        force_port=arguments.force_port,
+    )
+
+    sim = Simulator(    
         zmq_config=zmq_cfg,
-        scene_name="lift_scene",
-        end_effector="wrist_3_link",
-        #force_sensor_name="ur_tcp_fts_sensor",
-        num_envs=1,
-        spacing=2.0,
+        scene_name=arguments.scene,
+        end_effector=arguments.end_effector,
+        force_sensor_name=arguments.force_sensor
     )
     sim.run()
 
