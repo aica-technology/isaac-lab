@@ -94,7 +94,7 @@ class Simulator:
 def main() -> None:
     # create a argparse that takes as input the scene name and the end effector name
     parser = argparse.ArgumentParser(description="Run the AICA bridge.")
-    parser.add_argument("--scene", type=str, default="lift_scene", help="Scene name to load.")
+    parser.add_argument("--scene", type=str, help="Scene name to load.")
     parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
     parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
     parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
