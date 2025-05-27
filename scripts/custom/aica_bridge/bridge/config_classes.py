@@ -11,4 +11,4 @@ class ZMQConfig:
 @dataclass
 class SimulationParameters:
     device: str = "cuda:0"
-    dt: float = 1e-3
+    dt: float = 1/60

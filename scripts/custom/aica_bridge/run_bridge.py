@@ -23,10 +23,12 @@ class Simulator:
         zmq_config: ZMQConfig,
         scene_name: str,
         end_effector: str,
-        force_sensor_name: Union[str, None] = None
+        force_sensor_name: Union[str, None] = None,
+        command_interface: str = "position",
     ):
         sim_cfg = SimulationCfg(device=SimulationParameters().device, dt=SimulationParameters().dt)
         self._sim = SimulationContext(sim_cfg)
+        self._command_interface = command_interface
 
         scene_cfg = scenes[scene_name](num_envs=1, env_spacing=2)
         self._scene = InteractiveScene(scene_cfg)
@@ -78,17 +80,24 @@ class Simulator:
             position_command: Joint position command, if any.
             velocity_command: Joint velocity command, if any.
         """
-        if position_command:
-            target = torch.tensor(position_command.get_positions(), device=self._robot.device)
-            self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
-        elif velocity_command:
-            raw_vel = torch.tensor(velocity_command.get_velocities(), device=self._robot.device)
-            scaled = raw_vel * (1.0 / 60.0) + self._robot.data.default_joint_pos
-            self._robot.set_joint_position_target(scaled, joint_ids=self._robot_joint_ids)
-        else:
-            # maintain current state
-            current = self._robot.data.joint_pos[0, self._robot_joint_ids]
-            self._robot.set_joint_position_target(current, joint_ids=self._robot_joint_ids)
+        if self._command_interface == "position":
+            if position_command:
+                target = torch.tensor(position_command.get_positions(), device=self._robot.device)
+                self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
+            else:
+                # maintain current state
+                current = self._robot.data.joint_pos[0, self._robot_joint_ids]
+                self._robot.set_joint_position_target(current, joint_ids=self._robot_joint_ids)
+        elif self._command_interface == "velocity":
+            if velocity_command:
+                target = torch.tensor(velocity_command.get_velocities(), device=self._robot.device)
+                self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
+            else:
+                self._robot.set_joint_velocity_target(
+                    torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
+                    joint_ids=self._robot_joint_ids,
+                )
+                
 
 
 def main() -> None:
@@ -101,6 +110,7 @@ def main() -> None:
     parser.add_argument("--state_port", type=int, default="1801", help="Port for the state socket.")
     parser.add_argument("--command_port", type=str, default="1802", help="Port for the command socket.")
     parser.add_argument("--force_port", type=str, default="1803", help="Port for the force sensor.")
+    parser.add_argument("--command_interface", type=str, default="position", help="Command interface to use (default: position).")
     
     # parse the arguments
     arguments = parser.parse_args()
@@ -108,6 +118,9 @@ def main() -> None:
     # check if the scene name is valid
     if arguments.scene not in scenes:
         raise ValueError(f"Invalid scene name: {arguments.scene}. Available scenes are: {list(scenes.keys())}")
+
+    if arguments.command_interface not in ["position", "velocity"]:
+        raise ValueError(f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity")
 
     # create zmq config
     zmq_cfg = ZMQConfig(
@@ -121,7 +134,8 @@ def main() -> None:
         zmq_config=zmq_cfg,
         scene_name=arguments.scene,
         end_effector=arguments.end_effector,
-        force_sensor_name=arguments.force_sensor
+        force_sensor_name=arguments.force_sensor,
+        command_interface=arguments.command_interface,
     )
     sim.run()
 

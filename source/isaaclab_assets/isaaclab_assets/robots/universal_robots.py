@@ -94,17 +94,15 @@ UR5E_CFG_IK.actuators = {
             joint_names_expr=[".*"],
             velocity_limit=100.0,
             effort_limit=87.0,
-            stiffness=1600.0,
-            damping=200.0,
+            stiffness=50000.0,
+            damping=20000.0,
         ),
     }
 UR5E_CFG_LOW_LEVEL = UR5E_CFG.copy()
 UR5E_CFG_LOW_LEVEL.actuators = {
         "arm": ImplicitActuatorCfg(
             joint_names_expr=[".*"],
-            velocity_limit=100.0,
-            effort_limit=87.0,
             stiffness=100000,
-            damping=20000,
+            damping=50000,
         ),
     }
