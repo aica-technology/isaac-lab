@@ -17,6 +17,7 @@ from scripts.custom.aica_bridge.scenes import scenes
 from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
 from scripts.custom.aica_bridge.bridge.config_classes import ZMQConfig, SimulationParameters
 
+
 class Simulator:
     def __init__(
         self,
@@ -34,8 +35,10 @@ class Simulator:
         self._scene = InteractiveScene(scene_cfg)
         self._robot: Articulation = self._scene["robot"]
         self._robot_joint_ids = SceneEntityCfg("robot", joint_names=[".*"], body_names=[end_effector]).joint_ids
-        
-        self._bridge = AICABridge(zmq_config, robot_joint_ids=self._robot_joint_ids, force_sensor_name=force_sensor_name)
+
+        self._bridge = AICABridge(
+            zmq_config, robot_joint_ids=self._robot_joint_ids, force_sensor_name=force_sensor_name
+        )
         self._setup_done = False
 
     def run(self) -> None:
@@ -61,11 +64,15 @@ class Simulator:
 
         simulation_app.close()
 
-
     def _initialize_robot(self) -> None:
         """Set robot to default pose at startup."""
         defaults = self._robot.data
         self._robot.write_joint_state_to_sim(defaults.default_joint_pos, defaults.default_joint_vel)
+        if self._command_interface == "velocity":
+            # set the stiffness to zero for velocity control
+            self._robot.write_joint_stiffness_to_sim(
+                torch.zeros_like(defaults.default_joint_stiffness, device=self._robot.device)
+            )
         self._robot.reset()
 
     def _apply_command(
@@ -97,7 +104,6 @@ class Simulator:
                     torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
                     joint_ids=self._robot_joint_ids,
                 )
-                
 
 
 def main() -> None:
@@ -110,17 +116,21 @@ def main() -> None:
     parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
     parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
     parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
-    parser.add_argument("--command_interface", type=str, default="position", help="Command interface to use (default: position).")
-    
+    parser.add_argument(
+        "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
+    )
+
     # parse the arguments
     arguments = parser.parse_args()
-    
+
     # check if the scene name is valid
     if arguments.scene not in scenes:
         raise ValueError(f"Invalid scene name: {arguments.scene}. Available scenes are: {list(scenes.keys())}")
 
     if arguments.command_interface not in ["position", "velocity"]:
-        raise ValueError(f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity")
+        raise ValueError(
+            f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity"
+        )
 
     # create zmq config
     zmq_cfg = ZMQConfig(
@@ -130,7 +140,7 @@ def main() -> None:
         force_port=arguments.force_port,
     )
 
-    sim = Simulator(    
+    sim = Simulator(
         zmq_config=zmq_cfg,
         scene_name=arguments.scene,
         end_effector=arguments.end_effector,
