@@ -16,7 +16,6 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class CompliantScene(InteractiveSceneCfg):
-    """Configuration for a cart-pole scene."""
     robot: ArticulationCfg = UR5E_CFG_LOW_LEVEL.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # ground plane
