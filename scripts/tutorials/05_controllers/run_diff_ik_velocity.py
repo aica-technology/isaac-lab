@@ -122,7 +122,6 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
 
             # compute the joint commands
             joint_velocity = diff_ik_controller.compute(jacobian)
-            print(f"Joint velocity: {joint_velocity}")
             
         # apply actions
         robot.set_joint_velocity_target(joint_velocity, joint_ids=robot_entity_cfg.joint_ids)
