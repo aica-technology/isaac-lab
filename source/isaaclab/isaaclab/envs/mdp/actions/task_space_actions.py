@@ -172,11 +172,15 @@ class DifferentialInverseKinematicsAction(ActionTerm):
         # compute the delta in joint-space
         if ee_quat_curr.norm() != 0:
             jacobian = self._compute_frame_jacobian()
-            joint_pos_des = self._ik_controller.compute(ee_pos_curr, ee_quat_curr, jacobian, joint_pos)
+            joint_command_desired = self._ik_controller.compute(jacobian, ee_pos_curr, ee_quat_curr, joint_pos)
         else:
-            joint_pos_des = joint_pos.clone()
-        # set the joint position command
-        self._asset.set_joint_position_target(joint_pos_des, self._joint_ids)
+            joint_command_desired = joint_pos.clone()
+
+        if self.cfg.controller.command_type in ["pose", "position"]:
+            # set the joint position command
+            self._asset.set_joint_position_target(joint_command_desired, self._joint_ids)
+        else:
+            self._asset.set_joint_velocity_target(joint_command_desired, self._joint_ids)
 
     def reset(self, env_ids: Sequence[int] | None = None) -> None:
         self._raw_actions[env_ids] = 0.0

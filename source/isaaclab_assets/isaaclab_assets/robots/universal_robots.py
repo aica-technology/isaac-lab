@@ -56,7 +56,7 @@ UR5E_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path=f"{ISAAC_NUCLEUS_DIR}/Robots/UniversalRobots/ur5e/ur5e.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
-            disable_gravity=False,
+            disable_gravity=True,
             max_depenetration_velocity=5.0,
         ),
         activate_contact_sensors=False,
@@ -83,7 +83,7 @@ UR5E_CFG_VELOCIY.actuators = {
             velocity_limit=100.0,
             effort_limit=87.0,
             stiffness=0.0,
-            damping=40.0,
+            damping=20000.0,
         ),
     }
 
