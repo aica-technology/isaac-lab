@@ -56,10 +56,10 @@ UR5E_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path=f"{ISAAC_NUCLEUS_DIR}/Robots/UniversalRobots/ur5e/ur5e.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
-            disable_gravity=False,
+            disable_gravity=True,
             max_depenetration_velocity=5.0,
         ),
-        activate_contact_sensors=False,
+        activate_contact_sensors=True,
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
@@ -94,7 +94,15 @@ UR5E_CFG_IK.actuators = {
             joint_names_expr=[".*"],
             velocity_limit=100.0,
             effort_limit=87.0,
-            stiffness=1600.0,
-            damping=200.0,
+            stiffness=50000.0,
+            damping=20000.0,
+        ),
+    }
+UR5E_CFG_LOW_LEVEL = UR5E_CFG.copy()
+UR5E_CFG_LOW_LEVEL.actuators = {
+        "arm": ImplicitActuatorCfg(
+            joint_names_expr=[".*"],
+            stiffness=100000,
+            damping=50000,
         ),
     }
