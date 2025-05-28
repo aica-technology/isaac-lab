@@ -161,7 +161,7 @@ class DifferentialIKController:
             The target joint positions commands in shape (N, num_joints).
         """
         if self.cfg.command_type in ["position", "pose"]:
-            if not joint_pos:
+            if joint_pos is None:
                 raise ValueError("Current joint positions must be provided for `position_*` or `pose` command type!")
             if "position" in self.cfg.command_type:
                 position_error = self.ee_pos_des - ee_pos
