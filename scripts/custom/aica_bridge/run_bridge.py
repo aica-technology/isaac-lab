@@ -107,9 +107,9 @@ def main() -> None:
     parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
     parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
     parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
-    parser.add_argument("--state_port", type=int, default="1801", help="Port for the state socket.")
-    parser.add_argument("--command_port", type=str, default="1802", help="Port for the command socket.")
-    parser.add_argument("--force_port", type=str, default="1803", help="Port for the force sensor.")
+    parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
+    parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
+    parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
     parser.add_argument("--command_interface", type=str, default="position", help="Command interface to use (default: position).")
     
     # parse the arguments
