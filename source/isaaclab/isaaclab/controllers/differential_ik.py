@@ -165,8 +165,7 @@ class DifferentialIKController:
                 raise ValueError("Current joint positions must be provided for `position_*` or `pose` command type!")
             if "position" in self.cfg.command_type:
                 position_error = self.ee_pos_des - ee_pos
-                jacobian_pos = jacobian[:, 0:3]
-                delta_joint_pos = self._compute_delta_joint_state(delta_cartesian_state=position_error, jacobian=jacobian_pos)
+                delta_joint_pos = self._compute_delta_joint_state(delta_cartesian_state=position_error, jacobian=jacobian[:, 0:3])
             else:
                 position_error, axis_angle_error = compute_pose_error(
                     ee_pos, ee_quat, self.ee_pos_des, self.ee_quat_des, rot_error_type="axis_angle"
