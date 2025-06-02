@@ -124,11 +124,13 @@ class DifferentialIKController:
                 # we need end-effector orientation even though we are in position mode
                 # this is only needed for display purposes
                 if ee_quat is None:
-                    raise ValueError("End-effector orientation can not be None for `position_*` command type!")
+                    raise ValueError(
+                        "End-effector orientation can not be None for relative/absolute position command type!"
+                    )
                 # compute targets
                 if self.cfg.use_relative_mode:
                     if ee_pos is None:
-                        raise ValueError("End-effector position can not be None for `position_rel` command type!")
+                        raise ValueError("End-effector position can not be None for relative position command type!")
                     self.ee_pos_des[:] = ee_pos + self._command
                     self.ee_quat_des[:] = ee_quat
                 else:
@@ -139,7 +141,7 @@ class DifferentialIKController:
                 if self.cfg.use_relative_mode:
                     if ee_pos is None or ee_quat is None:
                         raise ValueError(
-                            "Neither end-effector position nor orientation can be None for `pose_rel` command type!"
+                            "Neither end-effector position nor orientation can be None for relative pose command type!"
                         )
                     self.ee_pos_des, self.ee_quat_des = apply_delta_pose(ee_pos, ee_quat, self._command)
                 else:
@@ -162,7 +164,9 @@ class DifferentialIKController:
         """
         if self.cfg.command_type in ["position", "pose"]:
             if joint_pos is None:
-                raise ValueError("Current joint positions must be provided for `position_*` or `pose` command type!")
+                raise ValueError(
+                    "Current joint positions must be provided for relative/absolute `position` or `pose` command type!"
+                )
             if "position" in self.cfg.command_type:
                 position_error = self.ee_pos_des - ee_pos
                 jacobian_pos = jacobian[:, 0:3]
