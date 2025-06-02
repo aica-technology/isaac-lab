@@ -37,14 +37,14 @@ class AICABridge:
         if self._use_force_sensor:
             self._cartesian_wrench = sr.CartesianWrench().Zero(force_sensor_name)
 
-    def set_joint_state_names(self, joint_names: list[str]) -> None:
-        """Set the joint state names for the robot."""
-        self._joint_state = sr.JointState("robot", joint_names)
+        self.is_active = False
 
-    def open(self) -> None:
-        """Open ZMQ sockets for bidirectional communication."""
+    def activate(self, joint_names: list[str]) -> None:
+        """Open ZMQ sockets for bidirectional communication and initialize joint state."""
         self._state_command_publisher_subscriber.open()
         self._force_publisher.open()
+        self._joint_state = sr.JointState("robot", joint_names)
+        self.is_active = True
 
     def receive_commands(self) -> tuple[Optional[sr.JointState], Optional[sr.JointState]]:
         """

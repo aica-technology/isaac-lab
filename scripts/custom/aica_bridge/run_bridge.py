@@ -39,20 +39,21 @@ class Simulator:
         self._bridge = AICABridge(
             zmq_config, robot_joint_ids=self._robot_joint_ids, force_sensor_name=force_sensor_name
         )
-        self._setup_done = False
 
     def run(self) -> None:
         """Initialize and run the simulation loop until the app is closed."""
         self._sim.reset()
 
-        self._bridge.open()
-
         physics_dt = self._sim.get_physics_dt()
         while simulation_app.is_running():
-            if not self._setup_done:
-                self._initialize_robot()
-                self._bridge.set_joint_state_names(self._robot.data.joint_names)
-                self._setup_done = True
+            if not self._bridge.is_active:
+                self._bridge.activate(self._robot.data.joint_names)
+                if self._bridge.is_active:
+                    self._initialize_robot()
+                    print("AICA Bridge activated. Waiting for commands...")
+                else:
+                    print("Failed to activate AICA Bridge...")
+                    break
             else:
                 self._bridge.send_states(self._robot, self._scene)
                 position_command, velocity_command = self._bridge.receive_commands()
@@ -91,6 +92,11 @@ class Simulator:
             if position_command:
                 target = torch.tensor(position_command.get_positions(), device=self._robot.device)
                 self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
+            elif velocity_command:
+                raise ValueError(
+                    "Received velocity command while using position interface. "
+                    "Please use the velocity interface instead."
+                )
             else:
                 # maintain current state
                 current = self._robot.data.joint_pos[0, self._robot_joint_ids]
@@ -99,6 +105,11 @@ class Simulator:
             if velocity_command:
                 target = torch.tensor(velocity_command.get_velocities(), device=self._robot.device)
                 self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
+            elif position_command:
+                raise ValueError(
+                    "Received position command while using velocity interface. "
+                    "Please use the position interface instead."
+                )
             else:
                 self._robot.set_joint_velocity_target(
                     torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
