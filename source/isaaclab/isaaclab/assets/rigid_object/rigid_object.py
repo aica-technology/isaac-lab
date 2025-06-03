@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING
 
 import omni.log
 import omni.physics.tensors.impl.api as physx
+from isaacsim.core.simulation_manager import SimulationManager
 from pxr import UsdPhysics
 
 import isaaclab.sim as sim_utils
@@ -258,7 +259,7 @@ class RigidObject(AssetBase):
         root_link_pos, root_link_quat = math_utils.combine_frame_transforms(
             root_pose[..., :3],
             root_pose[..., 3:7],
-            math_utils.quat_rotate(math_utils.quat_inv(com_quat), -com_pos),
+            math_utils.quat_apply(math_utils.quat_inv(com_quat), -com_pos),
             math_utils.quat_inv(com_quat),
         )
 
@@ -332,7 +333,7 @@ class RigidObject(AssetBase):
         com_pos_b = self.data.com_pos_b[local_env_ids, 0, :]
         # transform given velocity to center of mass
         root_com_velocity[:, :3] += torch.linalg.cross(
-            root_com_velocity[:, 3:], math_utils.quat_rotate(quat, com_pos_b), dim=-1
+            root_com_velocity[:, 3:], math_utils.quat_apply(quat, com_pos_b), dim=-1
         )
         # write center of mass velocity to sim
         self.write_root_com_velocity_to_sim(root_velocity=root_com_velocity, env_ids=env_ids)
@@ -400,9 +401,8 @@ class RigidObject(AssetBase):
     """
 
     def _initialize_impl(self):
-        # create simulation view
-        self._physics_sim_view = physx.create_simulation_view(self._backend)
-        self._physics_sim_view.set_subspace_roots("/")
+        # obtain global simulation view
+        self._physics_sim_view = SimulationManager.get_physics_sim_view()
         # obtain the first prim in the regex expression (all others are assumed to be a copy of this)
         template_prim = sim_utils.find_first_matching_prim(self.cfg.prim_path)
         if template_prim is None:
@@ -501,5 +501,4 @@ class RigidObject(AssetBase):
         # call parent
         super()._invalidate_initialize_callback(event)
         # set all existing views to None to invalidate them
-        self._physics_sim_view = None
         self._root_physx_view = None
