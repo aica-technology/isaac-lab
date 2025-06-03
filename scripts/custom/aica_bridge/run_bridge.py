@@ -34,7 +34,7 @@ class Simulator:
             scene_name (str): Name of the scene to load.
 
             end_effector (str): Name of the end effector to control.
-            
+
             command_interface (str): Command interface to use, either 'position' or 'velocity'.
         """
         sim_cfg = SimulationCfg(device=SimulationParameters().device, dt=SimulationParameters().dt)
@@ -74,7 +74,7 @@ class Simulator:
         simulation_app.close()
 
     def _initialize_robot(self) -> None:
-        """Set robot to default pose at startup."""
+        """Set robot to default pose at startup. If using velocity control, set stiffness to zero."""
         defaults = self._robot.data
         self._robot.write_joint_state_to_sim(defaults.default_joint_pos, defaults.default_joint_vel)
         if self._command_interface == "velocity":
@@ -95,6 +95,8 @@ class Simulator:
         Args:
             position_command: Joint position command, if any.
             velocity_command: Joint velocity command, if any.
+        Raises:
+            ValueError: If both position and velocity commands are received, or if the command interface does not match.
         """
         if self._command_interface == "position":
             if position_command:
