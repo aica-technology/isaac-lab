@@ -47,8 +47,10 @@ class AICABridge:
     def activate(self, joint_names: list[str]) -> None:
         """Open ZMQ sockets for bidirectional communication and initialize joint state."""
         if not self.__is_active:
+            if self._use_force_sensor:
+                self._force_publisher.open()
+
             self._state_command_publisher_subscriber.open()
-            self._force_publisher.open()
             self._joint_state = sr.JointState("robot", joint_names)
             self.__is_active = True
 
