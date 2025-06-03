@@ -171,7 +171,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
                 root_pose_w[:, 0:3], root_pose_w[:, 3:7], ee_pose_w[:, 0:3], ee_pose_w[:, 3:7]
             )
             # compute the joint commands
-            joint_pos_des = diff_ik_controller.compute(ee_pos_b, ee_quat_b, jacobian, joint_pos)
+            joint_pos_des = diff_ik_controller.compute(jacobian, ee_pos_b, ee_quat_b, joint_pos)
 
         # apply actions
         robot.set_joint_position_target(joint_pos_des, joint_ids=robot_entity_cfg.joint_ids)
