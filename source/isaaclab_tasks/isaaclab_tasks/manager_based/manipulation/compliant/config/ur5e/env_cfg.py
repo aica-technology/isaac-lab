@@ -3,7 +3,7 @@ from isaaclab.utils import configclass
 from isaaclab_tasks.manager_based.manipulation.compliant.compliant_env_cfg import CompliantControlRLCfg
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
-from isaaclab_assets import UR5E_CFG_IK  
+from isaaclab_assets import UR5E_CFG_VELOCIY  
 import math
 
 @configclass
@@ -15,7 +15,7 @@ class UR5eCompliantEnvCfg(CompliantControlRLCfg):
         self.ee_str = "wrist_3_link"
 
         # switch robot to ur5e
-        self.scene.robot = UR5E_CFG_IK.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = UR5E_CFG_VELOCIY.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
 
         # set end-effector frame
@@ -32,6 +32,6 @@ class UR5eCompliantEnvCfg(CompliantControlRLCfg):
             asset_name="robot",
             joint_names=[".*"],
             body_name=self.ee_str,
-            controller=DifferentialIKControllerCfg(command_type="pose", use_relative_mode=True, ik_method="dls"),
+            controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
             scale=1
         )
