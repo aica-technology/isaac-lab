@@ -15,16 +15,15 @@ from isaaclab.sim import SimulationCfg, SimulationContext
 import state_representation as sr
 from scripts.custom.aica_bridge.scenes import scenes
 from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
-from scripts.custom.aica_bridge.bridge.config_classes import ZMQConfig, SimulationParameters
+from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig, SimulationParameters
 
 
 class Simulator:
     def __init__(
         self,
-        zmq_config: ZMQConfig,
+        bridge_config: BridgeConfig,
         scene_name: str,
         end_effector: str,
-        force_sensor_name: Union[str, None] = None,
         command_interface: str = "position",
     ):
         sim_cfg = SimulationCfg(device=SimulationParameters().device, dt=SimulationParameters().dt)
@@ -37,7 +36,7 @@ class Simulator:
         self._robot_joint_ids = SceneEntityCfg("robot", joint_names=[".*"], body_names=[end_effector]).joint_ids
 
         self._bridge = AICABridge(
-            zmq_config, robot_joint_ids=self._robot_joint_ids, force_sensor_name=force_sensor_name
+            bridge_config, robot_joint_ids=self._robot_joint_ids
         )
 
     def run(self) -> None:
@@ -144,18 +143,18 @@ def main() -> None:
         )
 
     # create zmq config
-    zmq_cfg = ZMQConfig(
+    bridge_config = BridgeConfig(
         address=arguments.ip_address,
         state_port=arguments.state_port,
         command_port=arguments.command_port,
         force_port=arguments.force_port,
+        force_sensor_name=arguments.force_sensor,
     )
 
     sim = Simulator(
-        zmq_config=zmq_cfg,
+        bridge_config=bridge_config,
         scene_name=arguments.scene,
         end_effector=arguments.end_effector,
-        force_sensor_name=arguments.force_sensor,
         command_interface=arguments.command_interface,
     )
     sim.run()
