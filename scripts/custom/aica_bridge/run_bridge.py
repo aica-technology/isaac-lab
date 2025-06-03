@@ -26,6 +26,17 @@ class Simulator:
         end_effector: str,
         command_interface: str = "position",
     ):
+        """
+        Initialize the simulator with the given configuration.
+        Args:
+            bridge_config (BridgeConfig): Configuration for the AICA Bridge.
+
+            scene_name (str): Name of the scene to load.
+
+            end_effector (str): Name of the end effector to control.
+            
+            command_interface (str): Command interface to use, either 'position' or 'velocity'.
+        """
         sim_cfg = SimulationCfg(device=SimulationParameters().device, dt=SimulationParameters().dt)
         self._sim = SimulationContext(sim_cfg)
         self._command_interface = command_interface
@@ -35,9 +46,7 @@ class Simulator:
         self._robot: Articulation = self._scene["robot"]
         self._robot_joint_ids = SceneEntityCfg("robot", joint_names=[".*"], body_names=[end_effector]).joint_ids
 
-        self._bridge = AICABridge(
-            bridge_config, robot_joint_ids=self._robot_joint_ids
-        )
+        self._bridge = AICABridge(bridge_config, robot_joint_ids=self._robot_joint_ids)
 
     def run(self) -> None:
         """Initialize and run the simulation loop until the app is closed."""

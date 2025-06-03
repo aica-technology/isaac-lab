@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 
+
 @dataclass
 class BridgeConfig:
     address: str = "*"
@@ -12,4 +13,4 @@ class BridgeConfig:
 @dataclass
 class SimulationParameters:
     device: str = "cuda:0"
-    dt: float = 1/60
+    dt: float = 1 / 60

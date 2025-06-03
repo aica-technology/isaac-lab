@@ -17,15 +17,26 @@ from state_representation import StateType
 from scripts.custom.aica_bridge.bridge.utils import measured_forces
 from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
 
+
 class AICABridge:
     def __init__(self, config: BridgeConfig, robot_joint_ids: List[int] | slice):
+        """
+        Initialize the AICA Bridge with the given configuration and robot joint IDs.
+
+        Args:
+            config (BridgeConfig): Configuration for the AICA Bridge which includes address, ports, and force 
+                sensor name.
+
+            robot_joint_ids (List[int] | slice): Joint IDs of the robot to be controlled which are retrieved from the 
+                SceneEntityCfg of the robot.
+        """
+
         self._context = ZMQContext(1)
-        
+
         combined_cfg = ZMQCombinedSocketsConfiguration(
             self._context, config.address, str(config.state_port), str(config.command_port)
         )
         self._state_command_publisher_subscriber = ZMQPublisherSubscriber(combined_cfg)
-
 
         self._robot_joint_ids = robot_joint_ids
         self._joint_state: sr.JointState = None
@@ -43,7 +54,7 @@ class AICABridge:
     def is_active(self) -> bool:
         """Check if the AICA Bridge is active."""
         return self.__is_active
-    
+
     def activate(self, joint_names: list[str]) -> None:
         """Open ZMQ sockets for bidirectional communication and initialize joint state."""
         if not self.__is_active:
@@ -85,7 +96,7 @@ class AICABridge:
 
             self._joint_state.set_positions(positions.cpu().numpy())
             self._joint_state.set_velocities(velocities.cpu().numpy())
-            
+
             self._state_command_publisher_subscriber.send_bytes(
                 clproto.encode(self._joint_state, clproto.MessageType.JOINT_STATE_MESSAGE)
             )
@@ -100,4 +111,3 @@ class AICABridge:
                 )
         else:
             raise RuntimeError("AICA Bridge is not active. Please activate it before sending states.")
-

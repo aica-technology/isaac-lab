@@ -4,13 +4,13 @@ from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.sensors import FrameTransformerCfg, OffsetCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.utils import configclass
-from isaaclab.markers.config import FRAME_MARKER_CFG  
+from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
 from isaaclab_assets import UR5E_CFG_LOW_LEVEL
 
 
-ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy() # type: ignore
-ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1) # type: ignore
+ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()  # type: ignore
+ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)  # type: ignore
 ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 
@@ -38,9 +38,7 @@ class CompliantScene(InteractiveSceneCfg):
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
             activate_contact_sensors=True,
         ),
-        init_state=RigidObjectCfg.InitialStateCfg(
-            pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)
-        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)),
     )
 
     contact_forces = ContactSensorCfg(
@@ -52,17 +50,16 @@ class CompliantScene(InteractiveSceneCfg):
     )
 
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
-            prim_path="{ENV_REGEX_NS}/Robot/base_link",
-            debug_vis=False,
-            visualizer_cfg=ee_frame_cfg,
-            target_frames=[
-                FrameTransformerCfg.FrameCfg(
-                    prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
-                    name="end_effector",
-                    offset=OffsetCfg(
-                        pos=(0, 0, 0),
-                    ),
+        prim_path="{ENV_REGEX_NS}/Robot/base_link",
+        debug_vis=False,
+        visualizer_cfg=ee_frame_cfg,
+        target_frames=[
+            FrameTransformerCfg.FrameCfg(
+                prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
+                name="end_effector",
+                offset=OffsetCfg(
+                    pos=(0, 0, 0),
                 ),
-            ],
-        )
-    
+            ),
+        ],
+    )
