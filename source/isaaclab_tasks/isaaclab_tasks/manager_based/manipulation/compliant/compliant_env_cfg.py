@@ -168,6 +168,18 @@ class EventCfg:
         },
     )
 
+    robot_joint_stiffness_and_damping = EventTerm(
+        func=mdp.randomize_actuator_gains,
+        min_step_count_between_reset=500,
+        mode="reset",
+        params={
+            "asset_cfg": SceneEntityCfg("robot", joint_names=".*"),
+            "damping_distribution_params": (20000, 20000),
+            "distribution": "uniform",
+        },
+    )
+
+
 
 @configclass
 class RewardsCfg:
@@ -243,7 +255,7 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 60000}
     )
 
-    """"
+
     force_limit_penalty = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -1e-1, "num_steps": 72000}
     )
@@ -253,7 +265,7 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "force_gradient", "weight": -0.04, "num_steps": 72000}
     )
 
-
+    """"
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.06, "num_steps": 72000}
     )
@@ -292,10 +304,10 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2
+        self.decimation = 1
         self.sim.render_interval = self.decimation
         self.episode_length_s = 10.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 100.0
+        self.sim.dt = 1.0 / 200.0
 
