@@ -105,7 +105,7 @@ class Simulator:
             elif velocity_command:
                 raise ValueError(
                     "Received velocity command while using position interface. "
-                    "Please use the velocity interface instead."
+                    "Use the velocity interface instead."
                 )
             else:
                 # maintain current state
@@ -118,7 +118,7 @@ class Simulator:
             elif position_command:
                 raise ValueError(
                     "Received position command while using velocity interface. "
-                    "Please use the position interface instead."
+                    "Use the position interface instead."
                 )
             else:
                 self._robot.set_joint_velocity_target(
