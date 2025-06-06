@@ -93,7 +93,6 @@ class AICABridge:
         if self.__is_active:
             positions = robot.data.joint_pos[0, self._robot_joint_ids]
             velocities = robot.data.joint_vel[0, self._robot_joint_ids]
-
             self._joint_state.set_positions(positions.cpu().numpy())
             self._joint_state.set_velocities(velocities.cpu().numpy())
 

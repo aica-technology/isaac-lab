@@ -4,7 +4,7 @@ from isaaclab.app import AppLauncher
 app_launcher = AppLauncher()
 simulation_app = app_launcher.app
 
-from typing import Optional, Union
+from typing import Optional
 import argparse
 import torch
 from isaaclab.assets import Articulation
@@ -15,13 +15,14 @@ from isaaclab.sim import SimulationCfg, SimulationContext
 import state_representation as sr
 from scripts.custom.aica_bridge.scenes import scenes
 from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
-from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig, SimulationParameters
+from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
 
 
 class Simulator:
     def __init__(
         self,
         bridge_config: BridgeConfig,
+        simulation_config: SimulationCfg,
         scene_name: str,
         end_effector: str,
         command_interface: str = "position",
@@ -37,8 +38,10 @@ class Simulator:
 
             command_interface (str): Command interface to use, either 'position' or 'velocity'.
         """
-        sim_cfg = SimulationCfg(device=SimulationParameters().device, dt=SimulationParameters().dt)
-        self._sim = SimulationContext(sim_cfg)
+        self._sim = SimulationContext(simulation_config)
+        self._sim.add_physics_callback("state_callback", self._state_callback)
+        self._sim.add_physics_callback("command_callback", self._command_callback)
+
         self._command_interface = command_interface
 
         scene_cfg = scenes[scene_name](num_envs=1, env_spacing=2)
@@ -62,16 +65,31 @@ class Simulator:
                 else:
                     print("Failed to activate AICA Bridge...")
                     break
-            else:
-                self._bridge.send_states(self._robot, self._scene)
-                position_command, velocity_command = self._bridge.receive_commands()
-                self._apply_command(position_command, velocity_command)
 
-            self._scene.write_data_to_sim()
             self._sim.step()
             self._scene.update(physics_dt)
 
         simulation_app.close()
+
+    def _state_callback(self, _):
+        """
+        Callback to send the current state of the robot to the AICA Bridge.
+        """
+        if self._bridge.is_active:
+            self._bridge.send_states(self._robot, self._scene)
+        else:
+            print("AICA Bridge is not active. Cannot send states.")
+
+    def _command_callback(self, _):
+        """
+        Callback to receive commands from the AICA Bridge and apply them to the robot.
+        """
+        if self._bridge.is_active:
+            position_command, velocity_command = self._bridge.receive_commands()
+            self._apply_command(position_command, velocity_command)
+            self._scene.write_data_to_sim()
+        else:
+            print("AICA Bridge is not active. Cannot receive commands.")
 
     def _initialize_robot(self) -> None:
         """Set robot to default pose at startup. If using velocity control, set stiffness to zero."""
@@ -104,8 +122,7 @@ class Simulator:
                 self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
             elif velocity_command:
                 raise ValueError(
-                    "Received velocity command while using position interface. "
-                    "Use the velocity interface instead."
+                    "Received velocity command while using position interface. " "Use the velocity interface instead."
                 )
             else:
                 # maintain current state
@@ -117,8 +134,7 @@ class Simulator:
                 self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
             elif position_command:
                 raise ValueError(
-                    "Received position command while using velocity interface. "
-                    "Use the position interface instead."
+                    "Received position command while using velocity interface. " "Use the position interface instead."
                 )
             else:
                 self._robot.set_joint_velocity_target(
@@ -131,12 +147,14 @@ def main() -> None:
     # create a argparse that takes as input the scene name and the end effector name
     parser = argparse.ArgumentParser(description="Run the AICA bridge.")
     parser.add_argument("--scene", type=str, help="Scene name to load.")
+    parser.add_argument("--rate", type=float, default=100.0, help="Simulation rate in Hz.")
     parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
     parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
     parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
     parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
     parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
     parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
+    parser.add_argument("--device", type=str, default="cuda:0", help="Device to run the simulation on (default: cuda:0).")
     parser.add_argument(
         "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
     )
@@ -153,6 +171,12 @@ def main() -> None:
             f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity"
         )
 
+    if arguments.device not in ["cuda:0", "cpu"]:
+        raise ValueError(f"Invalid device: {arguments.device}. Available options are: cuda:0, cpu")
+    
+    if arguments.rate <= 0:
+        raise ValueError(f"Invalid rate: {arguments.rate}. Rate must be a positive number.")
+
     # create zmq config
     bridge_config = BridgeConfig(
         address=arguments.ip_address,
@@ -165,6 +189,10 @@ def main() -> None:
     sim = Simulator(
         bridge_config=bridge_config,
         scene_name=arguments.scene,
+        simulation_config=SimulationCfg(
+            dt=1.0 / arguments.rate,
+            device=arguments.device,
+        ),
         end_effector=arguments.end_effector,
         command_interface=arguments.command_interface,
     )
