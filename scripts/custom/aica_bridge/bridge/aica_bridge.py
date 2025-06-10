@@ -24,10 +24,10 @@ class AICABridge:
         Initialize the AICA Bridge with the given configuration and robot joint IDs.
 
         Args:
-            config (BridgeConfig): Configuration for the AICA Bridge which includes address, ports, and force 
+            config (BridgeConfig): Configuration for the AICA Bridge which includes address, ports, and force
                 sensor name.
 
-            robot_joint_ids (List[int] | slice): Joint IDs of the robot to be controlled which are retrieved from the 
+            robot_joint_ids (List[int] | slice): Joint IDs of the robot to be controlled which are retrieved from the
                 SceneEntityCfg of the robot.
         """
 

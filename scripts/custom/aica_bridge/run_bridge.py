@@ -122,7 +122,7 @@ class Simulator:
                 self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
             elif velocity_command:
                 raise ValueError(
-                    "Received velocity command while using position interface. " "Use the velocity interface instead."
+                    "Received velocity command while using position interface. Use the velocity interface instead."
                 )
             else:
                 # maintain current state
@@ -134,7 +134,7 @@ class Simulator:
                 self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
             elif position_command:
                 raise ValueError(
-                    "Received position command while using velocity interface. " "Use the position interface instead."
+                    "Received position command while using velocity interface. Use the position interface instead."
                 )
             else:
                 self._robot.set_joint_velocity_target(
@@ -154,7 +154,9 @@ def main() -> None:
     parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
     parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
     parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
-    parser.add_argument("--device", type=str, default="cuda:0", help="Device to run the simulation on (default: cuda:0).")
+    parser.add_argument(
+        "--device", type=str, default="cuda:0", help="Device to run the simulation on (default: cuda:0)."
+    )
     parser.add_argument(
         "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
     )
@@ -173,7 +175,7 @@ def main() -> None:
 
     if arguments.device not in ["cuda:0", "cpu"]:
         raise ValueError(f"Invalid device: {arguments.device}. Available options are: cuda:0, cpu")
-    
+
     if arguments.rate <= 0:
         raise ValueError(f"Invalid rate: {arguments.rate}. Rate must be a positive number.")
 
