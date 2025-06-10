@@ -16,6 +16,7 @@ import state_representation as sr
 from scripts.custom.aica_bridge.scenes import scenes
 from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
 from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
+import time
 
 
 class Simulator:
@@ -56,7 +57,10 @@ class Simulator:
         self._sim.reset()
 
         physics_dt = self._sim.get_physics_dt()
+        render_dt = 1.0 / 60.0  # render at 60Hz
+        time_to_render = 0.0
         while simulation_app.is_running():
+            start_time = time.time()
             if not self._bridge.is_active:
                 self._bridge.activate(self._robot.data.joint_names)
                 if self._bridge.is_active:
@@ -66,8 +70,20 @@ class Simulator:
                     print("Failed to activate AICA Bridge...")
                     break
 
-            self._sim.step()
+            self._sim.step(render=False)
             self._scene.update(physics_dt)
+
+            time_taken = time.time() - start_time
+
+            sleep_time = physics_dt - time_taken
+            time_to_render += time_taken
+
+            if sleep_time > 0:
+                time.sleep(sleep_time)
+
+            if time_taken >= render_dt:
+                self._sim.render()
+                time_to_render = 0.0
 
         simulation_app.close()
 
