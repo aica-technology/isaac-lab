@@ -188,13 +188,9 @@ def main() -> None:
             f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity"
         )
 
-    if arguments.device not in ["cuda:0", "cpu"]:
-        raise ValueError(f"Invalid device: {arguments.device}. Available options are: cuda:0, cpu")
-
     if arguments.rate <= 0:
         raise ValueError(f"Invalid rate: {arguments.rate}. Rate must be a positive number.")
 
-    # create zmq config
     bridge_config = BridgeConfig(
         address=arguments.ip_address,
         state_port=arguments.state_port,
