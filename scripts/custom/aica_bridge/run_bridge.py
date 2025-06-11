@@ -1,7 +1,26 @@
 from isaaclab.app import AppLauncher
+import argparse
+
+parser = argparse.ArgumentParser(description="Run the AICA bridge.")
+
+parser.add_argument("--scene", type=str, help="Scene name to load.")
+parser.add_argument("--rate", type=float, default=100.0, help="Simulation rate in Hz.")
+parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
+parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
+parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
+parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
+parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
+parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
+parser.add_argument(
+    "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
+)
+
+AppLauncher.add_app_launcher_args(parser)
+
+arguments = parser.parse_args()
 
 # launch omniverse app
-app_launcher = AppLauncher()
+app_launcher = AppLauncher(headless=arguments.headless, device=arguments.device)
 simulation_app = app_launcher.app
 
 from typing import Optional
@@ -57,8 +76,9 @@ class Simulator:
         self._sim.reset()
 
         physics_dt = self._sim.get_physics_dt()
-        render_dt = 1.0 / 60.0  # render at 60Hz
+        render_dt = 1.0 / 60.0
         time_to_render = 0.0
+
         while simulation_app.is_running():
             start_time = time.time()
             if not self._bridge.is_active:
@@ -73,17 +93,16 @@ class Simulator:
             self._sim.step(render=False)
             self._scene.update(physics_dt)
 
-            time_taken = time.time() - start_time
+            if not arguments.headless:
+                time_to_render += time.time() - start_time
+                if time_to_render >= render_dt:
+                    self._sim.render()
+                    time_to_render = 0.0
 
-            sleep_time = physics_dt - time_taken
-            time_to_render += time_taken
-
-            if sleep_time > 0:
-                time.sleep(sleep_time)
-
-            if time_taken >= render_dt:
-                self._sim.render()
-                time_to_render = 0.0
+            elapsed_time = time.time() - start_time
+            sleep_duration = physics_dt - elapsed_time
+            if sleep_duration > 0:
+                time.sleep(sleep_duration)
 
         simulation_app.close()
 
@@ -160,26 +179,6 @@ class Simulator:
 
 
 def main() -> None:
-    # create a argparse that takes as input the scene name and the end effector name
-    parser = argparse.ArgumentParser(description="Run the AICA bridge.")
-    parser.add_argument("--scene", type=str, help="Scene name to load.")
-    parser.add_argument("--rate", type=float, default=100.0, help="Simulation rate in Hz.")
-    parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
-    parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
-    parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
-    parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
-    parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
-    parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
-    parser.add_argument(
-        "--device", type=str, default="cuda:0", help="Device to run the simulation on (default: cuda:0)."
-    )
-    parser.add_argument(
-        "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
-    )
-
-    # parse the arguments
-    arguments = parser.parse_args()
-
     # check if the scene name is valid
     if arguments.scene not in scenes:
         raise ValueError(f"Invalid scene name: {arguments.scene}. Available scenes are: {list(scenes.keys())}")
