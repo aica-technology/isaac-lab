@@ -1,11 +1,11 @@
-# Running Applications in Isaac Sim Using AICA Studio
+# Running Applications in Isaac Lab Using AICA System
 
 This document provides a step-by-step guide for running robotic applications built in **AICA Studio** within a simulated
 environment using the **Isaac Lab** wrapper and executed on **Isaac Sim**.
 
-**AICA Studio** is a robotics software tool that enables the creation of robotic applications using a visual, data-flow
-approach. Applications are constructed from modular blocks namely, **components**, **controllers**, and **hardware
-interfaces**.
+**AICA System** is a robotics software tool suite that enables the creation of robotic applications using a visual, data-flow
+approach in **AICA Studio**. Applications are constructed from modular blocks namely, **components**, **controllers**, and 
+**hardware interfaces**.
 
 Hardware interfaces serve as bridges between the application and either physical hardware or simulators, enabling
 transitions between simulated and real-world deployments.
@@ -17,32 +17,32 @@ RL policies.
 
 # Motivation
 
-The integration of AICA Studio with Isaac Lab offers a workflow for developing, testing, and deploying robotic
+The integration of **AICA System** with **Isaac Lab** offers a workflow for developing, testing, and deploying robotic
 applications. Specifically:
 
 1. **RL Policy Testing** AICA’s RL Policy Component SDK allows developers to deploy Reinforcement Learning (RL) models
-   directly onto real hardware through components. These models can be trained in Isaac Lab, and with AICA application
+   directly onto real hardware through components. These models can be trained in Isaac Lab, and with AICA System
    interacting directly with Isaac Lab, users can validate the trained policies under the same conditions in which they
    were learned.
 
-2. **Reliable Policy Validation** Validating RL policies in Isaac Sim through AICA ensures consistency in simulation
+2. **Reliable Policy Validation** Validating RL policies in Isaac Lab through AICA ensures consistency in simulation
    fidelity. Developers can monitor the behaviors of the trained policies and test the effect of various parameters,
    enabling confident transitions from simulation to real-world deployment.
 
-3. **One-Click Robot Swapping** AICA Studio makes it easy to switch between robot models, whether simulated or
+3. **One-Click Robot Swapping** **AICA Studio** makes it easy to switch between robot models, whether simulated or
    real—using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
    hardware with no additional development overhead.
 
-4. **Digital Twin COntrol** Beyond RL, AICA empowers users to interact with digital twins of their robots. Applications
+4. **Digital Twin Cintrol** Beyond RL, AICA empowers users to interact with digital twins of their robots. Applications
    can be authored, tested, and validated entirely in simulation before connecting to actual hardware. This greatly
    accelerates development cycles and enhances safety.
 
-With this integration, users can build complete automation pipelines in Isaac Lab, interact with them using AICA Studio,
+With this integration, users can build complete automation pipelines in Isaac Lab, interact with them using AICA System,
 validate performance, switch the hardware interface to a real robot, and hit play with no code changes required.
 
 # Prerequisites
 
-Both **Isaac Lab** and **AICA Studio** require Docker to be installed on your host machine. Ensure Docker is properly
+Both **Isaac Lab** and **AICA System** require Docker to be installed on your host machine. Ensure Docker is properly
 installed and running before continuing.
 
 ## Installing Isaac Lab
@@ -72,25 +72,26 @@ Once done, verify the installation by running
 python3 scripts/custom/aica_bridge/run_bridge.py --scene basic_scene
 ```
 
-This will spwan a UR5e robot, a ground plane and lights as can be seen in the image below.
+This will spwan a UR5e robot, a ground plane and lights. If you see the UR5e robot in the scene, then the
+installation was successful and you are ready to proceed with the next steps.
 
-## Installing AICA Studio
+## Installing AICA System
 
-To run **AICA Studio**, you also need to install the **AICA Launcher**. Follow the installation instructions available
+To run **AICA System**, you also need to install the **AICA Launcher**. Follow the installation instructions available
 in the [official documentation](https://docs.aica.tech/docs/getting-started/installation/installation-and-launch).
 
-# Connecting AICA Studio to Isaac Lab
+# Connecting AICA System to Isaac Lab
 
 In this section, we’ll walk through a simple example of using a point attractor to move a UR5e simulated robot in Isaac
-Lab to a target frame and then manipulate that frame within the AICA Studio 3D Visualizer.
+Lab to a target frame and then manipulate that frame within the **AICA Studio** 3D Visualizer.
 
 ## Creating an AICA Application
 
-To get started, follow these steps to create a new application in AICA Studio:
+To get started, follow these steps to create a new application in **AICA Studio**:
 
-1. Open AICA Studio and launch a configuration using the latest core image along with the latest Universal Robots
-   collection, as shown in the image below.
-2. Click the **New Application** button located in the top-left corner of the AICA Studio interface.
+1. Open **AICA Launcher** and launch a configuration using the latest core image along with the latest Universal Robots
+   collection.
+2. Click the **New Application** button located in the top-left corner of the **AICA Studio** interface.
 3. In the new application, add the following components:
 
    - **Signal Point Attractor**: Drives the robot’s movement toward a specified target frame.
@@ -102,22 +103,22 @@ To get started, follow these steps to create a new application in AICA Studio:
 
 4. Connect the events and signals as shown in the image. Make sure to auto-configure and activate all components and
    controllers.
-5. Press **Play**, then switch to the **3D Visualizer** tab in AICA Studio. You should see the UR5e robot in the scene.
-   Use the **Record Frame** button to capture a target frame, specify the tool link name, and then move the frame to
+5. Press **Play**, then switch to the **3D Visualizer** tab in **AICA Studio**. You should see the UR5e robot in the scene.
+   Use the **Record Frame** button to capture a target frame, specify the tool frame name, and then move the frame to
    your desired target position.
 6. Once the target frame is set, parametrize the **Frame to Signal** component with the name of the target frame you
    just created.
 
 Now that you have set up the application, let's go over the necessary steps that needs to be done on the Hardware
-Interface level to connect AICA Studio to the Isaac Lab simulator.
+Interface level to connect **AICA System** to the Isaac Lab simulator.
 
 ## Configuring the Hardware Interface
 
-The **Hardware Interface** serves as the communication bridge between AICA Studio and external hardware or simulators.
+The **Hardware Interface** serves as the communication bridge between the **AICA System** and external hardware or simulators.
 In this example, we’ll use it to connect with the Isaac Lab simulator via ZMQ sockets.
 
 To set up the hardware interface for Isaac Lab, you’ll need to update the plugin section in the UR5e URDF to use the
-lightweight interface plugin, as shown below:
+**lightweight interface plugin**, as shown below:
 
 ```xml
 <hardware>
@@ -137,9 +138,9 @@ receiving both state and sensor data.
 
 To set up the hardware interface, follow these steps:
 
-1. Go to the **Hardware** tab in AICA Studio.
+1. Go to the **Hardware** tab in **AICA Studio**.
 2. Click on the Universal Robot 5e URDF to open it.
-3. Click **Save As** to create a copy of the URDF file for the UR5e robot in AICA Studio.
+3. Click **Save As** to create a copy of the URDF file for the UR5e robot in **AICA Studio**.
 4. In the **hardware** tag, replace the existing plugin with the lightweight interface plugin shown above.
 5. Remove any unused tags, such as GPIO or other unnecessary hardware interfaces, from the URDF file.
 6. Save your changes.
@@ -182,6 +183,10 @@ The simulator includes several important parameters that you should be familiar 
 Ensure these parameters are correctly configured to enable seamless communication between the simulator and your AICA
 application.
 
+# Running the AICA Application
+
+When the simulator is running, you can execute your AICA application by clicking the **Play** button in the **AICA Studio**.
+
 # Creating a New Scene in Isaac Lab
 
 To create a new scene, you should define a scene config class that inherits from InteractiveSceneCfg. Various examples
@@ -199,14 +204,14 @@ python3 scripts/custom/aica_bridge/run_bridge.py --scene <your_scene_name>
 
 # Beware
 
-When operating the AICA Studio and Isaac Lab simulator, there are several important points to keep in mind to ensure
+When run the **AICA System** and Isaac Lab simulator, there are several important points to keep in mind to ensure
 safe and reliable performance:
 
 1. **Robot joint names**: Ensure that the joint names in your URDF file match those expected by the USD file in Isaac
    Lab. In the correct implementation, there are two sources of truth for joint names: the URDF file and USD file. If
    these names do not match, the simulator will not be able to send the states correctly to the AICA application.
 
-2. **Hardware Interface Rate in AICA Studio**: The hardware interface rate in AICA Studio should be greater than the
+2. **Hardware Interface Rate in AICA Studio**: The hardware interface rate in **AICA Studio** should be greater than the
    simulation rate in Isaac Lab. This ensures that the AICA application can send commands to the simulator at a rate
    that matches or exceeds the simulation updates, preventing command loss or delays.
 
@@ -222,5 +227,5 @@ safe and reliable performance:
 5. **Command Interface**: Ensure that the command interface in the simulator matches the type of commands being sent.
 
 # Conclusion
-By following the steps outlined in this guide, you can successfully run robotic applications built in AICA Studio within
+By following the steps outlined in this guide, you can successfully run robotic applications built in **AICA Studio** within
 the Isaac Lab simulator. This integration allows for efficient development, testing, and deployment of robotic applications,
