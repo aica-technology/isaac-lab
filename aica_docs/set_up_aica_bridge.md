@@ -30,8 +30,8 @@ applications. Specifically:
 2. **Reliable Policy Validation**: Developers can monitor the behaviors of the trained policies and test the effect of
    various parameters, enabling confident transitions from simulation to real-world deployment.
 
-3. **One-Click Robot Swapping**: **AICA Studio** makes it easy to switch between robot models, whether simulated or
-   real—using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
+3. **One-Click Robot Swapping**: AICA Studio makes it easy to switch between robot models, whether simulated or
+   real, using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
    hardware with no additional development overhead.
 
 4. **Digital Twin Cintrol**: Beyond RL, Running AICA System with Isaac Lab provide users ways to interact with digital
