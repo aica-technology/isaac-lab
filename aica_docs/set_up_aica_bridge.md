@@ -34,7 +34,7 @@ applications. Specifically:
    real, using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
    hardware with no additional development overhead.
 
-4. **Digital Twin Cintrol**: Beyond RL, Running AICA System with Isaac Lab provide users ways to interact with digital
+4. **Digital Twin Control**: Beyond RL, Running AICA System with Isaac Lab provide users ways to interact with digital
    twins of their robots. Applications can be authored, tested, and validated entirely in simulation before connecting
    to actual hardware. This greatly accelerates development cycles and enhances safety.
 
@@ -183,6 +183,10 @@ The simulator includes several important parameters that you should be familiar 
 - **command_interface**: Specifies the type of command the simulator accepts. The default is `"position"`, meaning it
   expects position commands. You can change this to `"velocity"` if required. If a mismatched command type is received,
   the simulator will terminate with a `ValueError` indicating the mismatch.
+- **headless**: When set to `true`, the simulator runs in headless mode, which is useful for running simulations without a
+  graphical interface.
+- **device**: Specifies the device to use for simulation. The default is `cuda`, which utilizes GPU acceleration. You can
+  change this to `cpu` if you want to run the simulation on the CPU instead.
 
 Ensure these parameters are correctly configured to enable seamless communication between the simulator and your AICA
 application.
@@ -213,7 +217,7 @@ When run the **AICA System** and Isaac Lab simulator, there are several importan
 and reliable performance:
 
 1. **Robot joint names**: Ensure that the joint names in your URDF file match those expected by the USD file in Isaac
-   Lab. In the correct implementation, there are two sources of truth for joint names: the URDF file and USD file. If
+   Lab. In the current implementation, there are two sources of truth for joint names: the URDF file and USD file. If
    these names do not match, the simulator will not be able to send the states correctly to the AICA application.
 
 2. **Hardware Interface Rate in AICA Studio**: The hardware interface rate in **AICA Studio** should be greater than the
@@ -221,7 +225,7 @@ and reliable performance:
    that matches or exceeds the simulation updates, preventing command loss or delays.
 
 3. **Simulation Rate**: The simulation rate in Isaac Lab should be set to a value that allows for smooth and realistic
-   updates. Commands are updates at the simulation rate, so if the rate is too low, then the robot may skip commands or
+   updates. Commands are updated at the simulation rate, so if the rate is too low, then the robot may skip commands or
    not respond as expected.
 
 4. **Force Sensor**: If you enable the force sensor in the hardware interface, ensure that the simulator is configured
