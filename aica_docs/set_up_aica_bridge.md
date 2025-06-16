@@ -5,9 +5,9 @@ simulated environment using the **Isaac Lab** wrapper, executed on **Isaac Sim**
 refer to the simulation environment as the _Isaac Lab simulator_, which represents the Isaac Lab wrapper around the
 Isaac Sim simulation.
 
-**AICA System** is a robotics platform that enables the creation of robotic applications using a visual,
-data-flow approach in **AICA Studio**. Applications are constructed from modular blocks namely, **components**,
-**controllers**, and **hardware interfaces**.
+**AICA System** is a robotics platform that enables the creation of robotic applications using a visual, data-flow
+approach in **AICA Studio**. Applications are constructed from modular blocks namely, **components**, **controllers**,
+and **hardware interfaces**.
 
 Hardware interfaces serve as bridges between the application and either physical hardware or simulators, enabling
 transitions between simulated and real-world deployments.
@@ -22,22 +22,21 @@ RL policies.
 The integration of **AICA System** with **Isaac Lab** offers a workflow for developing, testing, and deploying robotic
 applications. Specifically:
 
-1. **RL Policy Testing** AICA’s RL Policy Component SDK allows developers to deploy Reinforcement Learning (RL) models
+1. **RL Policy Testing**: AICA’s RL Policy Component SDK allows developers to deploy Reinforcement Learning (RL) models
    directly onto real hardware through components. These models can be trained in Isaac Lab, and with AICA System
    interacting directly with Isaac Lab, users can validate the trained policies under the same conditions in which they
    were learned.
 
-2. **Reliable Policy Validation** Validating RL policies in Isaac Lab through AICA ensures consistency in simulation
-   fidelity. Developers can monitor the behaviors of the trained policies and test the effect of various parameters,
-   enabling confident transitions from simulation to real-world deployment.
+2. **Reliable Policy Validation**: Developers can monitor the behaviors of the trained policies and test the effect of
+   various parameters, enabling confident transitions from simulation to real-world deployment.
 
-3. **One-Click Robot Swapping** **AICA Studio** makes it easy to switch between robot models, whether simulated or
+3. **One-Click Robot Swapping**: **AICA Studio** makes it easy to switch between robot models, whether simulated or
    real—using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
    hardware with no additional development overhead.
 
-4. **Digital Twin Cintrol** Beyond RL, AICA empowers users to interact with digital twins of their robots. Applications
-   can be authored, tested, and validated entirely in simulation before connecting to actual hardware. This greatly
-   accelerates development cycles and enhances safety.
+4. **Digital Twin Cintrol**: Beyond RL, Running AICA System with Isaac Lab provide users ways to interact with digital
+   twins of their robots. Applications can be authored, tested, and validated entirely in simulation before connecting
+   to actual hardware. This greatly accelerates development cycles and enhances safety.
 
 With this integration, users can build complete automation pipelines in Isaac Lab, interact with them using AICA System,
 validate performance, switch the hardware interface to a real robot, and hit play with no code changes required.
