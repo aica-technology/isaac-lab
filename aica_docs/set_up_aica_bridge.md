@@ -73,7 +73,7 @@ Once done, verify the installation by running
 python3 scripts/custom/aica_bridge/run_bridge.py --scene basic_scene
 ```
 
-This will spwan a UR5e robot, a ground plane and lights. If you see the UR5e robot in the scene, then the installation
+This will spawn a UR5e robot, a ground plane and lights. If you see the UR5e robot in the scene, then the installation
 was successful and you are ready to proceed with the next steps.
 
 ## Installing AICA System
@@ -229,7 +229,7 @@ and reliable performance:
    not respond as expected.
 
 4. **Force Sensor**: If you enable the force sensor in the hardware interface, ensure that the simulator is configured
-   to provide force-torque data. This is done by setting the `force_sensor` parameter to to name of the force sensor
+   to provide force-torque data. This is done by setting the `force_sensor` parameter to the name of the force sensor
    present in the URDF file. If the force sensor is not configured correctly, the simulator will not send force-torque
    data, and the AICA application may not function as expected.
 
