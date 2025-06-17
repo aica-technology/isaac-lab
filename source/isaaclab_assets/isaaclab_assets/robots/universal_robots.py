@@ -65,8 +65,8 @@ UR5E_CFG = ArticulationCfg(
         joint_pos={
             "shoulder_pan_joint": 0.0,
             "shoulder_lift_joint": -1.712,
-            "elbow_joint": 1.57,
-            "wrist_1_joint": -1.57,
+            "elbow_joint": 1.8,
+            "wrist_1_joint": -1.8,
             "wrist_2_joint": -1.57,
             "wrist_3_joint": -1.57,
         },
@@ -83,7 +83,7 @@ UR5E_CFG_VELOCIY.actuators = {
             velocity_limit=100.0,
             effort_limit=87.0,
             stiffness=0.0,
-            damping=20000.0,
+            damping=80000.0,
         ),
     }
 

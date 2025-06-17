@@ -97,7 +97,7 @@ class CommandsCfg:
         force_sensor_name="contact_forces",
         surface_name="table",
         body_name=MISSING,  # will be set by agent env cfg
-        resampling_time_range=(10.0, 10.0),
+        resampling_time_range=(15.0, 15.0),
         debug_vis=True, # type: ignore
         ranges=mdp.TrackForcePoseCommandCfg.Ranges(
             pos_x=(0.3, 0.5),
@@ -193,7 +193,7 @@ class RewardsCfg:
 
     end_effector_state_tracking = RewTerm(
         func=mdp.state_command_error,
-        weight=-10.0,
+        weight=-20,
         params={"command_name": "ee_force_pose"},
     )
 
@@ -227,8 +227,12 @@ class RewardsCfg:
     force_limit_penalty = RewTerm(func=mdp.force_limit_penalty, weight=0)
     
     # termination on force limit exceeded
-    #termination_force_limit = RewTerm(func=mdp.is_terminated_term, weight=-50, params={"term_keys": "force_limit_exceeded"})
+    termination_force_limit = RewTerm(func=mdp.is_terminated_term, weight=-1e5, params={"term_keys": "force_limit_exceeded"})
 
+    action_term = RewTerm(
+        func=mdp.action_l2,
+        weight=-0.01,
+    )
 
 @configclass
 class TerminationsCfg:
@@ -236,8 +240,10 @@ class TerminationsCfg:
 
     time_out = DoneTerm(func=mdp.time_out, time_out=True)
 
-    #force_limit_exceeded = DoneTerm(func=mdp.illegal_contact, params={"sensor_cfg": SceneEntityCfg("contact_forces"), "threshold": 150})
-
+    force_limit_exceeded = DoneTerm(
+        func=mdp.high_contact_force,
+        params={"sensor_cfg": SceneEntityCfg("contact_forces", body_names="base"), "threshold": 100.0, "num_steps": 24000},
+    )
 
 @configclass
 class CurriculumCfg:
@@ -256,6 +262,7 @@ class CurriculumCfg:
     )
 
 
+    """"
     force_limit_penalty = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -1e-1, "num_steps": 72000}
     )
@@ -265,7 +272,6 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "force_gradient", "weight": -0.04, "num_steps": 72000}
     )
 
-    """"
     end_effector_force_gradient_penalty_level_2 = CurrTerm(
         func=mdp.modify_reward_weight, params={"term_name": "end_effector_force_gradient_penalty", "weight": -0.06, "num_steps": 72000}
     )
@@ -304,10 +310,10 @@ class CompliantControlRLCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 1
+        self.decimation = 2
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 10.0
+        self.episode_length_s = 15.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 200.0
+        self.sim.dt = 1.0 / 100.0
 

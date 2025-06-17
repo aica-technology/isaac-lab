@@ -6,7 +6,7 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from isaaclab_assets import UR5E_CFG_LOW_LEVEL
+from isaaclab_assets import UR5E_CFG_VELOCIY
 
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()  # type: ignore
@@ -16,7 +16,7 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class CompliantScene(InteractiveSceneCfg):
-    robot: ArticulationCfg = UR5E_CFG_LOW_LEVEL.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = UR5E_CFG_VELOCIY.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # ground plane
     ground = AssetBaseCfg(
@@ -32,7 +32,7 @@ class CompliantScene(InteractiveSceneCfg):
     table = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/TiltedWall",
         spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.3),
+            size=(1.25, 1.0, 0.45),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),

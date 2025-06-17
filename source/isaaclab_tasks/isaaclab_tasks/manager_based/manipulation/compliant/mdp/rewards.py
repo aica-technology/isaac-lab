@@ -64,7 +64,7 @@ def force_command_error(
     contact_force_error = torch.norm(desired_contact_force - experienced_forces, dim=1) # Nx1
 
     # FIXME: remove
-    """
+    """"
     with open("source/isaaclab_tasks/logs_reward.txt", "a") as file:
         exp_forces = experienced_forces.cpu().numpy()
         #position_err = position_error.cpu().numpy()
@@ -82,6 +82,15 @@ def state_command_error(
     damping: float = 5,
 ) -> torch.Tensor:
     return setpoint_error(env, command_name, stiffness=stiffness, damping=damping) / stiffness # Nx3
+
+def state_command_error_tanh(
+    env: ManagerBasedRLEnv,
+    command_name: str,
+    stiffness: float = 50,
+    damping: float = 5,
+    std: float = 0.1,
+) -> torch.Tensor:
+    return 1 - torch.tanh(1/std * setpoint_error(env, command_name, stiffness=stiffness, damping=damping) / stiffness) # Nx3
 
 
 def force_command_error_tanh(
