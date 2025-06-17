@@ -15,8 +15,7 @@ transitions between simulated and real-world deployments.
 
 # Motivation
 
-The integration of **AICA System** with **Isaac Lab** offers a workflow for developing, testing, and deploying robotic
-applications. Specifically:
+By integrating the AICA System with Isaac Lab, we establish a workflow for developing, testing, and deploying robotic applications
 
 1. **RL Policy Testing**: AICA’s RL Policy Component SDK allows developers to deploy Reinforcement Learning (RL) models
    directly onto real hardware through components. These models can be trained in Isaac Lab, and with AICA System
@@ -26,9 +25,9 @@ applications. Specifically:
 2. **Reliable Policy Validation**: Developers can monitor the behaviors of the trained policies and test the effect of
    various parameters, enabling confident transitions from simulation to real-world deployment.
 
-3. **Digital Twin Control**: Beyond RL, Running AICA System with Isaac Lab provide users ways to interact with digital
-   twins of their robots. Applications can be authored, tested, and validated entirely in simulation before connecting
-   to actual hardware. This greatly accelerates development cycles and enhances safety.
+
+3. **Digital Twin Control**: Beyond RL, running AICA System with Isaac Lab provides users with ways to interact with digital
+   twins of their robots. Applications can be authored, tested, and validated entirely in simulation before connecting to actual hardware. This improves safety and enables rapid iteration in early stages, helping streamline the overall development cycle.
 
 With this integration, users can build complete automation pipelines in Isaac Lab, interact with them using AICA System,
 validate performance, switch the hardware interface to a real robot, and hit play with no code changes required.
@@ -68,6 +67,8 @@ python3 scripts/custom/aica_bridge/run_bridge.py --scene basic_scene
 This will spawn a UR5e robot, a ground plane and lights. If you see the UR5e robot in the scene, then the installation
 was successful and you are ready to proceed with the next steps.
 
+If not, go carefully go over the instructions again or reach out to our [support email](contact@aica.tech) for help.
+
 ## Installing AICA System
 
 To run **AICA System**, you also need to install the **AICA Launcher**. Follow the installation instructions available
@@ -94,13 +95,13 @@ To get started, follow these steps to create a new application in **AICA Studio*
    - **IK Velocity Controller**: Calculates the inverse kinematics for the UR5e, enabling smooth motion toward the
      target frame.
 
-4. Connect the events and signals as shown in the image. Make sure to auto-configure and activate all components and
+4. Connect the events and signals as shown in the image. Make sure to auto-configure and auto-activate all components and
    controllers.
 
 ![AICA Studio Graph View](images/application.png)
 
 5. Press **Play**, then switch to the **3D Visualizer** tab in **AICA Studio**. You should see the UR5e robot in the
-   scene. Use the **Record Frame** button to capture a target frame, specify the tool frame name, and then move the
+   scene. Use the **Record Frame** button to capture a target frame at the robot's tool, specify the tool frame name (for UR robots from the collection, that is `ur_tool0`), and then move the
    frame to your desired target position.
 6. Once the target frame is set, parametrize the **Frame to Signal** component with the name of the target frame you
    just created.
@@ -194,6 +195,10 @@ To create a new scene, you should define a scene config class that inherits from
 of scene config classes can be found in the [`scenes`](../scripts/custom/aica_bridge/scenes) directory of the Isaac Lab
 repository.
 
+The scene lives entirely in Isaac Lab and the definitions of the assets used in the scene should be defined there. The
+3D Visualizer in **AICA Studio** will only display the robot and mirror the robot's movements, but it will not display
+the scene itself.
+
 Once you've defined your scene configuration class, register it by adding a corresponding key to the `scenes` dictionary
 located in [this file](../scripts/custom/aica_bridge/scenes/__init__.py).
 
@@ -205,7 +210,7 @@ python3 scripts/custom/aica_bridge/run_bridge.py --scene <your_scene_name>
 
 # Beware
 
-When run the **AICA System** and Isaac Lab simulator, there are several important points to keep in mind to ensure safe
+When running the **AICA System** and Isaac Lab simulator, there are several important points to keep in mind to ensure safe
 and reliable performance:
 
 1. **Robot joint names**: Ensure that the joint names in your URDF file match those expected by the USD file in Isaac
