@@ -15,7 +15,8 @@ transitions between simulated and real-world deployments.
 
 # Motivation
 
-By integrating the AICA System with Isaac Lab, we establish a workflow for developing, testing, and deploying robotic applications
+By integrating the AICA System with Isaac Lab, we establish a workflow for developing, testing, and deploying robotic
+applications
 
 1. **RL Policy Testing**: AICA’s RL Policy Component SDK allows developers to deploy Reinforcement Learning (RL) models
    directly onto real hardware through components. These models can be trained in Isaac Lab, and with AICA System
@@ -25,9 +26,10 @@ By integrating the AICA System with Isaac Lab, we establish a workflow for devel
 2. **Reliable Policy Validation**: Developers can monitor the behaviors of the trained policies and test the effect of
    various parameters, enabling confident transitions from simulation to real-world deployment.
 
-
-3. **Digital Twin Control**: Beyond RL, running AICA System with Isaac Lab provides users with ways to interact with digital
-   twins of their robots. Applications can be authored, tested, and validated entirely in simulation before connecting to actual hardware. This improves safety and enables rapid iteration in early stages, helping streamline the overall development cycle.
+3. **Digital Twin Control**: Beyond RL, running AICA System with Isaac Lab provides users with ways to interact with
+   digital twins of their robots. Applications can be authored, tested, and validated entirely in simulation before
+   connecting to actual hardware. This improves safety and enables rapid iteration in early stages, helping streamline
+   the overall development cycle.
 
 With this integration, users can build complete automation pipelines in Isaac Lab, interact with them using AICA System,
 validate performance, switch the hardware interface to a real robot, and hit play with no code changes required.
@@ -95,14 +97,14 @@ To get started, follow these steps to create a new application in **AICA Studio*
    - **IK Velocity Controller**: Calculates the inverse kinematics for the UR5e, enabling smooth motion toward the
      target frame.
 
-4. Connect the events and signals as shown in the image. Make sure to auto-configure and auto-activate all components and
-   controllers.
+4. Connect the events and signals as shown in the image. Make sure to auto-configure and auto-activate all components
+   and controllers.
 
 ![AICA Studio Graph View](images/application.png)
 
 5. Press **Play**, then switch to the **3D Visualizer** tab in **AICA Studio**. You should see the UR5e robot in the
-   scene. Use the **Record Frame** button to capture a target frame at the robot's tool, specify the tool frame name (for UR robots from the collection, that is `ur_tool0`), and then move the
-   frame to your desired target position.
+   scene. Use the **Record Frame** button to capture a target frame at the robot's tool, specify the tool frame name
+   (for UR robots from the collection, that is `ur_tool0`), and then move the frame to your desired target position.
 6. Once the target frame is set, parametrize the **Frame to Signal** component with the name of the target frame you
    just created.
 
@@ -114,8 +116,16 @@ Interface level to connect **AICA System** to the Isaac Lab simulator.
 The **Hardware Interface** serves as the communication bridge between the **AICA System** and external hardware or
 simulators. In this example, we’ll use it to connect with the Isaac Lab simulator via ZMQ sockets.
 
-To set up the hardware interface for Isaac Lab, you’ll need to update the plugin section in the UR5e URDF to use the
-**lightweight interface plugin**, as shown below:
+To set up the hardware interface, follow these steps:
+
+1. Go to the **Hardware** tab in **AICA Studio**.
+2. Click on the Universal Robot 5e URDF to open it.
+3. Click **Save As** to create a copy of the URDF file for the UR5e robot in **AICA Studio**.
+4. In the **hardware** tag, replace the existing plugin with the lightweight interface plugin shown above.
+5. Remove any unused tags, such as GPIO or other unnecessary hardware interfaces, from the URDF file.
+6. Save your changes.
+7. In the **Hardware Interface** component on the graph view, select the modified URDF file for the UR5e robot from the
+   drop down menu in the hardware interface.
 
 ```xml
 <hardware>
@@ -132,17 +142,6 @@ To set up the hardware interface for Isaac Lab, you’ll need to update the plug
 
 This configuration enables the UR5e robot model to communicate with the Isaac Lab simulator by sending commands and
 receiving both state and sensor data.
-
-To set up the hardware interface, follow these steps:
-
-1. Go to the **Hardware** tab in **AICA Studio**.
-2. Click on the Universal Robot 5e URDF to open it.
-3. Click **Save As** to create a copy of the URDF file for the UR5e robot in **AICA Studio**.
-4. In the **hardware** tag, replace the existing plugin with the lightweight interface plugin shown above.
-5. Remove any unused tags, such as GPIO or other unnecessary hardware interfaces, from the URDF file.
-6. Save your changes.
-7. In the **Hardware Interface** component on the graph view, select the modified URDF file for the UR5e robot from the
-   drop down menu in the hardware interface.
 
 With the hardware interface now configured, let's jump into running the Isaac Lab simulator and running your AICA
 application.
@@ -210,8 +209,8 @@ python3 scripts/custom/aica_bridge/run_bridge.py --scene <your_scene_name>
 
 # Beware
 
-When running the **AICA System** and Isaac Lab simulator, there are several important points to keep in mind to ensure safe
-and reliable performance:
+When running the **AICA System** and Isaac Lab simulator, there are several important points to keep in mind to ensure
+safe and reliable performance:
 
 1. **Robot joint names**: Ensure that the joint names in your URDF file match those expected by the USD file in Isaac
    Lab. In the current implementation, there are two sources of truth for joint names: the URDF file and USD file. If
