@@ -1,21 +1,17 @@
 # Running Applications in Isaac Lab Using AICA System
 
 This document provides a step-by-step guide for running robotic applications developed in **AICA Studio** within a
-simulated environment using the **Isaac Lab** wrapper, executed on **Isaac Sim**. For the purpose of this guide, we’ll
-refer to the simulation environment as the _Isaac Lab simulator_, which represents the Isaac Lab wrapper around the
-Isaac Sim simulation.
+simulated environment in **Isaac Lab**. **Isaac Lab** is a modular framework built on **NVIDIA Isaac Sim**, designed to
+simplify robotics workflows such as reinforcement learning (RL), learning from demonstrations, and motion planning. By
+leveraging the PhysX engine, it offers photorealistic simulation and GPU-accelerated performance, making it a great
+option for training and validating RL policies.
 
 **AICA System** is a robotics platform that enables the creation of robotic applications using a visual, data-flow
 approach in **AICA Studio**. Applications are constructed from modular blocks namely, **components**, **controllers**,
 and **hardware interfaces**.
 
-Hardware interfaces serve as bridges between the application and either physical hardware or simulators, enabling
+Hardware interfaces serve as bridges between the application and either physical or simulated hardware, enabling
 transitions between simulated and real-world deployments.
-
-**Isaac Lab** is a modular framework built on **NVIDIA Isaac Sim**, designed to simplify robotics workflows such as
-reinforcement learning (RL), learning from demonstrations, and motion planning. By leveraging the PhysX engine, it
-offers photorealistic simulation and GPU-accelerated performance, making it a great option for training and validating
-RL policies.
 
 # Motivation
 
@@ -30,8 +26,8 @@ applications. Specifically:
 2. **Reliable Policy Validation**: Developers can monitor the behaviors of the trained policies and test the effect of
    various parameters, enabling confident transitions from simulation to real-world deployment.
 
-3. **One-Click Robot Swapping**: AICA Studio makes it easy to switch between robot models, whether simulated or
-   real, using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
+3. **One-Click Robot Swapping**: AICA Studio makes it easy to switch between robot models, whether simulated or real,
+   using a simple dropdown menu. This means developers can reuse the exact same application across simulation and
    hardware with no additional development overhead.
 
 4. **Digital Twin Control**: Beyond RL, Running AICA System with Isaac Lab provide users ways to interact with digital
@@ -183,10 +179,10 @@ The simulator includes several important parameters that you should be familiar 
 - **command_interface**: Specifies the type of command the simulator accepts. The default is `"position"`, meaning it
   expects position commands. You can change this to `"velocity"` if required. If a mismatched command type is received,
   the simulator will terminate with a `ValueError` indicating the mismatch.
-- **headless**: When set to `true`, the simulator runs in headless mode, which is useful for running simulations without a
-  graphical interface.
-- **device**: Specifies the device to use for simulation. The default is `cuda`, which utilizes GPU acceleration. You can
-  change this to `cpu` if you want to run the simulation on the CPU instead.
+- **headless**: When set to `true`, the simulator runs in headless mode, which is useful for running simulations without
+  a graphical interface.
+- **device**: Specifies the device to use for simulation. The default is `cuda`, which utilizes GPU acceleration. You
+  can change this to `cpu` if you want to run the simulation on the CPU instead.
 
 Ensure these parameters are correctly configured to enable seamless communication between the simulator and your AICA
 application.
