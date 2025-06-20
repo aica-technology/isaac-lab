@@ -71,6 +71,9 @@ class Simulator:
 
         self._bridge = AICABridge(bridge_config, robot_joint_ids=self._robot_joint_ids)
 
+        # integral tracking term
+        self._integral_tracking_term = None
+
     def run(self) -> None:
         """Initialize and run the simulation loop until the app is closed."""
         self._sim.reset()
@@ -115,13 +118,13 @@ class Simulator:
         else:
             print("AICA Bridge is not active. Cannot send states.")
 
-    def _command_callback(self, _):
+    def _command_callback(self, delta_time: float):
         """
         Callback to receive commands from the AICA Bridge and apply them to the robot.
         """
         if self._bridge.is_active:
             position_command, velocity_command = self._bridge.receive_commands()
-            self._apply_command(position_command, velocity_command)
+            self._apply_command(position_command, velocity_command, delta_time=delta_time)
             self._scene.write_data_to_sim()
         else:
             print("AICA Bridge is not active. Cannot receive commands.")
@@ -131,16 +134,14 @@ class Simulator:
         defaults = self._robot.data
         self._robot.write_joint_state_to_sim(defaults.default_joint_pos, defaults.default_joint_vel)
         if self._command_interface == "velocity":
-            # set the stiffness to zero for velocity control
-            self._robot.write_joint_stiffness_to_sim(
-                torch.zeros_like(defaults.default_joint_stiffness, device=self._robot.device)
-            )
+            self._integral_tracking_term = torch.zeros(defaults.default_joint_pos.shape[1], device=self._robot.device)
         self._robot.reset()
 
     def _apply_command(
         self,
         position_command: Optional[sr.JointState],
         velocity_command: Optional[sr.JointState],
+        delta_time: Optional[float] = None,
     ) -> None:
         """
         Apply the received position or velocity command to the robot.
@@ -166,7 +167,21 @@ class Simulator:
         elif self._command_interface == "velocity":
             if velocity_command:
                 target = torch.tensor(velocity_command.get_velocities(), device=self._robot.device)
+
+                # integral tracking term for velocity control
+                if self._integral_tracking_term is not None:
+                    tracking_error = target - self._robot.data.joint_vel[0, self._robot_joint_ids]
+                    self._integral_tracking_term += tracking_error * delta_time
+                    self._integral_tracking_term = torch.clamp(self._integral_tracking_term, min=-0.0025, max=0.0025)
+                    target += self._integral_tracking_term * 10
+
                 self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
+                
+                # position feedforward command
+                current_position = self._robot.data.joint_pos[0, self._robot_joint_ids]
+                position_feedforward = current_position + target * delta_time
+                self._robot.set_joint_position_target(position_feedforward, joint_ids=self._robot_joint_ids)
+
             elif position_command:
                 raise ValueError(
                     "Received position command while using velocity interface. Use the position interface instead."
@@ -175,6 +190,9 @@ class Simulator:
                 self._robot.set_joint_velocity_target(
                     torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
                     joint_ids=self._robot_joint_ids,
+                )
+                self._integral_tracking_term = torch.zeros(
+                    self._robot.data.default_joint_pos.shape[1], device=self._robot.device
                 )
 
 
