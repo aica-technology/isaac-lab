@@ -9,7 +9,7 @@ from typing import Literal
 
 from isaaclab.utils import configclass
 
-from . import actuator_net, actuator_pd
+from . import actuator_net, actuator_pd, actuator_pi
 from .actuator_base import ActuatorBase
 
 
@@ -175,7 +175,20 @@ class ImplicitActuatorCfg(ActuatorBaseCfg):
 """
 Explicit Actuator Models.
 """
+@configclass
+class VelocityPIActuatorCfg(ActuatorBaseCfg):
+    """Configuration for a PID actuator."""
 
+    class_type: type = actuator_pi.VelocityPIActuator
+
+    integral_gain: float = MISSING
+    """Integral gain of the PI controller."""
+
+    max_integral_error: float = MISSING
+    """Maximum integral error of the PI controller."""
+
+    delta_time: float = MISSING
+    """Time step of the simulation in seconds."""
 
 @configclass
 class IdealPDActuatorCfg(ActuatorBaseCfg):
