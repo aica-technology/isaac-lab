@@ -83,6 +83,8 @@ def main():
 
     task_name = args_cli.task.split(":")[-1]
 
+    task_name = args_cli.task.split(":")[-1]
+
     # directory for logging into
     log_root_path = os.path.join("logs", "sb3", task_name)
     log_root_path = os.path.abspath(log_root_path)

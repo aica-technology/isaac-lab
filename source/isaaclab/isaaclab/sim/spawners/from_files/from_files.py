@@ -11,7 +11,7 @@ import isaacsim.core.utils.prims as prim_utils
 import isaacsim.core.utils.stage as stage_utils
 import omni.kit.commands
 import omni.log
-from pxr import Gf, Sdf, Usd
+from pxr import Gf, Sdf, Semantics, Usd
 
 # from Isaac Sim 4.2 onwards, pxr.Semantics is deprecated
 try:
