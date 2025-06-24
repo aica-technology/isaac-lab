@@ -9,7 +9,7 @@ from typing import Literal
 
 from isaaclab.utils import configclass
 
-from . import actuator_net, actuator_pd, actuator_pi
+from . import actuator_net, actuator_pd, actuator_pid
 from .actuator_base import ActuatorBase
 
 
@@ -176,15 +176,27 @@ class ImplicitActuatorCfg(ActuatorBaseCfg):
 Explicit Actuator Models.
 """
 @configclass
-class VelocityPIActuatorCfg(ActuatorBaseCfg):
+class VelocityPIDActuatorCfg(ActuatorBaseCfg):
     """Configuration for a PID actuator."""
 
-    class_type: type = actuator_pi.VelocityPIActuator
+    class_type: type = actuator_pid.VelocityPIDActuator
 
-    integral_gain: float = MISSING
+    stiffness = None
+    """Stiffness gain of the PID controller. Defaults to None."""
+
+    damping = None
+    """Damping gain of the PID controller. Defaults to None."""
+
+    integral_gain: dict[str, float] | float | None = MISSING
     """Integral gain of the PI controller."""
 
-    max_integral_error: float = MISSING
+    derivative_gain: dict[str, float] | float | None = MISSING
+    """Derivative gain of the PI controller."""
+
+    proportional_gain: dict[str, float] | float | None = MISSING
+    """Proportional gain of the PI controller."""
+
+    max_integral_error: dict[str, float] | float | None = MISSING
     """Maximum integral error of the PI controller."""
 
     delta_time: float = MISSING
