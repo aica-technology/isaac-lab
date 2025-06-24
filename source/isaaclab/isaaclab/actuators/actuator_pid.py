@@ -30,9 +30,21 @@ class VelocityPIDActuator(ActuatorBase):
 
     def reset(self, env_ids: Sequence[int]):
         pass
+    
+    def set_propertional_gain(self, proportional_gain: torch.Tensor):
+        """Set the proportional gain."""
+        self._proportional_gain = proportional_gain
+    
+    def set_derivative_gain(self, derivative_gain: torch.Tensor):
+        """Set the derivative gain."""
+        self._derivate_gain = derivative_gain
+    
+    def set_integral_gain(self, integral_gain: torch.Tensor):
+        """Set the integral gain."""
+        self._integral_gain = integral_gain
 
     def compute(
-        self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor
+        self, control_action: ArticulationActions, _: torch.Tensor, joint_vel: torch.Tensor
     ) -> ArticulationActions:
         # compute errors
 
