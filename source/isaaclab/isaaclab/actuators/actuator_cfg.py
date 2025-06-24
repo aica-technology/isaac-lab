@@ -188,16 +188,16 @@ class VelocityPIDActuatorCfg(ActuatorBaseCfg):
     """Damping gain of the PID controller. Defaults to None."""
 
     integral_gain: dict[str, float] | float | None = MISSING
-    """Integral gain of the PI controller."""
+    """Integral gain of the PID controller."""
 
     derivative_gain: dict[str, float] | float | None = MISSING
-    """Derivative gain of the PI controller."""
+    """Derivative gain of the PID controller."""
 
     proportional_gain: dict[str, float] | float | None = MISSING
-    """Proportional gain of the PI controller."""
+    """Proportional gain of the PID controller."""
 
     max_integral_error: dict[str, float] | float | None = MISSING
-    """Maximum integral error of the PI controller."""
+    """Maximum integral error of the PID controller."""
 
     delta_time: float = MISSING
     """Time step of the simulation in seconds."""
