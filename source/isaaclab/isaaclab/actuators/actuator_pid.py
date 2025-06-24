@@ -28,7 +28,9 @@ class VelocityPIDActuator(ActuatorBase):
         self._max_integral_error = self._parse_joint_parameter(self.cfg.max_integral_error, None)
 
     def reset(self, env_ids: Sequence[int]):
-        pass
+        """Reset the actuator state."""
+        self._error_integral[env_ids, :] = 0.0
+        self._last_error[env_ids, :] = 0.0
 
     def set_propertional_gain(self, proportional_gain: torch.Tensor):
         """Set the proportional gain."""
