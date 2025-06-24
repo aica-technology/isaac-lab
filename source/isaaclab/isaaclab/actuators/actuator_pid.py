@@ -45,7 +45,7 @@ class VelocityPIDActuator(ActuatorBase):
         self._integral_gain = integral_gain
 
     def compute(
-        self, control_action: ArticulationActions, _: torch.Tensor, joint_vel: torch.Tensor
+        self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor
     ) -> ArticulationActions:
         # compute errors
 
