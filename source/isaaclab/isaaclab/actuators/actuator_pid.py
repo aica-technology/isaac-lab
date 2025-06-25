@@ -45,7 +45,7 @@ class VelocityPIDActuator(ActuatorBase):
         self._integral_gain = integral_gain
 
     def compute(
-        self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor
+        self, control_action: ArticulationActions, joint_vel: torch.Tensor, mass_matrix: torch.Tensor
     ) -> ArticulationActions:
         # compute errors
         error_velocity = control_action.joint_velocities - joint_vel
@@ -63,7 +63,8 @@ class VelocityPIDActuator(ActuatorBase):
             + self._integral_gain * self._error_integral  # ki * e_i
             + self._derivate_gain * self._error_derivative  # kd * e_d
         )
-
+        # apply mass matrix
+        self.computed_effort = torch.bmm(mass_matrix, self.computed_effort.unsqueeze(2)).squeeze(2)
         self.applied_effort = self._clip_effort(self.computed_effort)
 
         control_action.joint_efforts = self.applied_effort
