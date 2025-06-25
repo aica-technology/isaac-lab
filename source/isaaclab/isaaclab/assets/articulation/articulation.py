@@ -22,7 +22,7 @@ from pxr import PhysxSchema, UsdPhysics
 import isaaclab.sim as sim_utils
 import isaaclab.utils.math as math_utils
 import isaaclab.utils.string as string_utils
-from isaaclab.actuators import ActuatorBase, ActuatorBaseCfg, ImplicitActuator
+from isaaclab.actuators import ActuatorBase, ActuatorBaseCfg, ImplicitActuator, VelocityPIDActuator
 from isaaclab.utils.types import ArticulationActions
 
 from ..asset_base import AssetBase
@@ -1459,11 +1459,21 @@ class Articulation(AssetBase):
                 joint_indices=actuator.joint_indices,
             )
             # compute joint command from the actuator model
-            control_action = actuator.compute(
-                control_action,
-                joint_pos=self._data.joint_pos[:, actuator.joint_indices],
-                joint_vel=self._data.joint_vel[:, actuator.joint_indices],
-            )
+            if isinstance(actuator, VelocityPIDActuator):
+                control_action = actuator.compute(
+                    control_action,
+                    joint_vel=self._data.joint_vel[:, actuator.joint_indices],
+                    mass_matrix=self._root_physx_view.get_generalized_mass_matrices()[ # type: ignore
+                        :, actuator.joint_indices
+                    ][:, :, actuator.joint_indices],
+                )
+
+            else:
+                control_action = actuator.compute(
+                    control_action,
+                    joint_pos=self._data.joint_pos[:, actuator.joint_indices],
+                    joint_vel=self._data.joint_vel[:, actuator.joint_indices],
+                )
             # update targets (these are set into the simulation)
             if control_action.joint_positions is not None:
                 self._joint_pos_target_sim[:, actuator.joint_indices] = control_action.joint_positions
