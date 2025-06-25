@@ -14,7 +14,7 @@ if TYPE_CHECKING:
 
 class VelocityPIDActuator(ActuatorBase):
     cfg: VelocityPIDActuatorCfg
-    """Velocity PI actuator model."""
+    """Velocity PID actuator model."""
 
     def __init__(self, cfg: VelocityPIDActuatorCfg, *args, **kwargs):
         super().__init__(cfg, *args, **kwargs)
@@ -48,7 +48,6 @@ class VelocityPIDActuator(ActuatorBase):
         self, control_action: ArticulationActions, joint_pos: torch.Tensor, joint_vel: torch.Tensor
     ) -> ArticulationActions:
         # compute errors
-
         error_velocity = control_action.joint_velocities - joint_vel
         self._error_integral += error_velocity * self.cfg.delta_time
         self._error_derivative = (error_velocity - self._last_error) / self.cfg.delta_time
