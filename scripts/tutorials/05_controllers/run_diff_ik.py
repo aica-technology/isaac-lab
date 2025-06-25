@@ -53,8 +53,7 @@ from isaaclab.utils.math import subtract_frame_transforms
 ##
 # Pre-defined configs
 ##
-from isaaclab_assets import FRANKA_PANDA_HIGH_PD_CFG, UR10_CFG  # isort:skip
-
+from isaaclab_assets import FRANKA_PANDA_HIGH_PD_CFG, UR10_CFG, UR5E_CFG_IK  # isort:skip
 
 @configclass
 class TableTopSceneCfg(InteractiveSceneCfg):
@@ -85,8 +84,10 @@ class TableTopSceneCfg(InteractiveSceneCfg):
         robot = FRANKA_PANDA_HIGH_PD_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
     elif args_cli.robot == "ur10":
         robot = UR10_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    elif args_cli.robot == "ur5e":
+        robot = UR5E_CFG_IK.replace(prim_path="{ENV_REGEX_NS}/Robot")
     else:
-        raise ValueError(f"Robot {args_cli.robot} is not supported. Valid: franka_panda, ur10")
+        raise ValueError(f"Robot {args_cli.robot} is not supported. Valid: franka_panda, ur10, ur5e")
 
 
 def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
@@ -123,8 +124,10 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
         robot_entity_cfg = SceneEntityCfg("robot", joint_names=["panda_joint.*"], body_names=["panda_hand"])
     elif args_cli.robot == "ur10":
         robot_entity_cfg = SceneEntityCfg("robot", joint_names=[".*"], body_names=["ee_link"])
+    elif args_cli.robot == "ur5e":
+        robot_entity_cfg = SceneEntityCfg("robot", joint_names=[".*"], body_names=["wrist_3_link"])
     else:
-        raise ValueError(f"Robot {args_cli.robot} is not supported. Valid: franka_panda, ur10")
+        raise ValueError(f"Robot {args_cli.robot} is not supported. Valid: franka_panda, ur10. ur5e")
     # Resolving the scene entities
     robot_entity_cfg.resolve(scene)
     # Obtain the frame index of the end-effector
@@ -168,7 +171,7 @@ def run_simulator(sim: sim_utils.SimulationContext, scene: InteractiveScene):
                 root_pose_w[:, 0:3], root_pose_w[:, 3:7], ee_pose_w[:, 0:3], ee_pose_w[:, 3:7]
             )
             # compute the joint commands
-            joint_pos_des = diff_ik_controller.compute(ee_pos_b, ee_quat_b, jacobian, joint_pos)
+            joint_pos_des = diff_ik_controller.compute(jacobian, ee_pos_b, ee_quat_b, joint_pos)
 
         # apply actions
         robot.set_joint_position_target(joint_pos_des, joint_ids=robot_entity_cfg.joint_ids)

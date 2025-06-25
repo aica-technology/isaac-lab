@@ -4,7 +4,7 @@
 # SPDX-License-Identifier: BSD-3-Clause
 
 from dataclasses import MISSING
-
+import math
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
@@ -18,14 +18,21 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.utils import configclass
-from isaaclab.utils.assets import ISAAC_NUCLEUS_DIR
 from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
-
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
+import isaaclab_tasks.manager_based.manipulation.reach.mdp as mdp
+from isaaclab.markers.config import FRAME_MARKER_CFG  
+from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
 import isaaclab_tasks.manager_based.manipulation.reach.mdp as mdp
 
 ##
 # Scene definition
 ##
+
+
+ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
+ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 
 @configclass
@@ -36,19 +43,27 @@ class ReachSceneCfg(InteractiveSceneCfg):
     ground = AssetBaseCfg(
         prim_path="/World/ground",
         spawn=sim_utils.GroundPlaneCfg(),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, -1.05)),
-    )
-
-    table = AssetBaseCfg(
-        prim_path="{ENV_REGEX_NS}/Table",
-        spawn=sim_utils.UsdFileCfg(
-            usd_path=f"{ISAAC_NUCLEUS_DIR}/Props/Mounts/SeattleLabTable/table_instanceable.usd",
-        ),
-        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.55, 0.0, 0.0), rot=(0.70711, 0.0, 0.0, 0.70711)),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
     )
 
     # robots
     robot: ArticulationCfg = MISSING
+
+    ee_frame: FrameTransformerCfg = FrameTransformerCfg(
+            prim_path=MISSING,
+            debug_vis=False,
+            visualizer_cfg=ee_frame_cfg,
+            target_frames=[
+                FrameTransformerCfg.FrameCfg(
+                    prim_path=MISSING,
+                    name="end_effector",
+                    offset=OffsetCfg(
+                        pos=(0, 0, 0),
+                    ),
+                ),
+            ],
+        )
+
 
     # lights
     light = AssetBaseCfg(
@@ -69,17 +84,19 @@ class CommandsCfg:
     ee_pose = mdp.UniformPoseCommandCfg(
         asset_name="robot",
         body_name=MISSING,
-        resampling_time_range=(4.0, 4.0),
+        resampling_time_range=(2.0, 4.0),
         debug_vis=True,
+        make_quat_unique=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.35, 0.65),
-            pos_y=(-0.2, 0.2),
-            pos_z=(0.15, 0.5),
-            roll=(0.0, 0.0),
+            pos_x=(0.3, 0.5),
+            pos_y=(-0.3, 0.3),
+            pos_z=(0.25, 0.4),
+            roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
-            yaw=(-3.14, 3.14),
+            yaw=(-2*math.pi, 2*math.pi),
         ),
     )
+
 
 
 @configclass
@@ -100,8 +117,11 @@ class ObservationsCfg:
 
         # observation terms (order preserved)
         joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
+        
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -120,7 +140,7 @@ class EventCfg:
         func=mdp.reset_joints_by_scale,
         mode="reset",
         params={
-            "position_range": (0.5, 1.5),
+            "position_range": (0.9, 1.1),
             "velocity_range": (0.0, 0.0),
         },
     )
@@ -133,22 +153,25 @@ class RewardsCfg:
     # task terms
     end_effector_position_tracking = RewTerm(
         func=mdp.position_command_error,
-        weight=-0.2,
+        weight=-6.0,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
     end_effector_position_tracking_fine_grained = RewTerm(
         func=mdp.position_command_error_tanh,
-        weight=0.1,
+        weight=3.6,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose"},
     )
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
-        weight=-0.1,
+        weight=-4,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
 
+    action_termination_penalty = RewTerm(func=mdp.action_termination, weight=-0.01, params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},)
+
+
     # action penalty
-    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.0001)
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     joint_vel = RewTerm(
         func=mdp.joint_vel_l2,
         weight=-0.0001,
@@ -175,6 +198,11 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 4500}
     )
 
+    action_termination_penalty = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "action_termination_penalty", "weight": -0.02, "num_steps": 4500}
+    )
+
+
 
 ##
 # Environment configuration
@@ -187,6 +215,7 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
 
     # Scene settings
     scene: ReachSceneCfg = ReachSceneCfg(num_envs=4096, env_spacing=2.5)
+
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
@@ -202,7 +231,7 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 2
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 12.0
+        self.episode_length_s = 8.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 60.0

@@ -8,7 +8,7 @@ from __future__ import annotations
 import torch
 from typing import TYPE_CHECKING
 
-from isaaclab.assets import RigidObject
+from isaaclab.assets import RigidObject, Articulation
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.utils.math import combine_frame_transforms, quat_error_magnitude, quat_mul
 
@@ -67,3 +67,22 @@ def orientation_command_error(env: ManagerBasedRLEnv, command_name: str, asset_c
     des_quat_w = quat_mul(asset.data.root_quat_w, des_quat_b)
     curr_quat_w = asset.data.body_quat_w[:, asset_cfg.body_ids[0]]  # type: ignore
     return quat_error_magnitude(curr_quat_w, des_quat_w)
+
+
+
+def action_termination(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg) -> torch.Tensor:
+    """
+    Penalize actions using L2 squared kernel with a distance-based scaling factor.
+    The penalty reduces smoothly as the end-effector approaches the target.
+    """
+    # Calculate the L2 squared penalty for the action
+    asset: Articulation = env.scene[asset_cfg.name]
+    velocity =  torch.sum(torch.square(asset.data.joint_vel[:, asset_cfg.joint_ids]), dim=1)
+    
+    # Compute the distance to the target
+    position_error = position_command_error(env, command_name, asset_cfg)
+    
+    # Apply a scaling factor that diminishes as the robot approaches the target
+    penalty = velocity * torch.exp(-position_error)
+    
+    return penalty

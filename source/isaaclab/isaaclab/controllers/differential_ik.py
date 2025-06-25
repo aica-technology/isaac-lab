@@ -78,7 +78,7 @@ class DifferentialIKController:
         """Dimension of the controller's input command."""
         if self.cfg.command_type == "position":
             return 3  # (x, y, z)
-        elif self.cfg.command_type == "pose" and self.cfg.use_relative_mode:
+        elif (self.cfg.command_type == "pose" and self.cfg.use_relative_mode) or self.cfg.command_type == "velocity":
             return 6  # (dx, dy, dz, droll, dpitch, dyaw)
         else:
             return 7  # (x, y, z, qw, qx, qy, qz)
@@ -119,34 +119,37 @@ class DifferentialIKController:
         # store command
         self._command[:] = command
         # compute the desired end-effector pose
-        if self.cfg.command_type == "position":
-            # we need end-effector orientation even though we are in position mode
-            # this is only needed for display purposes
-            if ee_quat is None:
-                raise ValueError("End-effector orientation can not be None for `position_*` command type!")
-            # compute targets
-            if self.cfg.use_relative_mode:
-                if ee_pos is None:
-                    raise ValueError("End-effector position can not be None for `position_rel` command type!")
-                self.ee_pos_des[:] = ee_pos + self._command
-                self.ee_quat_des[:] = ee_quat
-            else:
-                self.ee_pos_des[:] = self._command
-                self.ee_quat_des[:] = ee_quat
-        else:
-            # compute targets
-            if self.cfg.use_relative_mode:
-                if ee_pos is None or ee_quat is None:
+        if self.cfg.command_type in ["position", "pose"]:
+            if self.cfg.command_type == "position":
+                # we need end-effector orientation even though we are in position mode
+                # this is only needed for display purposes
+                if ee_quat is None:
                     raise ValueError(
-                        "Neither end-effector position nor orientation can be None for `pose_rel` command type!"
+                        "End-effector orientation can not be None for relative/absolute position command type!"
                     )
-                self.ee_pos_des, self.ee_quat_des = apply_delta_pose(ee_pos, ee_quat, self._command)
+                # compute targets
+                if self.cfg.use_relative_mode:
+                    if ee_pos is None:
+                        raise ValueError("End-effector position can not be None for relative position command type!")
+                    self.ee_pos_des[:] = ee_pos + self._command
+                    self.ee_quat_des[:] = ee_quat
+                else:
+                    self.ee_pos_des[:] = self._command
+                    self.ee_quat_des[:] = ee_quat
             else:
-                self.ee_pos_des = self._command[:, 0:3]
-                self.ee_quat_des = self._command[:, 3:7]
+                # compute targets
+                if self.cfg.use_relative_mode:
+                    if ee_pos is None or ee_quat is None:
+                        raise ValueError(
+                            "Neither end-effector position nor orientation can be None for relative pose command type!"
+                        )
+                    self.ee_pos_des, self.ee_quat_des = apply_delta_pose(ee_pos, ee_quat, self._command)
+                else:
+                    self.ee_pos_des = self._command[:, 0:3]
+                    self.ee_quat_des = self._command[:, 3:7]
 
     def compute(
-        self, ee_pos: torch.Tensor, ee_quat: torch.Tensor, jacobian: torch.Tensor, joint_pos: torch.Tensor
+        self, jacobian: torch.Tensor, ee_pos: torch.Tensor = None, ee_quat: torch.Tensor = None, joint_pos: torch.Tensor = None
     ) -> torch.Tensor:
         """Computes the target joint positions that will yield the desired end effector pose.
 
@@ -159,25 +162,30 @@ class DifferentialIKController:
         Returns:
             The target joint positions commands in shape (N, num_joints).
         """
-        # compute the delta in joint-space
-        if "position" in self.cfg.command_type:
-            position_error = self.ee_pos_des - ee_pos
-            jacobian_pos = jacobian[:, 0:3]
-            delta_joint_pos = self._compute_delta_joint_pos(delta_pose=position_error, jacobian=jacobian_pos)
+        if self.cfg.command_type in ["position", "pose"]:
+            if joint_pos is None:
+                raise ValueError(
+                    "Current joint positions must be provided for relative/absolute `position` or `pose` command type!"
+                )
+            if self.cfg.command_type == "position":
+                position_error = self.ee_pos_des - ee_pos
+                delta_joint_pos = self._compute_delta_joint_state(delta_cartesian_state=position_error, jacobian=jacobian[:, 0:3])
+            else:
+                position_error, axis_angle_error = compute_pose_error(
+                    ee_pos, ee_quat, self.ee_pos_des, self.ee_quat_des, rot_error_type="axis_angle"
+                )
+                pose_error = torch.cat((position_error, axis_angle_error), dim=1)
+                delta_joint_pos = self._compute_delta_joint_state(delta_cartesian_state=pose_error, jacobian=jacobian)
+
+            return joint_pos + delta_joint_pos
         else:
-            position_error, axis_angle_error = compute_pose_error(
-                ee_pos, ee_quat, self.ee_pos_des, self.ee_quat_des, rot_error_type="axis_angle"
-            )
-            pose_error = torch.cat((position_error, axis_angle_error), dim=1)
-            delta_joint_pos = self._compute_delta_joint_pos(delta_pose=pose_error, jacobian=jacobian)
-        # return the desired joint positions
-        return joint_pos + delta_joint_pos
+            return self._compute_delta_joint_state(delta_cartesian_state=self._command, jacobian=jacobian)
 
     """
     Helper functions.
     """
 
-    def _compute_delta_joint_pos(self, delta_pose: torch.Tensor, jacobian: torch.Tensor) -> torch.Tensor:
+    def _compute_delta_joint_state(self, delta_cartesian_state: torch.Tensor, jacobian: torch.Tensor) -> torch.Tensor:
         """Computes the change in joint position that yields the desired change in pose.
 
         The method uses the Jacobian mapping from joint-space velocities to end-effector velocities
@@ -199,7 +207,7 @@ class DifferentialIKController:
             k_val = self.cfg.ik_params["k_val"]
             # computation
             jacobian_pinv = torch.linalg.pinv(jacobian)
-            delta_joint_pos = k_val * jacobian_pinv @ delta_pose.unsqueeze(-1)
+            delta_joint_pos = k_val * jacobian_pinv @ delta_cartesian_state.unsqueeze(-1)
             delta_joint_pos = delta_joint_pos.squeeze(-1)
         elif self.cfg.ik_method == "svd":  # adaptive SVD
             # parameters
@@ -215,14 +223,14 @@ class DifferentialIKController:
                 @ torch.diag_embed(S_inv)
                 @ torch.transpose(U, dim0=1, dim1=2)
             )
-            delta_joint_pos = k_val * jacobian_pinv @ delta_pose.unsqueeze(-1)
+            delta_joint_pos = k_val * jacobian_pinv @ delta_cartesian_state.unsqueeze(-1)
             delta_joint_pos = delta_joint_pos.squeeze(-1)
         elif self.cfg.ik_method == "trans":  # Jacobian transpose
             # parameters
             k_val = self.cfg.ik_params["k_val"]
             # computation
             jacobian_T = torch.transpose(jacobian, dim0=1, dim1=2)
-            delta_joint_pos = k_val * jacobian_T @ delta_pose.unsqueeze(-1)
+            delta_joint_pos = k_val * jacobian_T @ delta_cartesian_state.unsqueeze(-1)
             delta_joint_pos = delta_joint_pos.squeeze(-1)
         elif self.cfg.ik_method == "dls":  # damped least squares
             # parameters
@@ -231,7 +239,7 @@ class DifferentialIKController:
             jacobian_T = torch.transpose(jacobian, dim0=1, dim1=2)
             lambda_matrix = (lambda_val**2) * torch.eye(n=jacobian.shape[1], device=self._device)
             delta_joint_pos = (
-                jacobian_T @ torch.inverse(jacobian @ jacobian_T + lambda_matrix) @ delta_pose.unsqueeze(-1)
+                jacobian_T @ torch.inverse(jacobian @ jacobian_T + lambda_matrix) @ delta_cartesian_state.unsqueeze(-1)
             )
             delta_joint_pos = delta_joint_pos.squeeze(-1)
         else:

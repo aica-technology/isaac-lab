@@ -9,6 +9,8 @@
 # Base image
 ARG ISAACSIM_BASE_IMAGE_ARG
 ARG ISAACSIM_VERSION_ARG
+ARG CONTROL_LIBRARIES_TAG=v9.2.0-jammy
+FROM ghcr.io/aica-technology/control-libraries:${CONTROL_LIBRARIES_TAG} AS cl
 FROM ${ISAACSIM_BASE_IMAGE_ARG}:${ISAACSIM_VERSION_ARG} AS base
 ENV ISAACSIM_VERSION=${ISAACSIM_VERSION_ARG}
 
@@ -50,6 +52,8 @@ RUN --mount=type=cache,target=/var/cache/apt \
 
 # Copy the Isaac Lab directory (files to exclude are defined in .dockerignore)
 COPY ../ ${ISAACLAB_PATH}
+
+COPY --from=cl /usr /usr
 
 # Set up a symbolic link between the installed Isaac Sim root folder and _isaac_sim in the Isaac Lab directory
 RUN ln -sf ${ISAACSIM_ROOT_PATH} ${ISAACLAB_PATH}/_isaac_sim
@@ -100,6 +104,7 @@ RUN echo "export ISAACLAB_PATH=${ISAACLAB_PATH}" >> ${HOME}/.bashrc && \
     echo "alias pip3='${ISAACLAB_PATH}/_isaac_sim/python.sh -m pip'" >> ${HOME}/.bashrc && \
     echo "alias tensorboard='${ISAACLAB_PATH}/_isaac_sim/python.sh ${ISAACLAB_PATH}/_isaac_sim/tensorboard'" >> ${HOME}/.bashrc && \
     echo "export TZ=$(date +%Z)" >> ${HOME}/.bashrc && \
+    echo "export PYTHONPATH=${PYTHONPATH}:/usr/lib/python3.10/dist-packages" >> ${HOME}/.bashrc && \
     echo "shopt -s histappend" >> /root/.bashrc && \
     echo "PROMPT_COMMAND='history -a'" >> /root/.bashrc
 
