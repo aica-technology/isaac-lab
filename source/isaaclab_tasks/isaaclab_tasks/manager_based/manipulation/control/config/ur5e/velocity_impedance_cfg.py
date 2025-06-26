@@ -20,8 +20,11 @@ class UR5eVelocityImpedanceControlSceneCfg(ImpedanceControlRLSceneCfg):
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         # override commands
-        self.commands.ee_force_pose.body_name = self.ee_str 
+        self.commands.ee_force_pose.body_name = self.ee_str
         self.commands.ee_force_pose.ranges.pitch = (0, 0)
+
+        # override rewards
+        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
 
         # override actions
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
@@ -29,5 +32,5 @@ class UR5eVelocityImpedanceControlSceneCfg(ImpedanceControlRLSceneCfg):
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
-            scale=1
+            scale=0.02,
         )

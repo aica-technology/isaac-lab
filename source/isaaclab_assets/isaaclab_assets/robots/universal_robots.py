@@ -64,9 +64,9 @@ UR5E_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
             "shoulder_pan_joint": 0.0,
-            "shoulder_lift_joint": -1.712,
-            "elbow_joint": 1.712,
-            "wrist_1_joint": -1.57,
+            "shoulder_lift_joint": -1.99,
+            "elbow_joint": 2.3,
+            "wrist_1_joint": -1.88,
             "wrist_2_joint": -1.57,
             "wrist_3_joint": -1.57,
         },
@@ -112,7 +112,7 @@ UR5E_CFG_LOW_LEVEL_PID.actuators = {
         "arm": VelocityPIDActuatorCfg(
             joint_names_expr=[".*"],
             effort_limit=150,
-            proportional_gain=500,
+            proportional_gain=400,
             derivative_gain=0,
             integral_gain=10000,
             max_integral_error=150,
