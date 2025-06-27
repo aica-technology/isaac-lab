@@ -13,7 +13,7 @@ Reference: https://github.com/ros-industrial/universal_robot
 """
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg
+from isaaclab.actuators import ImplicitActuatorCfg, VelocityPIDActuatorCfg
 from isaaclab.assets.articulation import ArticulationCfg
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR, ISAAC_NUCLEUS_DIR
 from isaaclab_assets.custom_actuator_models.actuator_model_parsers import parse_actuator_model
@@ -104,5 +104,18 @@ UR5E_CFG_LOW_LEVEL.actuators = {
             joint_names_expr=[".*"],
             stiffness=100000,
             damping=50000,
+        ),
+    }
+
+UR5E_CFG_LOW_LEVEL_PID = UR5E_CFG.copy()
+UR5E_CFG_LOW_LEVEL_PID.actuators = {
+        "arm": VelocityPIDActuatorCfg(
+            joint_names_expr=[".*"],
+            effort_limit=150,
+            proportional_gain=500,
+            derivative_gain=0,
+            integral_gain=10000,
+            max_integral_error=150,
+            delta_time=0.002
         ),
     }
