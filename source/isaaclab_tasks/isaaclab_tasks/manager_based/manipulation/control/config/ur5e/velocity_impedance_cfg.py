@@ -1,6 +1,6 @@
 from isaaclab.utils import configclass
 
-from source.isaaclab_tasks.isaaclab_tasks.manager_based.manipulation.control.impedance_scene_cfg import ImpedanceControlRLSceneCfg
+from isaaclab_tasks.manager_based.manipulation.control.impedance_scene_cfg import ImpedanceControlRLSceneCfg
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from isaaclab_assets import UR5E_CFG_LOW_LEVEL_PID
