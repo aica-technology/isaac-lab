@@ -77,7 +77,7 @@ class UniformForcePoseCommand(CommandTerm):
 
     @property
     def command(self) -> torch.Tensor:
-        """The desired pose command. Shape is (num_envs, 7).
+        """The desired pose command. Shape is (num_envs, 10).
 
         The first three elements correspond to the position, followed by the quaternion orientation in (w, x, y, z) and 
         then followed by (fx, fy, fz).

@@ -195,7 +195,7 @@ class UniformForcePoseCommandCfg(CommandTermCfg):
     """Name of the asset in the environment for which the commands are generated."""
 
     surface_name: str = MISSING
-    """Name of the table in the environment for which the commands are generated."""    
+    """Name of the surface in the environment for which the commands are generated."""    
 
     body_name: str = MISSING
     """Name of the body in the asset for which the commands are generated."""
@@ -247,7 +247,6 @@ class UniformForcePoseCommandCfg(CommandTermCfg):
     )
     """The configuration for the current pose visualization marker. Defaults to FRAME_MARKER_CFG."""
 
-    # Set the scale of the visualization markers to (0.1, 0.1, 0.1)
     goal_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
     current_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
 
