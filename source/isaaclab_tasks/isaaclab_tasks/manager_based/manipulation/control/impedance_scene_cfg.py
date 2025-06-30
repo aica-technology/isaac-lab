@@ -11,7 +11,7 @@ from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransf
 from isaaclab.utils import configclass
 from isaaclab.markers.config import FRAME_MARKER_CFG  
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from . import mdp
+from isaaclab_tasks.manager_based.manipulation.control import mdp
 import math
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
