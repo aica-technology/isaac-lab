@@ -15,4 +15,4 @@ def measured_forces(
     end_effector: FrameTransformer = env.scene[end_effector_cfg.name]
     ee_quat_w = end_effector.data.target_quat_w[..., 0, :]
     force_ee = transform_points(force_w.unsqueeze(1), quat=ee_quat_w)
-    return force_ee.squeeze() if not force_ee.shape[0] == 1 else force_ee
+    return force_ee.view(-1, 3)
