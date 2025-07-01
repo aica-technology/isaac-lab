@@ -76,14 +76,14 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
 @configclass
 class CommandsCfg:
     """Command terms for the MDP."""
-    ee_force_pose = mdp.UniformForcePoseCommandCfg(
+    ee_force_pose = mdp.UniformPoseForceCommandCfg(
             asset_name="robot",
             force_sensor_name="contact_sensor",
             surface_name="table",
             body_name=MISSING,
             resampling_time_range=(15.0, 15.0),
             debug_vis=True, # type: ignore
-            ranges=mdp.UniformForcePoseCommandCfg.Ranges(
+            ranges=mdp.UniformPoseForceCommandCfg.Ranges(
                 pos_x=(0.3, 0.5),
                 pos_y=(-0.2, 0.2),
                 roll=(-math.pi, -math.pi),

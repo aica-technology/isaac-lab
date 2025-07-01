@@ -15,7 +15,7 @@ from .null_command import NullCommand
 from .pose_2d_command import TerrainBasedPose2dCommand, UniformPose2dCommand
 from .pose_command import UniformPoseCommand
 from .velocity_command import NormalVelocityCommand, UniformVelocityCommand
-from .force_pose_command import UniformForcePoseCommand
+from .pose_force_command import UniformPoseForceCommand
 
 @configclass
 class NullCommandCfg(CommandTermCfg):
@@ -186,10 +186,10 @@ class UniformPoseCommandCfg(CommandTermCfg):
 
 
 @configclass
-class UniformForcePoseCommandCfg(CommandTermCfg):
+class UniformPoseForceCommandCfg(CommandTermCfg):
     """Configuration for uniform force and pose command generator."""
 
-    class_type: type = UniformForcePoseCommand
+    class_type: type = UniformPoseForceCommand
 
     asset_name: str = MISSING
     """Name of the asset in the environment for which the commands are generated."""
