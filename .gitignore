@@ -69,4 +69,5 @@ tests/
 
 # Docker history
 .isaac-lab-docker-history
-usd/*
+
+usd/
