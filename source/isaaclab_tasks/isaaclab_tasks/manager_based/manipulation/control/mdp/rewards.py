@@ -77,7 +77,7 @@ def state_command_error_tanh(
     std: float = 0.1,
 ) -> torch.Tensor:
     return 1 - torch.tanh(
-        (1 / std) * setpoint_error(env, command_name, stiffness=stiffness, damping=damping) / stiffness
+        setpoint_error(env, command_name, stiffness=stiffness, damping=damping) / (stiffness * std)
     )
 
 
