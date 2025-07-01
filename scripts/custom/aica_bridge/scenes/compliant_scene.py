@@ -6,7 +6,7 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from isaaclab_assets import UR5E_CFG_LOW_LEVEL
+from isaaclab_assets import UR5E_CFG_LOW_LEVEL_PID
 
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()  # type: ignore
@@ -16,7 +16,7 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class CompliantScene(InteractiveSceneCfg):
-    robot: ArticulationCfg = UR5E_CFG_LOW_LEVEL.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = UR5E_CFG_LOW_LEVEL_PID.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # ground plane
     ground = AssetBaseCfg(

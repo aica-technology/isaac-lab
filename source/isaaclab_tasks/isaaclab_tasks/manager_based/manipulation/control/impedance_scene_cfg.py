@@ -4,38 +4,46 @@ import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
 from isaaclab.managers import ActionTermCfg as ActionTerm
+from isaaclab.managers import CurriculumTermCfg as CurrTerm
+from isaaclab.managers import EventTermCfg as EventTerm
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
+from isaaclab.managers import ObservationTermCfg as ObsTerm
+from isaaclab.managers import RewardTermCfg as RewTerm
+from isaaclab.managers import SceneEntityCfg
+from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
 from isaaclab.sensors import ContactSensorCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
 from isaaclab.utils import configclass
-from isaaclab.markers.config import FRAME_MARKER_CFG  
+from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
 from isaaclab_tasks.manager_based.manipulation.control import mdp
+from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
 import math
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
 ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
 ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
+
 @configclass
-class ImpedanceControlSceneCfg(InteractiveSceneCfg):    
+class ImpedanceControlSceneCfg(InteractiveSceneCfg):
     robot: ArticulationCfg = MISSING
 
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
-            prim_path=MISSING,
-            debug_vis=False,
-            visualizer_cfg=ee_frame_cfg,
-            target_frames=[
-                FrameTransformerCfg.FrameCfg(
-                    prim_path=MISSING,
-                    name="end_effector",
-                    offset=OffsetCfg(
-                        pos=(0, 0, 0),
-                    ),
+        prim_path=MISSING,
+        debug_vis=False,
+        visualizer_cfg=ee_frame_cfg,
+        target_frames=[
+            FrameTransformerCfg.FrameCfg(
+                prim_path=MISSING,
+                name="end_effector",
+                offset=OffsetCfg(
+                    pos=(0, 0, 0),
                 ),
-            ],
-        )
+            ),
+        ],
+    )
 
     ground = AssetBaseCfg(
         prim_path="/World/defaultGroundPlane",
@@ -55,9 +63,7 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
             activate_contact_sensors=True,
         ),
-        init_state=RigidObjectCfg.InitialStateCfg(
-            pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)
-        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)),
     )
 
     contact_sensor = ContactSensorCfg(
@@ -67,6 +73,7 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
         debug_vis=True,
         filter_prim_paths_expr=["{ENV_REGEX_NS}/Table"],
     )
+
 
 ##
 # MDP settings
@@ -110,31 +117,107 @@ class ObservationsCfg:
     @configclass
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
-        pass
+
+        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-1, n_max=1))
+        desired_state = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
+
+        actions = ObsTerm(func=mdp.last_action)
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.1, n_max=0.1))
+
+        def __post_init__(self):
+            self.enable_corruption = True
+            self.concatenate_terms = True
+
     # observation groups
     policy: PolicyCfg = PolicyCfg()
 
 
 @configclass
 class EventCfg:
-    """Configuration for events."""
-    pass
+    reset_robot_joints = EventTerm(
+        func=mdp.reset_joints_by_scale,
+        mode="reset",
+        params={
+            "position_range": (1.0, 1.0),
+            "velocity_range": (0.0, 0.0),
+        },
+    )
+
+    reset_object_position = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
+            "velocity_range": {},
+            "asset_cfg": SceneEntityCfg("table"),
+        },
+    )
 
 
 @configclass
 class RewardsCfg:
     """Reward terms for the MDP."""
-    pass
+
+    # task terms
+    end_effector_force_tracking = RewTerm(
+        func=mdp.force_command_error, weight=-0.1, params={"command_name": "ee_force_pose"}
+    )
+
+    end_effector_state_tracking = RewTerm(
+        func=mdp.state_command_error, weight=-20, params={"command_name": "ee_force_pose"}
+    )
+
+    end_effector_force_tracking_fine_grained = RewTerm(
+        func=mdp.force_command_error_tanh, weight=3.6, params={"command_name": "ee_force_pose", "std": 0.2}
+    )
+
+    end_effector_state_tracking_fine_grained = RewTerm(
+        func=mdp.state_command_error_tanh,
+        weight=7.2,
+        params={
+            "command_name": "ee_force_pose",
+        },
+    )
+
+    end_effector_orientation_tracking = RewTerm(
+        func=mdp.orientation_command_error,
+        weight=-4,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
+    )
+
+    # behavioral terms
+    action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
+    joint_vel = RewTerm(func=mdp.joint_vel_l2, weight=-0.0001, params={"asset_cfg": SceneEntityCfg("robot")})
+    joint_acceleration = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7, params={"asset_cfg": SceneEntityCfg("robot")})
+    action_term = RewTerm(func=mdp.action_l2, weight=-0.01)
+
 
 @configclass
 class TerminationsCfg:
     """Termination terms for the MDP."""
-    pass
+
+    time_out = DoneTerm(func=mdp.time_out, time_out=True)
+
 
 @configclass
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
-    pass
+
+    force_tracking = CurrTerm(
+        func=mdp.modify_reward_weight,
+        params={"term_name": "end_effector_force_tracking", "weight": -0.2, "num_steps": 24000},
+    )
+
+    action_rate = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 60000}
+    )
+
+    joint_vel = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 60000}
+    )
 
 
 ##
@@ -161,9 +244,9 @@ class ImpedanceControlRLSceneCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2
+        self.decimation = 5
         self.sim.render_interval = self.decimation
         self.episode_length_s = 15.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 100.0
+        self.sim.dt = 1.0 / 500.0
