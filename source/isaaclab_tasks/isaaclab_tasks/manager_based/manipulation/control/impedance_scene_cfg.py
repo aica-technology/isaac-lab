@@ -11,7 +11,8 @@ from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransf
 from isaaclab.utils import configclass
 from isaaclab.markers.config import FRAME_MARKER_CFG  
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-
+from isaaclab_tasks.manager_based.manipulation.control import mdp
+import math
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
 ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
@@ -75,7 +76,24 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
 @configclass
 class CommandsCfg:
     """Command terms for the MDP."""
-    pass
+    ee_force_pose = mdp.UniformPoseForceCommandCfg(
+            asset_name="robot",
+            force_sensor_name="contact_sensor",
+            surface_name="table",
+            body_name=MISSING,
+            resampling_time_range=(15.0, 15.0),
+            debug_vis=True, # type: ignore
+            ranges=mdp.UniformPoseForceCommandCfg.Ranges(
+                pos_x=(0.3, 0.5),
+                pos_y=(-0.2, 0.2),
+                roll=(-math.pi, -math.pi),
+                pitch=MISSING,  # depends on end-effector axis
+                yaw=(0, 0),
+                force_x=(0.0, 0.0),
+                force_y=(0.0, 0.0),
+                force_z=(-50.0, -25.0),
+            ),
+        )
 
 
 @configclass
