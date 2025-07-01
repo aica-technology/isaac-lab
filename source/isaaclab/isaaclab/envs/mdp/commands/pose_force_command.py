@@ -17,16 +17,17 @@ if TYPE_CHECKING:
 
 
 class UniformPoseForceCommand(CommandTerm):
-    """Command generator for generating force-pose commands uniformly.
+    """Command generator for generating pose-force commands uniformly.
 
-    The command generator generates forces and poses by sampling positions uniformly within specified
-    regions in cartesian space in x, y while z is fixed to be on a surface. For orientation, it samples uniformly the euler angles
-    (roll-pitch-yaw) and converts them into quaternion representation (w, x, y, z). For forces, it samples uniformly
-    force setpoints within a predefined range.
+    The command generator creates poses and force setpoints by uniformly sampling positions 
+    within specified regions of Cartesian space along the x and y axes, while the z-axis is constrained to lie on a surface.
 
-    The force, position and orientation commands are generated in the base frame of the robot, and not the
-    simulation world frame. This means that users need to handle the transformation from the
-    base frame to the simulation world frame themselves.
+    For orientation, it samples roll, pitch, and yaw angles uniformly and converts them into quaternion format (w, x, y, z). 
+    Force setpoints are sampled uniformly within a predefined range.
+
+    Position and orientation commands are generated in the robot's base frame, not in the simulation world frame. 
+    Forces, on the other hand, are generated in the robot's tool frame, where the contact sensor is located. As a result, 
+    users are responsible for transforming the base frame to the simulation world frame if needed.
 
     .. caution::
 
