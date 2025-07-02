@@ -1,9 +1,8 @@
-from typing import Optional, Union, List
-
 import torch
-from isaaclab.assets import Articulation
-from isaaclab.scene import InteractiveScene
+from typing import Optional
 
+import clproto
+import state_representation as sr
 from communication_interfaces.sockets import (
     ZMQCombinedSocketsConfiguration,
     ZMQContext,
@@ -11,15 +10,15 @@ from communication_interfaces.sockets import (
     ZMQPublisherSubscriber,
     ZMQSocketConfiguration,
 )
-import clproto
-import state_representation as sr
-from state_representation import StateType
-from scripts.custom.aica_bridge.bridge.utils import measured_forces
+
+from isaaclab.assets import Articulation
+from isaaclab.scene import InteractiveScene
 from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
+from scripts.custom.aica_bridge.bridge.utils import measured_forces
 
 
 class AICABridge:
-    def __init__(self, config: BridgeConfig, robot_joint_ids: List[int] | slice):
+    def __init__(self, config: BridgeConfig):
         """
         Initialize the AICA Bridge with the given configuration and robot joint IDs.
 
@@ -38,7 +37,6 @@ class AICABridge:
         )
         self._state_command_publisher_subscriber = ZMQPublisherSubscriber(combined_cfg)
 
-        self._robot_joint_ids = robot_joint_ids
         self._joint_state: sr.JointState = None
 
         self._use_force_sensor = config.force_sensor_name is not None
@@ -55,7 +53,7 @@ class AICABridge:
         """Check if the AICA Bridge is active."""
         return self.__is_active
 
-    def activate(self, joint_names: list[str]) -> None:
+    def activate(self, joint_names: list[str], robot_joint_ids: list[int]) -> None:
         """Open ZMQ sockets for bidirectional communication and initialize joint state."""
         if not self.__is_active:
             if self._use_force_sensor:
@@ -63,9 +61,10 @@ class AICABridge:
 
             self._state_command_publisher_subscriber.open()
             self._joint_state = sr.JointState("robot", joint_names)
+            self._robot_joint_ids = robot_joint_ids
             self.__is_active = True
 
-    def receive_commands(self) -> tuple[Optional[sr.JointState], Optional[sr.JointState]]:
+    def receive_commands(self) -> Optional[sr.JointState]:
         """
         Receive and decode commands from AICA.
 
@@ -75,14 +74,9 @@ class AICABridge:
         if self.__is_active:
             data = self._state_command_publisher_subscriber.receive_bytes()
             if not data:
-                return None, None
+                return None
 
-            message = clproto.decode(data)
-            if message.get_type() == StateType.JOINT_POSITIONS:
-                return message, None
-            if message.get_type() == StateType.JOINT_VELOCITIES:
-                return None, message
-            return None, None
+            return clproto.decode(data)
         else:
             raise RuntimeError("AICA Bridge is not active. Please activate it before receiving commands.")
 

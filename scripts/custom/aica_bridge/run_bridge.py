@@ -5,14 +5,14 @@ parser = argparse.ArgumentParser(description="Run the AICA bridge.")
 
 parser.add_argument("--scene", type=str, help="Scene name to load.")
 parser.add_argument("--rate", type=float, default=100.0, help="Simulation rate in Hz.")
-parser.add_argument("--end_effector", type=str, default="wrist_3_link", help="End effector name.")
 parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
 parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
 parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
 parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
 parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
+parser.add_argument("--joint_names", nargs="+", help="List of joint names to control.")
 parser.add_argument(
-    "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
+    "--command_interface", type=str, default="positions", help="Command interface to use (default: positions)."
 )
 
 AppLauncher.add_app_launcher_args(parser)
@@ -23,19 +23,25 @@ arguments = parser.parse_args()
 app_launcher = AppLauncher(headless=arguments.headless, device=arguments.device)
 simulation_app = app_launcher.app
 
-from typing import Optional
+
 import argparse
 import torch
 from isaaclab.assets import Articulation
-from isaaclab.managers import SceneEntityCfg
 from isaaclab.scene import InteractiveScene
 from isaaclab.sim import SimulationCfg, SimulationContext
 
 import state_representation as sr
+from state_representation import StateType
 from scripts.custom.aica_bridge.scenes import scenes
 from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
 from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
 import time
+
+STATE_TYPE_TO_STRING = {
+    StateType.JOINT_POSITIONS: "positions",
+    StateType.JOINT_VELOCITIES: "velocities",
+    StateType.JOINT_TORQUES: "torques",
+}
 
 
 class Simulator:
@@ -44,8 +50,8 @@ class Simulator:
         bridge_config: BridgeConfig,
         simulation_config: SimulationCfg,
         scene_name: str,
-        end_effector: str,
-        command_interface: str = "position",
+        request_joint_names: list[str],
+        command_interface: str = "positions",
     ):
         """
         Initialize the simulator with the given configuration.
@@ -54,9 +60,9 @@ class Simulator:
 
             scene_name (str): Name of the scene to load.
 
-            end_effector (str): Name of the end effector to control.
+            request_joint_names (list[str]): List of joint names to control in the robot.
 
-            command_interface (str): Command interface to use, either 'position' or 'velocity'.
+            command_interface (str): Command interface to use, either 'positions', 'velocities', or 'torques'.
         """
         self._sim = SimulationContext(simulation_config)
         self._sim.add_physics_callback("state_callback", self._state_callback)
@@ -66,10 +72,12 @@ class Simulator:
 
         scene_cfg = scenes[scene_name](num_envs=1, env_spacing=2)
         self._scene = InteractiveScene(scene_cfg)
-        self._robot: Articulation = self._scene["robot"]
-        self._robot_joint_ids = SceneEntityCfg("robot", joint_names=[".*"], body_names=[end_effector]).joint_ids
 
-        self._bridge = AICABridge(bridge_config, robot_joint_ids=self._robot_joint_ids)
+        self._robot: Articulation = self._scene["robot"]
+        self._request_joint_names = request_joint_names
+        self._robot_joint_ids = None
+
+        self._bridge = AICABridge(bridge_config)
 
     def run(self) -> None:
         """Initialize and run the simulation loop until the app is closed."""
@@ -82,7 +90,11 @@ class Simulator:
         while simulation_app.is_running():
             start_time = time.time()
             if not self._bridge.is_active:
-                self._bridge.activate(self._robot.data.joint_names)
+                self._robot_joint_ids = self._robot.find_joints(self._request_joint_names)[0]
+                self._bridge.activate(
+                    [self._robot.data.joint_names[joint_id] for joint_id in self._robot_joint_ids],
+                    self._robot_joint_ids,
+                )
                 if self._bridge.is_active:
                     self._initialize_robot()
                     print("AICA Bridge activated. Waiting for commands...")
@@ -120,18 +132,18 @@ class Simulator:
         Callback to receive commands from the AICA Bridge and apply them to the robot.
         """
         if self._bridge.is_active:
-            position_command, velocity_command = self._bridge.receive_commands()
-            self._apply_command(position_command, velocity_command)
+            command = self._bridge.receive_commands()
+            self._apply_command(command)
             self._scene.write_data_to_sim()
         else:
             print("AICA Bridge is not active. Cannot receive commands.")
 
     def _initialize_robot(self) -> None:
-        """Set robot to default pose at startup. If using velocity control, set stiffness to zero."""
+        """Set robot to default pose at startup. If using velocities control, set stiffness to zero."""
         defaults = self._robot.data
         self._robot.write_joint_state_to_sim(defaults.default_joint_pos, defaults.default_joint_vel)
-        if self._command_interface == "velocity":
-            # set the stiffness to zero for velocity control
+        if self._command_interface == "velocities":
+            # set the stiffness to zero for velocities control
             self._robot.write_joint_stiffness_to_sim(
                 torch.zeros_like(defaults.default_joint_stiffness, device=self._robot.device)
             )
@@ -139,42 +151,51 @@ class Simulator:
 
     def _apply_command(
         self,
-        position_command: Optional[sr.JointState],
-        velocity_command: Optional[sr.JointState],
+        command: sr.JointState,
     ) -> None:
         """
-        Apply the received position or velocity command to the robot.
+        Apply the received positions or velocities command to the robot.
 
         Args:
-            position_command: Joint position command, if any.
-            velocity_command: Joint velocity command, if any.
+            command (sr.JointState): The command containing the joint state
         Raises:
-            ValueError: If both position and velocity commands are received, or if the command interface does not match.
+            ValueError: If the command type does not match the expected type based on the command interface.
         """
-        if self._command_interface == "position":
-            if position_command:
-                target = torch.tensor(position_command.get_positions(), device=self._robot.device)
+
+        command_type = command.get_type() if command is not None else None
+        match (self._command_interface, command_type):
+            case ("positions", StateType.JOINT_POSITIONS):
+                target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
                 self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
-            elif velocity_command:
-                raise ValueError(
-                    "Received velocity command while using position interface. Use the velocity interface instead."
-                )
-            else:
-                # maintain current state
-                current = self._robot.data.joint_pos[0, self._robot_joint_ids]
-                self._robot.set_joint_position_target(current, joint_ids=self._robot_joint_ids)
-        elif self._command_interface == "velocity":
-            if velocity_command:
-                target = torch.tensor(velocity_command.get_velocities(), device=self._robot.device)
+
+            case ("velocities", StateType.JOINT_VELOCITIES):
+                target = torch.tensor(command.get_velocities(), device=self._robot.device).to(dtype=torch.float32)
                 self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
-            elif position_command:
-                raise ValueError(
-                    "Received position command while using velocity interface. Use the position interface instead."
+
+            case ("torques", StateType.JOINT_TORQUES):
+                target = torch.tensor(command.get_torques(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
+
+            case ("positions", None):
+                current_positions = self._robot.data.joint_pos[:, self._robot_joint_ids]
+                self._robot.set_joint_position_target(current_positions, joint_ids=self._robot_joint_ids)
+
+            case ("velocities", None):
+                current_velocities = torch.zeros_like(
+                    self._robot.data.joint_vel[:, self._robot_joint_ids], device=self._robot.device
                 )
-            else:
-                self._robot.set_joint_velocity_target(
-                    torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
-                    joint_ids=self._robot_joint_ids,
+                self._robot.set_joint_velocity_target(current_velocities, joint_ids=self._robot_joint_ids)
+
+            case ("torques", None):
+                current_torques = torch.zeros_like(
+                    self._robot.data.joint_vel[:, self._robot_joint_ids], device=self._robot.device
+                )
+                self._robot.set_joint_effort_target(current_torques, joint_ids=self._robot_joint_ids)
+
+            case (_, _):
+
+                raise ValueError(
+                    f"Received a command of type {STATE_TYPE_TO_STRING[command_type]}, but the command interface is set to {self._command_interface}."
                 )
 
 
@@ -183,10 +204,17 @@ def main() -> None:
     if arguments.scene not in scenes:
         raise ValueError(f"Invalid scene name: {arguments.scene}. Available scenes are: {list(scenes.keys())}")
 
-    if arguments.command_interface not in ["position", "velocity"]:
+    if arguments.command_interface not in ["positions", "velocities", "torques"]:
         raise ValueError(
-            f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity"
+            f"Invalid command interface: {arguments.command_interface}. Available options are: positions, velocities, torques"
         )
+
+    if arguments.joint_names is None:
+        raise ValueError("Joint names must be provided. Use --joint_names to specify them.")
+
+    else:
+        if len(arguments.joint_names) == 0:
+            raise ValueError("Joint names list cannot be empty. Provide at least one joint name.")
 
     if arguments.rate <= 0:
         raise ValueError(f"Invalid rate: {arguments.rate}. Rate must be a positive number.")
@@ -206,7 +234,7 @@ def main() -> None:
             dt=1.0 / arguments.rate,
             device=arguments.device,
         ),
-        end_effector=arguments.end_effector,
+        request_joint_names=arguments.joint_names,
         command_interface=arguments.command_interface,
     )
     sim.run()
