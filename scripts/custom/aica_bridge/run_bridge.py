@@ -37,6 +37,12 @@ from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
 from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
 import time
 
+_LOG_MESSAGES = {
+    StateType.JOINT_POSITIONS: "position",
+    StateType.JOINT_VELOCITIES: "velocity",
+    StateType.JOINT_TORQUES: "torque",
+}
+
 
 class Simulator:
     def __init__(
@@ -168,7 +174,7 @@ class Simulator:
                 self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
             else:
                 raise ValueError(
-                    f"Received a command of type {command_type}, but the command interface is set to {self._command_interface}."
+                    f"Received a command of type {_LOG_MESSAGES[command_type]}, but the command interface is set to {self._command_interface}."
                 )
         else:
             if self._command_interface == "position":
