@@ -59,6 +59,8 @@ class Simulator:
 
             scene_name (str): Name of the scene to load.
 
+            request_joint_names (list[str]): List of joint names to control in the robot.
+
             command_interface (str): Command interface to use, either 'positions', 'velocities', or 'torques'.
         """
         self._sim = SimulationContext(simulation_config)
