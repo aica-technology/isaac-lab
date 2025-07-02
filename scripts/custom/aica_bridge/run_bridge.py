@@ -156,32 +156,20 @@ class Simulator:
         if command is not None:
             command_type = command.get_type()
 
-            if self._command_interface == "position":
-                if command_type == StateType.JOINT_POSITIONS:
-                    target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
-                    self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
-                else:
-                    raise ValueError(
-                        f"Received a command of type {command_type}, but the command interface is set to 'position'."
-                    )
+            if self._command_interface == "position" and command_type == StateType.JOINT_POSITIONS:
+                target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
+            elif self._command_interface == "velocity" and command_type == StateType.JOINT_VELOCITIES:
+                target = torch.tensor(command.get_velocities(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
 
-            elif self._command_interface == "velocity":
-                if command_type == StateType.JOINT_VELOCITIES:
-                    target = torch.tensor(command.get_velocities(), device=self._robot.device).to(dtype=torch.float32)
-                    self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
-                else:
-                    raise ValueError(
-                        f"Received a command of type {command_type}, but the command interface is set to 'velocity'."
-                    )
-
-            elif self._command_interface == "torque":
-                if command_type == StateType.JOINT_TORQUES:
-                    target = torch.tensor(command.get_torques(), device=self._robot.device).to(dtype=torch.float32)
-                    self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
-                else:
-                    raise ValueError(
-                        f"Received a command of type {command_type}, but the command interface is set to 'torque'."
-                    )
+            elif self._command_interface == "torque" and command_type == StateType.JOINT_TORQUES:
+                target = torch.tensor(command.get_torques(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
+            else:
+                raise ValueError(
+                    f"Received a command of type {command_type}, but the command interface is set to {self._command_interface}."
+                )
         else:
             if self._command_interface == "position":
                 self._robot.set_joint_position_target(
