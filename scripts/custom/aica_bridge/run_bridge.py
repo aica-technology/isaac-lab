@@ -12,7 +12,7 @@ parser.add_argument("--command_port", type=int, default=1802, help="Port for the
 parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
 parser.add_argument("--joint_names", nargs="+", help="List of joint names to control.")
 parser.add_argument(
-    "--command_interface", type=str, default="position", help="Command interface to use (default: position)."
+    "--command_interface", type=str, default="positions", help="Command interface to use (default: positions)."
 )
 
 AppLauncher.add_app_launcher_args(parser)
@@ -37,12 +37,11 @@ from scripts.custom.aica_bridge.bridge.aica_bridge import AICABridge
 from scripts.custom.aica_bridge.bridge.config_classes import BridgeConfig
 import time
 
-_LOG_MESSAGES = {
-    StateType.JOINT_POSITIONS: "position",
-    StateType.JOINT_VELOCITIES: "velocity",
-    StateType.JOINT_TORQUES: "torque",
+STATE_TYPE_TO_STRING = {
+    StateType.JOINT_POSITIONS: "positions",
+    StateType.JOINT_VELOCITIES: "velocities",
+    StateType.JOINT_TORQUES: "torques",
 }
-
 
 class Simulator:
     def __init__(
@@ -51,7 +50,7 @@ class Simulator:
         simulation_config: SimulationCfg,
         scene_name: str,
         request_joint_names: list[str],
-        command_interface: str = "position",
+        command_interface: str = "positions",
     ):
         """
         Initialize the simulator with the given configuration.
@@ -60,7 +59,7 @@ class Simulator:
 
             scene_name (str): Name of the scene to load.
 
-            command_interface (str): Command interface to use, either 'position', 'velocity', or 'torque'.
+            command_interface (str): Command interface to use, either 'positions', 'velocities', or 'torques'.
         """
         self._sim = SimulationContext(simulation_config)
         self._sim.add_physics_callback("state_callback", self._state_callback)
@@ -137,11 +136,11 @@ class Simulator:
             print("AICA Bridge is not active. Cannot receive commands.")
 
     def _initialize_robot(self) -> None:
-        """Set robot to default pose at startup. If using velocity control, set stiffness to zero."""
+        """Set robot to default pose at startup. If using velocities control, set stiffness to zero."""
         defaults = self._robot.data
         self._robot.write_joint_state_to_sim(defaults.default_joint_pos, defaults.default_joint_vel)
-        if self._command_interface == "velocity":
-            # set the stiffness to zero for velocity control
+        if self._command_interface == "velocities":
+            # set the stiffness to zero for velocities control
             self._robot.write_joint_stiffness_to_sim(
                 torch.zeros_like(defaults.default_joint_stiffness, device=self._robot.device)
             )
@@ -152,45 +151,49 @@ class Simulator:
         command: sr.JointState,
     ) -> None:
         """
-        Apply the received position or velocity command to the robot.
+        Apply the received positions or velocities command to the robot.
 
         Args:
             command (sr.JointState): The command containing the joint state
         Raises:
             ValueError: If the command type does not match the expected type based on the command interface.
         """
+        command_translators = {
+            "positions": {
+                "command_getter": command.get_positions if command is not None else lambda: None,
+                "sim_setter": self._robot.set_joint_position_target,
+                "no_command_state": self._robot.data.joint_pos[0, self._robot_joint_ids],
+            },
+            "velocities": {
+                "command_getter": command.get_velocities if command is not None else lambda: None,
+                "sim_setter": self._robot.set_joint_velocity_target,
+                "no_command_state": torch.zeros_like(
+                    self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device
+                ),
+            },
+            "torques": {
+                "command_getter": command.get_torques if command is not None else lambda: None,
+                "sim_setter": self._robot.set_joint_effort_target,
+                "no_command_state": torch.zeros_like(
+                    self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device
+                ),
+            },
+        }
+
         if command is not None:
-            command_type = command.get_type()
-
-            if self._command_interface == "position" and command_type == StateType.JOINT_POSITIONS:
-                target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
-                self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
-            elif self._command_interface == "velocity" and command_type == StateType.JOINT_VELOCITIES:
-                target = torch.tensor(command.get_velocities(), device=self._robot.device).to(dtype=torch.float32)
-                self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
-
-            elif self._command_interface == "torque" and command_type == StateType.JOINT_TORQUES:
-                target = torch.tensor(command.get_torques(), device=self._robot.device).to(dtype=torch.float32)
-                self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
-            else:
+            if STATE_TYPE_TO_STRING[command.get_type()] != self._command_interface:
                 raise ValueError(
-                    f"Received a command of type {_LOG_MESSAGES[command_type]}, but the command interface is set to {self._command_interface}."
+                    f"Received a command of type {STATE_TYPE_TO_STRING[command.get_type()]}, but the command interface is set to {self._command_interface}."
                 )
+
+            target = torch.tensor(
+                command_translators[self._command_interface]["command_getter"](), device=self._robot.device
+            ).to(dtype=torch.float32)
+            command_translators[self._command_interface]["sim_setter"](target, joint_ids=self._robot_joint_ids)
         else:
-            if self._command_interface == "position":
-                self._robot.set_joint_position_target(
-                    self._robot.data.joint_pos[0, self._robot_joint_ids], joint_ids=self._robot_joint_ids
-                )
-            elif self._command_interface == "velocity":
-                self._robot.set_joint_velocity_target(
-                    torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
-                    joint_ids=self._robot_joint_ids,
-                )
-            elif self._command_interface == "torque":
-                self._robot.set_joint_effort_target(
-                    torch.zeros_like(self._robot.data.joint_vel[0, self._robot_joint_ids], device=self._robot.device),
-                    joint_ids=self._robot_joint_ids,
-                )
+            command_translators[self._command_interface]["sim_setter"](
+                command_translators[self._command_interface]["no_command_state"], joint_ids=self._robot_joint_ids
+            )
 
 
 def main() -> None:
@@ -198,9 +201,9 @@ def main() -> None:
     if arguments.scene not in scenes:
         raise ValueError(f"Invalid scene name: {arguments.scene}. Available scenes are: {list(scenes.keys())}")
 
-    if arguments.command_interface not in ["position", "velocity", "torque"]:
+    if arguments.command_interface not in ["positions", "velocities", "torques"]:
         raise ValueError(
-            f"Invalid command interface: {arguments.command_interface}. Available options are: position, velocity, torque"
+            f"Invalid command interface: {arguments.command_interface}. Available options are: positions, velocities, torques"
         )
 
     if arguments.joint_names is None:
