@@ -202,7 +202,7 @@ def main() -> None:
 
     else:
         if len(arguments.joint_names) == 0:
-            raise ValueError("Joint names list cannot be empty. Please provide at least one joint name.")
+            raise ValueError("Joint names list cannot be empty. Provide at least one joint name.")
 
     if arguments.rate <= 0:
         raise ValueError(f"Invalid rate: {arguments.rate}. Rate must be a positive number.")
