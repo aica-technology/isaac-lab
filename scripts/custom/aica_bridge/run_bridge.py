@@ -161,41 +161,42 @@ class Simulator:
         Raises:
             ValueError: If the command type does not match the expected type based on the command interface.
         """
-        if command is not None:
-            command_type = command.get_type()
-            match (self._command_interface, command_type):
-                case ("positions", StateType.JOINT_POSITIONS):
-                    target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
-                    self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
-                
-                case ("velocities", StateType.JOINT_VELOCITIES):
-                    target = torch.tensor(command.get_velocities(), device=self._robot.device).to(dtype=torch.float32)
-                    self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
 
-                case ("torques", StateType.JOINT_TORQUES):
-                    target = torch.tensor(command.get_torques(), device=self._robot.device).to(dtype=torch.float32)
-                    self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
+        command_type = command.get_type() if command is not None else None
 
-                case _:
-                    raise ValueError(
-                        f"Received a command of type {STATE_TYPE_TO_STRING[command_type]}, but the command interface is set to {self._command_interface}."
-                    )
-        else:
-            match self._command_interface:
-                case "positions":
-                    current_positions = self._robot.data.joint_pos[self._robot_joint_ids]
-                    self._robot.set_joint_position_target(current_positions, joint_ids=self._robot_joint_ids)
-                case "velocities":
-                    current_velocities = torch.zeros_like(
-                        self._robot.data.joint_vel[self._robot_joint_ids], device=self._robot.device
-                    )
-                    self._robot.set_joint_velocity_target(current_velocities, joint_ids=self._robot_joint_ids)
+        match (self._command_interface, command_type):
+            case ("positions", StateType.JOINT_POSITIONS):
+                target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_position_target(target, joint_ids=self._robot_joint_ids)
 
-                case "torques":
-                    current_torques = torch.zeros_like(
-                        self._robot.data.joint_vel[self._robot_joint_ids], device=self._robot.device
-                    )
-                    self._robot.set_joint_effort_target(current_torques, joint_ids=self._robot_joint_ids)
+            case ("velocities", StateType.JOINT_VELOCITIES):
+                target = torch.tensor(command.get_velocities(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_velocity_target(target, joint_ids=self._robot_joint_ids)
+
+            case ("torques", StateType.JOINT_TORQUES):
+                target = torch.tensor(command.get_torques(), device=self._robot.device).to(dtype=torch.float32)
+                self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
+
+            case ("positions", None):
+                current_positions = self._robot.data.joint_pos[self._robot_joint_ids]
+                self._robot.set_joint_position_target(current_positions, joint_ids=self._robot_joint_ids)
+
+            case ("velocities", None):
+                current_velocities = torch.zeros_like(
+                    self._robot.data.joint_vel[self._robot_joint_ids], device=self._robot.device
+                )
+                self._robot.set_joint_velocity_target(current_velocities, joint_ids=self._robot_joint_ids)
+
+            case ("torques", None):
+                current_torques = torch.zeros_like(
+                    self._robot.data.joint_vel[self._robot_joint_ids], device=self._robot.device
+                )
+                self._robot.set_joint_effort_target(current_torques, joint_ids=self._robot_joint_ids)
+
+            case (_, _):
+                raise ValueError(
+                    f"Received a command of type {STATE_TYPE_TO_STRING[command_type]}, but the command interface is set to {self._command_interface}."
+                )
 
 
 def main() -> None:
