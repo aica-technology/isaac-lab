@@ -163,7 +163,6 @@ class Simulator:
         """
 
         command_type = command.get_type() if command is not None else None
-
         match (self._command_interface, command_type):
             case ("positions", StateType.JOINT_POSITIONS):
                 target = torch.tensor(command.get_positions(), device=self._robot.device).to(dtype=torch.float32)
@@ -178,22 +177,23 @@ class Simulator:
                 self._robot.set_joint_effort_target(target, joint_ids=self._robot_joint_ids)
 
             case ("positions", None):
-                current_positions = self._robot.data.joint_pos[self._robot_joint_ids]
+                current_positions = self._robot.data.joint_pos[:, self._robot_joint_ids]
                 self._robot.set_joint_position_target(current_positions, joint_ids=self._robot_joint_ids)
 
             case ("velocities", None):
                 current_velocities = torch.zeros_like(
-                    self._robot.data.joint_vel[self._robot_joint_ids], device=self._robot.device
+                    self._robot.data.joint_vel[:, self._robot_joint_ids], device=self._robot.device
                 )
                 self._robot.set_joint_velocity_target(current_velocities, joint_ids=self._robot_joint_ids)
 
             case ("torques", None):
                 current_torques = torch.zeros_like(
-                    self._robot.data.joint_vel[self._robot_joint_ids], device=self._robot.device
+                    self._robot.data.joint_vel[:, self._robot_joint_ids], device=self._robot.device
                 )
                 self._robot.set_joint_effort_target(current_torques, joint_ids=self._robot_joint_ids)
 
             case (_, _):
+
                 raise ValueError(
                     f"Received a command of type {STATE_TYPE_TO_STRING[command_type]}, but the command interface is set to {self._command_interface}."
                 )
