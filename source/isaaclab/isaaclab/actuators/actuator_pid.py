@@ -34,15 +34,15 @@ class VelocityPIDActuator(ActuatorBase):
 
     def set_propertional_gain(self, proportional_gain: torch.Tensor):
         """Set the proportional gain."""
-        self._proportional_gain = proportional_gain
+        self._proportional_gain = proportional_gain.to(self._device)
 
     def set_derivative_gain(self, derivative_gain: torch.Tensor):
         """Set the derivative gain."""
-        self._derivate_gain = derivative_gain
+        self._derivate_gain = derivative_gain.to(self._device)
 
     def set_integral_gain(self, integral_gain: torch.Tensor):
         """Set the integral gain."""
-        self._integral_gain = integral_gain
+        self._integral_gain = integral_gain.to(self._device)
 
     def compute(
         self, control_action: ArticulationActions, joint_vel: torch.Tensor, mass_matrix: torch.Tensor
