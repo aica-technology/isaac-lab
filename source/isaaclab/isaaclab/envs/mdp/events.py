@@ -1057,6 +1057,73 @@ def reset_joints_by_scale(
     # set into the physics simulation
     asset.write_joint_state_to_sim(joint_pos, joint_vel, env_ids=env_ids)
 
+def reset_joints_by_end_effector_pose(
+    env: ManagerBasedEnv,
+    env_ids: torch.Tensor,
+    delta_position_x_range: tuple[float, float],
+    delta_position_y_range: tuple[float, float],
+    delta_position_z_range: tuple[float, float],
+    delta_roll_range: tuple[float, float],
+    delta_pitch_range: tuple[float, float],
+    delta_yaw_range: tuple[float, float],
+    ee_frame_name: str,
+    arm_joint_names: str,
+    asset_cfg: SceneEntityCfg = SceneEntityCfg("robot"),
+    lambda_val: float = 0.01,
+):
+    """Reset the robot joints by setting the end-effector pose to a random value within the given ranges.
+
+    This function samples random values from the given ranges and sets the end-effector pose of the robot to these values.
+    The end-effector pose is defined by the position and orientation of the end-effector in the world frame.
+    The function then computes the joint positions and velocities that achieve this end-effector pose and sets them
+    into the physics simulation.
+    """
+    # extract the used quantities (to enable type-hinting)
+    asset: Articulation = env.scene[asset_cfg.name]
+
+    # sample random end-effector pose
+    num_envs = len(env_ids)
+
+    delta_pose = torch.empty((num_envs, 6), device=asset.device)
+
+    # Fill position
+    delta_pose[:, 0] = torch.empty(num_envs, device=asset.device).uniform_(*delta_position_x_range)
+    delta_pose[:, 1] = torch.empty(num_envs, device=asset.device).uniform_(*delta_position_y_range)
+    delta_pose[:, 2] = torch.empty(num_envs, device=asset.device).uniform_(*delta_position_z_range)
+
+    # Fill orientation
+    delta_pose[:, 3] = torch.empty(num_envs, device=asset.device).uniform_(*delta_roll_range)
+    delta_pose[:, 4] = torch.empty(num_envs, device=asset.device).uniform_(*delta_pitch_range)
+    delta_pose[:, 5] = torch.empty(num_envs, device=asset.device).uniform_(*delta_yaw_range)
+
+
+    end_effector_jacobian_index = asset.find_bodies(ee_frame_name)[0][0] - 1 
+    arm_joint_ids = asset.find_joints(arm_joint_names)[0]
+
+    jacobians = asset.root_physx_view.get_jacobians()[env_ids]
+    jacobian = jacobians[:, end_effector_jacobian_index, :, arm_joint_ids]
+    jacobian_T = torch.transpose(jacobian, dim0=1, dim1=2)
+
+    lambda_matrix = (lambda_val**2) * torch.eye(n=jacobian.shape[1], device=asset.device)
+    delta_joint_positions = torch.zeros_like(asset.data.default_joint_pos[env_ids], device=asset.device)
+    delta_joint_positions[:, arm_joint_ids] = (jacobian_T @ torch.linalg.inv(jacobian @ jacobian_T + lambda_matrix) @ (delta_pose.unsqueeze(-1))).squeeze(-1)
+
+    # compute the new joint positions and velocities
+    joint_pos = asset.data.default_joint_pos[env_ids].clone()
+    joint_vel = asset.data.default_joint_vel[env_ids].clone()
+    joint_pos += delta_joint_positions.squeeze(-1)
+    joint_vel += torch.zeros_like(joint_pos)  # no change in velocity
+
+    # clamp joint pos to limits
+    joint_pos_limits = asset.data.soft_joint_pos_limits[env_ids]
+    joint_pos = joint_pos.clamp_(joint_pos_limits[..., 0], joint_pos_limits[..., 1])
+
+    # clamp joint vel to limits
+    joint_vel_limits = asset.data.soft_joint_vel_limits[env_ids]
+    joint_vel = joint_vel.clamp_(-joint_vel_limits, joint_vel_limits)
+    
+    # set into the physics simulation
+    asset.write_joint_state_to_sim(joint_pos, joint_vel, env_ids=env_ids)
 
 def reset_joints_by_offset(
     env: ManagerBasedEnv,

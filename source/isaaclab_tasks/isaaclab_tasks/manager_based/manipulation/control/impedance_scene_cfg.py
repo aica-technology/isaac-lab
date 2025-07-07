@@ -91,14 +91,14 @@ class CommandsCfg:
             resampling_time_range=(15.0, 15.0),
             debug_vis=True, # type: ignore
             ranges=mdp.UniformPoseForceCommandCfg.Ranges(
-                pos_x=(0.3, 0.5),
-                pos_y=(-0.2, 0.2),
+                pos_x=(0.3, 0.3),
+                pos_y=(0.13, 0.13),
                 roll=(-math.pi, -math.pi),
                 pitch=MISSING,  # depends on end-effector axis
                 yaw=(0, 0),
                 force_x=(0.0, 0.0),
                 force_y=(0.0, 0.0),
-                force_z=(-50.0, -25.0),
+                force_z=(-25.0, -25.0),
             ),
         )
 

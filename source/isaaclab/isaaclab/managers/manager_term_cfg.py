@@ -93,8 +93,8 @@ class ActionTermCfg:
     debug_vis: bool = False
     """Whether to visualize debug information. Defaults to False."""
 
-    clip: dict[str, tuple] | None = None
-    """Clip range for the action (dict of regex expressions). Defaults to None."""
+    clip: dict[str, tuple] | tuple | None = None
+    """Clip range for the action (dict of regex expressions), task space clip is a tuple. Defaults to None."""
 
 
 ##
