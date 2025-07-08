@@ -91,8 +91,8 @@ class CommandsCfg:
             resampling_time_range=(15.0, 15.0),
             debug_vis=True, # type: ignore
             ranges=mdp.UniformPoseForceCommandCfg.Ranges(
-                pos_x=(0.3, 0.3),
-                pos_y=(0.13, 0.13),
+                pos_x=(0.25, 0.40),
+                pos_y=(-0.15, 0.15),
                 roll=(-math.pi, -math.pi),
                 pitch=MISSING,  # depends on end-effector axis
                 yaw=(0, 0),
@@ -138,13 +138,17 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
+        func=mdp.reset_joints_by_end_effector_pose,
         mode="reset",
         params={
-            "position_range": (1.0, 1.0),
-            "velocity_range": (0.0, 0.0),
+            "x_range": (0.25, 0.35),
+            "y_range": (-0.15, 0.15),
+            "z_range": (0.45, 0.48),
+            "ee_frame_name": MISSING,
+            "arm_joint_names": MISSING,
         },
     )
+
 
     reset_object_position = EventTerm(
         func=mdp.reset_root_state_uniform,

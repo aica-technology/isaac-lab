@@ -64,9 +64,9 @@ UR5E_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
             "shoulder_pan_joint": 0.0,
-            "shoulder_lift_joint": -1.99,
-            "elbow_joint": 2.3,
-            "wrist_1_joint": -1.88,
+            "shoulder_lift_joint": -1.712,
+            "elbow_joint": 1.712,
+            "wrist_1_joint": -1.91,
             "wrist_2_joint": -1.57,
             "wrist_3_joint": -1.57,
         },

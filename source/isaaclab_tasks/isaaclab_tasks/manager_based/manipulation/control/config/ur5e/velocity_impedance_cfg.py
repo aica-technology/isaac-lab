@@ -26,8 +26,8 @@ class UR5eVelocityImpedanceControlSceneCfg(ImpedanceControlRLSceneCfg):
         # override rewards
         self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
 
-        #self.events.reset_robot_joints.params["ee_frame_name"] = self.ee_str
-        #self.events.reset_robot_joints.params["arm_joint_names"] = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
+        self.events.reset_robot_joints.params["ee_frame_name"] = self.ee_str
+        self.events.reset_robot_joints.params["arm_joint_names"] = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
 
         # override actions
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
