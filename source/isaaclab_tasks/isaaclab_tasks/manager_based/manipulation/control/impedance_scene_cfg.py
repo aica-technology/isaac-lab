@@ -67,7 +67,7 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
     )
 
     contact_sensor = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
+        prim_path=MISSING,
         update_period=0.0,
         history_length=2,
         debug_vis=True,

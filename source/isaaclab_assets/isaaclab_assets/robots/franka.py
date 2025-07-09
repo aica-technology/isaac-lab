@@ -14,7 +14,7 @@ Reference: https://github.com/frankaemika/franka_ros
 """
 
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg
+from isaaclab.actuators import ImplicitActuatorCfg, VelocityPIDActuatorCfg
 from isaaclab.assets.articulation import ArticulationCfg
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
 
@@ -85,3 +85,40 @@ FRANKA_PANDA_HIGH_PD_CFG.actuators["panda_forearm"].damping = 80.0
 
 This configuration is useful for task-space control using differential IK.
 """
+
+FRANKA_PANDA_WO_HAND_CFG = ArticulationCfg(
+    spawn=sim_utils.UsdFileCfg(
+        usd_path=f"/workspace/isaaclab/source/panda_wo_hand/panda_wo_hand.usd",
+        activate_contact_sensors=True,
+        rigid_props=sim_utils.RigidBodyPropertiesCfg(
+            disable_gravity=True,
+            max_depenetration_velocity=5.0,
+        ),
+        articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+            enabled_self_collisions=True, solver_position_iteration_count=8, solver_velocity_iteration_count=0
+        ),
+        # collision_props=sim_utils.CollisionPropertiesCfg(contact_offset=0.005, rest_offset=0.0),
+    ),
+    init_state=ArticulationCfg.InitialStateCfg(
+        joint_pos={
+            "panda_joint1": -0.11,
+            "panda_joint2": 0.29,
+            "panda_joint3": 0.13,
+            "panda_joint4": -1.95,
+            "panda_joint5": -0.02,
+            "panda_joint6": 2.32,
+            "panda_joint7": 1.58,
+        },
+    ),
+    actuators={
+        "arm": ImplicitActuatorCfg(
+            joint_names_expr=["panda_joint[1-7]"],
+            effort_limit_sim=87.0,
+            velocity_limit_sim=2.175,
+            stiffness=0.0,
+            damping=80.0,
+        ),
+    },
+    soft_joint_pos_limit_factor=1.0,
+)
+"""Configuration of Franka Emika Panda robot."""

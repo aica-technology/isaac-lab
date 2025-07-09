@@ -115,7 +115,7 @@ class UniformForcePoseCommand(CommandTerm):
         self.metrics["exhibited_forces"] = torch.norm(force_ee.squeeze() , dim=1)
 
     def _resample_command(self, env_ids: Sequence[int]):
-        surface_height = self.surface.data.body_state_w[env_ids, 0, 2] + 0.15
+        surface_height = self.surface.data.body_state_w[env_ids, 0, 2] + 0.25
 
         # sample new pose targets
         # -- position
