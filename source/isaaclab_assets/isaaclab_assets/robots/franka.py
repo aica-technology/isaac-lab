@@ -107,7 +107,7 @@ FRANKA_PANDA_WO_HAND_CFG = ArticulationCfg(
             "panda_joint4": -1.95,
             "panda_joint5": -0.02,
             "panda_joint6": 2.32,
-            "panda_joint7": 1.58,
+            "panda_joint7": 0.0,
         },
     ),
     actuators={
