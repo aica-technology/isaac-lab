@@ -248,9 +248,9 @@ class ImpedanceControlRLSceneCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 5
+        self.decimation = 2
         self.sim.render_interval = self.decimation
         self.episode_length_s = 15.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 500.0
+        self.sim.dt = 1.0 / 200.0
