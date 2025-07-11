@@ -3,7 +3,7 @@ from isaaclab.utils import configclass
 from isaaclab_tasks.manager_based.manipulation.control.impedance_scene_cfg import ImpedanceControlRLSceneCfg
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
-from isaaclab_assets import FRANKA_PANDA_WO_HAND_CFG
+from isaaclab_assets import FRANKA_PANDA_NO_HAND_CFG
 
 
 @configclass
@@ -12,10 +12,10 @@ class FrankaVelocityImpedanceControlSceneCfg(ImpedanceControlRLSceneCfg):
         # post init of parent
         super().__post_init__()
 
-        self.ee_str = "panda_link7"
+        self.ee_str = "panda_hand"
 
         # override scene
-        self.scene.robot = FRANKA_PANDA_WO_HAND_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = FRANKA_PANDA_NO_HAND_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/panda_link0"
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
@@ -34,4 +34,4 @@ class FrankaVelocityImpedanceControlSceneCfg(ImpedanceControlRLSceneCfg):
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
             scale=0.02,
         )
-        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/panda_link7"
+        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str

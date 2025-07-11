@@ -42,7 +42,7 @@ class CompliantScene(InteractiveSceneCfg):
     )
 
     contact_forces = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/panda_hand_tcp",
+        prim_path="{ENV_REGEX_NS}/Robot/fr3_hand_tcp",
         update_period=0.0,
         history_length=2,
         debug_vis=True,
@@ -55,7 +55,7 @@ class CompliantScene(InteractiveSceneCfg):
         visualizer_cfg=ee_frame_cfg,
         target_frames=[
             FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Robot/panda_hand_tcp",
+                prim_path="{ENV_REGEX_NS}/Robot/fr3_hand_tcp",
                 name="end_effector",
                 offset=OffsetCfg(
                     pos=(0, 0, 0),

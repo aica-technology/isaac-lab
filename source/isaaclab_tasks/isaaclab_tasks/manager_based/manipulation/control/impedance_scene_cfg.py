@@ -91,7 +91,7 @@ class CommandsCfg:
             resampling_time_range=(15.0, 15.0),
             debug_vis=True, # type: ignore
             ranges=mdp.UniformPoseForceCommandCfg.Ranges(
-                pos_x=(0.25, 0.40),
+                pos_x=(0.4, 0.60),
                 pos_y=(-0.15, 0.15),
                 roll=(-math.pi, -math.pi),
                 pitch=MISSING,  # depends on end-effector axis
@@ -154,7 +154,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.05, -0.05)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },

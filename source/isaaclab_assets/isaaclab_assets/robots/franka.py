@@ -14,6 +14,7 @@ from isaaclab.assets.articulation import ArticulationCfg
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
 
 _FRANKA_FR3_SBTC_INSTANCEABLE_USD = "/workspace/isaaclab/usd/robots/franka/fr3/panda2fr3_instanceable.usd"
+_FRANKA_FR3_NO_HAND_INSTANCEABLE_USD = "/workspace/isaaclab/usd/robots/franka/fr3/panda2fr3_no_hand.usd"
 _FRANKA_FR3_SBTC_UNSCREWER_INSTANCEABLE_USD = (
     "/workspace/isaaclab/usd/robots/franka/fr3/panda2fr3_unscrewer_instanceable.usd"
 )
@@ -117,37 +118,37 @@ FRANKA_PANDA_SBTC_CFG = ArticulationCfg(
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
-            "panda_joint1": -0.11,
-            "panda_joint2": 0.29,
-            "panda_joint3": 0.13,
-            "panda_joint4": -1.95,
-            "panda_joint5": -0.02,
-            "panda_joint6": 2.32,
-            "panda_joint7": 0.0,
-            "panda_finger_joint.*": 0.04,
+            "panda_joint1": 0.05,
+            "panda_joint2": -0.04,
+            "panda_joint3": 0.22,
+            "panda_joint4": -2.12,
+            "panda_joint5": 0.02,
+            "panda_joint6": 2.11,
+            "panda_joint7": 1.07,
+            "panda_finger_joint.*": 0.005,
         },
     ),
     actuators={
         "panda_shoulder": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint[1-4]"],
-            effort_limit_sim=10.0,
+            effort_limit_sim=87.0,
             velocity_limit_sim=2.62,
             stiffness=0.0,
-            damping=8.0,
+            damping=80.0,
         ),
         "panda_forearm": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint[5,7]"],
-            effort_limit_sim=10.0,
+            effort_limit_sim=12.0,
             velocity_limit_sim=5.26,
             stiffness=0,
-            damping=8.0,
+            damping=80.0,
         ),
         "panda_forearm_joint6": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint6"],
-            effort_limit_sim=10.0,
+            effort_limit_sim=200.0,
             velocity_limit_sim=4.18,
             stiffness=0.0,
-            damping=8.0,
+            damping=80.0,
         ),
         "panda_hand": ImplicitActuatorCfg(
             joint_names_expr=["panda_finger_joint.*"],
@@ -248,3 +249,49 @@ FRANKA_PANDA_UNSCREWER_EFFORT_SBTC_CFG = ArticulationCfg(
     soft_joint_pos_limit_factor=1.0,
 )
 """Configuration of SBTC Franka Research 3 robot with unscrewer."""
+
+FRANKA_PANDA_NO_HAND_CFG = ArticulationCfg(
+    spawn=sim_utils.UsdFileCfg(
+        usd_path=_FRANKA_FR3_NO_HAND_INSTANCEABLE_USD,
+        activate_contact_sensors=True,
+        rigid_props=sim_utils.RigidBodyPropertiesCfg(
+            disable_gravity=True,
+            max_depenetration_velocity=5.0,
+        ),
+    ),
+    init_state=ArticulationCfg.InitialStateCfg(
+        joint_pos={
+            "panda_joint1": 0.05,
+            "panda_joint2": -0.04,
+            "panda_joint3": 0.22,
+            "panda_joint4": -2.12,
+            "panda_joint5": 0.02,
+            "panda_joint6": 2.11,
+            "panda_joint7": 1.07,
+        },
+    ),
+    actuators={
+        "panda_shoulder": ImplicitActuatorCfg(
+            joint_names_expr=["panda_joint[1-4]"],
+            effort_limit_sim=87.0,
+            velocity_limit_sim=2.62,
+            stiffness=0.0,
+            damping=80.0,
+        ),
+        "panda_forearm": ImplicitActuatorCfg(
+            joint_names_expr=["panda_joint[5,7]"],
+            effort_limit_sim=12.0,
+            velocity_limit_sim=5.26,
+            stiffness=0,
+            damping=80.0,
+        ),
+        "panda_forearm_joint6": ImplicitActuatorCfg(
+            joint_names_expr=["panda_joint6"],
+            effort_limit_sim=200.0,
+            velocity_limit_sim=4.18,
+            stiffness=0.0,
+            damping=80.0,
+        ),
+    },
+    soft_joint_pos_limit_factor=1.0,
+)
