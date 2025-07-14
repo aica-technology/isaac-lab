@@ -6,7 +6,7 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from isaaclab_assets import FRANKA_PANDA_SBTC_CFG
+from isaaclab_assets import FRANKA_PANDA_NO_HAND_CFG
 
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()  # type: ignore
@@ -16,7 +16,7 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class CompliantScene(InteractiveSceneCfg):
-    robot: ArticulationCfg = FRANKA_PANDA_SBTC_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = FRANKA_PANDA_NO_HAND_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # ground plane
     ground = AssetBaseCfg(
@@ -42,7 +42,7 @@ class CompliantScene(InteractiveSceneCfg):
     )
 
     contact_forces = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/fr3_hand_tcp",
+        prim_path="{ENV_REGEX_NS}/Robot/panda_link7",
         update_period=0.0,
         history_length=2,
         debug_vis=True,
@@ -55,7 +55,7 @@ class CompliantScene(InteractiveSceneCfg):
         visualizer_cfg=ee_frame_cfg,
         target_frames=[
             FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Robot/fr3_hand_tcp",
+                prim_path="{ENV_REGEX_NS}/Robot/panda_hand",
                 name="end_effector",
                 offset=OffsetCfg(
                     pos=(0, 0, 0),

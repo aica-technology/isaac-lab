@@ -33,5 +33,6 @@ class FrankaVelocityImpedanceControlSceneCfg(ImpedanceControlRLSceneCfg):
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
             scale=0.02,
+            clip=(-0.09, 0.09)
         )
-        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
+        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/panda_link7"

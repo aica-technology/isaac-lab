@@ -91,8 +91,8 @@ class CommandsCfg:
             resampling_time_range=(15.0, 15.0),
             debug_vis=True, # type: ignore
             ranges=mdp.UniformPoseForceCommandCfg.Ranges(
-                pos_x=(0.4, 0.60),
-                pos_y=(-0.15, 0.15),
+                pos_x=(0.5, 0.5),
+                pos_y=(0.15, 0.15),
                 roll=(-math.pi, -math.pi),
                 pitch=MISSING,  # depends on end-effector axis
                 yaw=(0, 0),
@@ -124,7 +124,7 @@ class ObservationsCfg:
         ee_measured_forces = ObsTerm(func=mdp.measured_forces, noise=Unoise(n_min=-1, n_max=1))
         desired_state = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
 
-        actions = ObsTerm(func=mdp.last_action)
+        actions = ObsTerm(func=mdp.last_processed_action)
         joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.1, n_max=0.1))
 
         def __post_init__(self):
@@ -138,14 +138,11 @@ class ObservationsCfg:
 @configclass
 class EventCfg:
     reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_end_effector_pose,
+        func=mdp.reset_joints_by_scale,
         mode="reset",
         params={
-            "x_range": (0.25, 0.35),
-            "y_range": (-0.15, 0.15),
-            "z_range": (0.45, 0.48),
-            "ee_frame_name": MISSING,
-            "arm_joint_names": MISSING,
+            "position_range": (1.0, 1.0),
+            "velocity_range": (0.0, 0.0),
         },
     )
 
@@ -154,7 +151,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.05, -0.05)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.10, 0.10)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },
@@ -248,9 +245,9 @@ class ImpedanceControlRLSceneCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2
+        self.decimation = 5
         self.sim.render_interval = self.decimation
         self.episode_length_s = 15.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 200.0
+        self.sim.dt = 1.0 / 500.0
