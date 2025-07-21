@@ -13,16 +13,14 @@ class UR5eBaseReachEnvCfg(ReachEnvCfg):
         self.scene.robot = UR5E_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         
         self.ee_str = "wrist_3_link"
-        
-        # override randomization
-        self.events.reset_robot_joints.params["position_range"] = (0.75, 1.25)
 
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
-
+        self.rewards.force_direction_reward.params["asset_cfg"].body_names = [self.ee_str]
+        
         # set end-effector frame
         self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str

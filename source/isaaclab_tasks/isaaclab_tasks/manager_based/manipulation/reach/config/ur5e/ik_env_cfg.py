@@ -5,7 +5,7 @@ from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 from isaaclab.utils import configclass
 
-from isaaclab_assets import UR5E_CFG_VELOCIY
+from isaaclab_assets import UR5E_CFG_LOW_LEVEL_PID
 
 @configclass
 class UR5eReachIKEnvCfg(UR5eBaseReachEnvCfg):
@@ -14,7 +14,7 @@ class UR5eReachIKEnvCfg(UR5eBaseReachEnvCfg):
         super().__post_init__()
 
         # switch robot to ur5e
-        self.scene.robot = UR5E_CFG_VELOCIY.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = UR5E_CFG_LOW_LEVEL_PID.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
         # override actions
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
@@ -22,7 +22,8 @@ class UR5eReachIKEnvCfg(UR5eBaseReachEnvCfg):
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
-            scale=1.0,
+            scale=0.02, 
+            clip=(-0.06, 0.06)
         )
 
         # remove last action, joint velocity, and joint position from observation

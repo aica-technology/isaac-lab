@@ -6,8 +6,9 @@
 from dataclasses import MISSING
 import math
 import isaaclab.sim as sim_utils
-from isaaclab.assets import ArticulationCfg, AssetBaseCfg
+from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.sensors import ContactSensorCfg
 from isaaclab.managers import ActionTermCfg as ActionTerm
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -71,6 +72,25 @@ class ReachSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
     )
 
+    table = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/Table",
+        spawn=sim_utils.CuboidCfg(
+            size=(1.25, 1.0, 0.3),
+            collision_props=sim_utils.CollisionPropertiesCfg(),
+            visual_material=sim_utils.PreviewSurfaceCfg(),
+            rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
+            activate_contact_sensors=True,
+        ),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)),
+    )
+
+    contact_sensor = ContactSensorCfg(
+        prim_path="{ENV_REGEX_NS}/Robot/wrist_3_link",
+        update_period=0.0,
+        history_length=2,
+        debug_vis=True,
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Table"],
+    )
 
 ##
 # MDP settings
@@ -84,16 +104,16 @@ class CommandsCfg:
     ee_pose = mdp.UniformPoseCommandCfg(
         asset_name="robot",
         body_name=MISSING,
-        resampling_time_range=(2.0, 4.0),
+        resampling_time_range=(10.0, 10.0),
         debug_vis=True,
         make_quat_unique=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             pos_x=(0.3, 0.5),
-            pos_y=(-0.3, 0.3),
+            pos_y=(-0.1, 0.1),
             pos_z=(0.25, 0.4),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
-            yaw=(-2*math.pi, 2*math.pi),
+            yaw=(0, 0)
         ),
     )
 
@@ -117,11 +137,14 @@ class ObservationsCfg:
 
         # observation terms (order preserved)
         joint_pos = ObsTerm(func=mdp.joint_pos_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
+
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_ee_frame, noise=Unoise(n_min=-1, n_max=1))
+        
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
         
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.01, n_max=0.01))
         actions = ObsTerm(func=mdp.last_action)
 
         def __post_init__(self):
@@ -144,6 +167,17 @@ class EventCfg:
             "velocity_range": (0.0, 0.0),
         },
     )
+
+    reset_object_position = EventTerm(
+        func=mdp.reset_root_state_uniform,
+        mode="reset",
+        params={
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.1)},
+            "velocity_range": {},
+            "asset_cfg": SceneEntityCfg("table"),
+        },
+    )
+
 
 
 @configclass
@@ -169,6 +203,28 @@ class RewardsCfg:
 
     action_termination_penalty = RewTerm(func=mdp.action_termination, weight=-0.01, params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},)
 
+    # force limit penalty
+    force_limit_penalty = RewTerm(
+        func=mdp.force_limit_penalty,
+        weight=-0.01,
+        params={
+            "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
+            "end_effector_cfg": SceneEntityCfg("ee_frame"),
+            "maximum_limit": 100,
+        },
+    )
+    
+    # force in the direction of the position error
+    force_direction_reward = RewTerm(
+        func=mdp.force_direction_reward,
+        weight=1,
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=MISSING),
+            "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
+            "command_name": "ee_pose",
+            "limit": 0.005,
+        },
+    )
 
     # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
@@ -229,9 +285,9 @@ class ReachEnvCfg(ManagerBasedRLEnvCfg):
     def __post_init__(self):
         """Post initialization."""
         # general settings
-        self.decimation = 2
+        self.decimation = 5
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 8.0
+        self.episode_length_s = 10.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
-        self.sim.dt = 1.0 / 60.0
+        self.sim.dt = 1.0 / 500.0

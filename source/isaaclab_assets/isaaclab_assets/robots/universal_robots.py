@@ -54,7 +54,7 @@ UR10_CFG = ArticulationCfg(
 
 UR5E_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"{ISAAC_NUCLEUS_DIR}/Robots/UniversalRobots/ur5e/ur5e.usd",
+        usd_path=f"/workspace/isaaclab/source/ur5e_unscrewer/ur5e/ur5e_instanceable.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=5.0,
@@ -64,9 +64,9 @@ UR5E_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
             "shoulder_pan_joint": 0.0,
-            "shoulder_lift_joint": -1.99,
-            "elbow_joint": 2.3,
-            "wrist_1_joint": -1.88,
+            "shoulder_lift_joint": -1.712,
+            "elbow_joint": 1.712,
+            "wrist_1_joint": -1.57,
             "wrist_2_joint": -1.57,
             "wrist_3_joint": -1.57,
         },

@@ -7,7 +7,7 @@ from isaaclab.utils import configclass
 
 from isaaclab_rl.rsl_rl import (
     RslRlOnPolicyRunnerCfg,
-    RslRlPpoActorCriticCfg,
+    RslRlPpoActorCriticRecurrentCfg,
     RslRlPpoAlgorithmCfg,
 )
 
@@ -15,17 +15,20 @@ from isaaclab_rl.rsl_rl import (
 @configclass
 class UR5eReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 1000
+    max_iterations = 2000
     save_interval = 50
     experiment_name = "reach_ur5e"
     run_name = ""
     resume = False
     empirical_normalization = False
-    policy = RslRlPpoActorCriticCfg(
+    policy = RslRlPpoActorCriticRecurrentCfg(
         init_noise_std=1.0,
         actor_hidden_dims=[64, 64],
         critic_hidden_dims=[64, 64],
         activation="elu",
+        rnn_type="lstm",
+        rnn_hidden_dim=128,
+        rnn_num_layers=2,
     )
     algorithm = RslRlPpoAlgorithmCfg(
         value_loss_coef=1.0,
