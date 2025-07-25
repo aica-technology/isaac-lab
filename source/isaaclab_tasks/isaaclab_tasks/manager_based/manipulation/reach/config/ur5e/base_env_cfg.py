@@ -20,7 +20,7 @@ class UR5eBaseReachEnvCfg(ReachEnvCfg):
         self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.force_direction_reward.params["asset_cfg"].body_names = [self.ee_str]
-        
+
         # set end-effector frame
         self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str

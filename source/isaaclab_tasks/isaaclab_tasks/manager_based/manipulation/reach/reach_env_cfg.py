@@ -109,11 +109,11 @@ class CommandsCfg:
         make_quat_unique=True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             pos_x=(0.3, 0.5),
-            pos_y=(-0.1, 0.1),
-            pos_z=(0.25, 0.4),
+            pos_y=(-0.2, 0.2),
+            pos_z=(0.15, 0.4),
             roll=(-math.pi, -math.pi),
             pitch=MISSING,  # depends on end-effector axis
-            yaw=(0, 0)
+            yaw=(-math.pi/8, math.pi/8),
         ),
     )
 
@@ -141,11 +141,10 @@ class ObservationsCfg:
 
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_ee_frame, noise=Unoise(n_min=-1, n_max=1))
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1))
         
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
-        
-        actions = ObsTerm(func=mdp.last_action)
+        actions = ObsTerm(func=mdp.last_processed_action)
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -163,7 +162,7 @@ class EventCfg:
         func=mdp.reset_joints_by_scale,
         mode="reset",
         params={
-            "position_range": (0.9, 1.1),
+            "position_range": (1.0, 1.0),
             "velocity_range": (0.0, 0.0),
         },
     )
@@ -172,7 +171,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.1)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.0)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },
@@ -197,35 +196,42 @@ class RewardsCfg:
     )
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
-        weight=-4,
+        weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
 
     action_termination_penalty = RewTerm(func=mdp.action_termination, weight=-0.01, params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},)
-
-    # force limit penalty
-    force_limit_penalty = RewTerm(
-        func=mdp.force_limit_penalty,
+    velocity_contact = RewTerm(
+        func=mdp.velocity_contact,
         weight=-0.01,
         params={
             "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
             "end_effector_cfg": SceneEntityCfg("ee_frame"),
-            "maximum_limit": 100,
+        },
+    )
+
+    # force limit penalty
+    force_limit_penalty = RewTerm(
+        func=mdp.force_limit_penalty,
+        weight=-5,
+        params={
+            "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
+            "end_effector_cfg": SceneEntityCfg("ee_frame"),
+            "maximum_limit": 25,
         },
     )
     
     # force in the direction of the position error
     force_direction_reward = RewTerm(
         func=mdp.force_direction_reward,
-        weight=1,
+        weight=0.05,
         params={
             "asset_cfg": SceneEntityCfg("robot", body_names=MISSING),
             "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
             "command_name": "ee_pose",
-            "limit": 0.005,
+            "limit": 2,
         },
     )
-
     # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
     joint_vel = RewTerm(
@@ -247,7 +253,7 @@ class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.005, "num_steps": 4500}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.04, "num_steps": 4500}
     )
 
     joint_vel = CurrTerm(
@@ -258,8 +264,9 @@ class CurriculumCfg:
         func=mdp.modify_reward_weight, params={"term_name": "action_termination_penalty", "weight": -0.02, "num_steps": 4500}
     )
 
-
-
+    force_limit_penalty = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -10, "num_steps": 6000}
+    )
 ##
 # Environment configuration
 ##

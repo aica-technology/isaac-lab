@@ -29,4 +29,3 @@ class UR5eReachIKEnvCfg(UR5eBaseReachEnvCfg):
         # remove last action, joint velocity, and joint position from observation
         self.observations.policy.joint_pos = None
         self.observations.policy.joint_vel = None
-        self.observations.policy.actions = None

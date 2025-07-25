@@ -5,6 +5,7 @@
 
 from __future__ import annotations
 
+from source.isaaclab.isaaclab.sensors.contact_sensor.contact_sensor import ContactSensor
 import torch
 from typing import TYPE_CHECKING
 
@@ -92,6 +93,18 @@ def action_termination(env: ManagerBasedRLEnv, command_name: str, asset_cfg: Sce
     
     return penalty
 
+def velocity_contact(
+    env: ManagerBasedRLEnv,
+    contact_sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor"),
+    end_effector_cfg: SceneEntityCfg = SceneEntityCfg("ee_frame"),
+    limit: float = 100,
+) -> torch.Tensor:
+    """Compute the velocity of the contact sensor."""
+    force = torch.norm(measured_forces_in_ee_frame(env, contact_sensor_cfg, end_effector_cfg), dim=1) / limit
+    force = torch.clamp(force, min=0, max=2.0)
+    velocity = torch.norm(0.06*env.action_manager.action[:, :3], dim=1)
+    return velocity * torch.exp(force)
+
 def force_limit_penalty(
     env: ManagerBasedRLEnv,
     contact_sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor"),
@@ -122,3 +135,19 @@ def force_direction_reward(
     force_position = torch.clamp(force_position, -limit, limit)
 
     return force_position
+
+def force_tracking_penalty(
+    env: ManagerBasedRLEnv,
+    asset_cfg: SceneEntityCfg,
+    contact_sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor"),
+    command_name: str = "ee_pose",
+    stifness = 120
+) -> torch.Tensor:
+    """Compute the force tracking penalty."""
+    force_world = measured_forces_in_world_frame(env, contact_sensor_cfg)
+    position_error = position_command_error(env, command_name, asset_cfg, raw_vector=True)
+
+    f_target = position_error * stifness
+    force_error = torch.norm(force_world - f_target, dim=1)
+    return force_error
+    
