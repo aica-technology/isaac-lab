@@ -110,10 +110,18 @@ class DifferentialInverseKinematicsAction(ActionTerm):
 
         # parse clip
         if self.cfg.clip is not None:
-            if isinstance(cfg.clip, tuple) and len(cfg.clip) == 2:
-                self._clip = torch.tensor([[cfg.clip[0], cfg.clip[1]]], device=self.device).repeat(
+            if isinstance(self.cfg.clip, dict):
+                self._clip = torch.tensor([[-float("inf"), float("inf")]], device=self.device).repeat(
                     self.num_envs, self.action_dim, 1
                 )
+                index_list, _, value_list = string_utils.resolve_matching_names_values(self.cfg.clip, self._joint_names)
+                self._clip[:, index_list] = torch.tensor(value_list, device=self.device)
+
+            elif isinstance(self.cfg.clip, tuple) and len(self.cfg.clip) == 2:
+                self._clip = torch.tensor([[self.cfg.clip[0], self.cfg.clip[1]]], device=self.device).repeat(
+                    self.num_envs, self.action_dim, 1
+                )
+
             else:
                 raise ValueError(f"Unsupported clip type: {type(cfg.clip)}. Supported types are dict.")
 
