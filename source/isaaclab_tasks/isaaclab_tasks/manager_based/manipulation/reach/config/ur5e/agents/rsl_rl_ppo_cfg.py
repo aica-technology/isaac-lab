@@ -15,7 +15,7 @@ from isaaclab_rl.rsl_rl import (
 @configclass
 class UR5eReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
-    max_iterations = 2000
+    max_iterations = 1000
     save_interval = 50
     experiment_name = "reach_ur5e"
     run_name = ""
@@ -41,4 +41,3 @@ class UR5eReachPPORunnerCfg(RslRlOnPolicyRunnerCfg):
         desired_kl=0.01,
         max_grad_norm=1.0,
     )
-    clip_actions: float = 100.0
