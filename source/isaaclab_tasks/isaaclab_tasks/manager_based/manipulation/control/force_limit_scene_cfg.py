@@ -1,8 +1,9 @@
 from dataclasses import MISSING
-
+import math
 import isaaclab.sim as sim_utils
 from isaaclab.assets import ArticulationCfg, AssetBaseCfg, RigidObjectCfg
 from isaaclab.envs import ManagerBasedRLEnvCfg
+from isaaclab.sensors import ContactSensorCfg
 from isaaclab.managers import ActionTermCfg as ActionTerm
 from isaaclab.managers import CurriculumTermCfg as CurrTerm
 from isaaclab.managers import EventTermCfg as EventTerm
@@ -12,14 +13,17 @@ from isaaclab.managers import RewardTermCfg as RewTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.managers import TerminationTermCfg as DoneTerm
 from isaaclab.scene import InteractiveSceneCfg
-from isaaclab.sensors import ContactSensorCfg
-from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
 from isaaclab.utils import configclass
+from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
+from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
+import isaaclab_tasks.manager_based.manipulation.control.mdp as mdp
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from isaaclab_tasks.manager_based.manipulation.control import mdp
-from isaaclab.utils.noise import AdditiveUniformNoiseCfg as Unoise
-import math
+
+##
+# Scene definition
+##
+
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()
 ee_frame_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
@@ -27,7 +31,17 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 
 @configclass
-class ImpedanceControlSceneCfg(InteractiveSceneCfg):
+class ForceLimitSceneCfg(InteractiveSceneCfg):
+    """Configuration for the scene with a robotic arm."""
+
+    # world
+    ground = AssetBaseCfg(
+        prim_path="/World/ground",
+        spawn=sim_utils.GroundPlaneCfg(),
+        init_state=AssetBaseCfg.InitialStateCfg(pos=(0.0, 0.0, 0.0)),
+    )
+
+    # robots
     robot: ArticulationCfg = MISSING
 
     ee_frame: FrameTransformerCfg = FrameTransformerCfg(
@@ -45,13 +59,10 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
         ],
     )
 
-    ground = AssetBaseCfg(
-        prim_path="/World/defaultGroundPlane",
-        spawn=sim_utils.GroundPlaneCfg(),
-    )
-
-    dome_light = AssetBaseCfg(
-        prim_path="/World/Light", spawn=sim_utils.DomeLightCfg(intensity=3000.0, color=(0.75, 0.75, 0.75))
+    # lights
+    light = AssetBaseCfg(
+        prim_path="/World/light",
+        spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
     )
 
     table = RigidObjectCfg(
@@ -83,24 +94,22 @@ class ImpedanceControlSceneCfg(InteractiveSceneCfg):
 @configclass
 class CommandsCfg:
     """Command terms for the MDP."""
-    ee_force_pose = mdp.UniformPoseForceCommandCfg(
-            asset_name="robot",
-            force_sensor_name="contact_sensor",
-            surface_name="table",
-            body_name=MISSING,
-            resampling_time_range=(15.0, 15.0),
-            debug_vis=True, # type: ignore
-            ranges=mdp.UniformPoseForceCommandCfg.Ranges(
-                pos_x=(0.3, 0.5),
-                pos_y=(-0.2, 0.2),
-                roll=(-math.pi, -math.pi),
-                pitch=MISSING,  # depends on end-effector axis
-                yaw=(0, 0),
-                force_x=(0.0, 0.0),
-                force_y=(0.0, 0.0),
-                force_z=(-50.0, -25.0),
-            ),
-        )
+
+    ee_pose = mdp.UniformPoseCommandCfg(
+        asset_name="robot",
+        body_name=MISSING,
+        resampling_time_range=(10.0, 10.0),
+        debug_vis=True,
+        make_quat_unique=True,
+        ranges=mdp.UniformPoseCommandCfg.Ranges(
+            pos_x=(0.3, 0.5),
+            pos_y=(-0.2, 0.2),
+            pos_z=(0.15, 0.4),
+            roll=(-math.pi, -math.pi),
+            pitch=MISSING,  # depends on end-effector axis
+            yaw=(0, 0)
+        ),
+    )
 
 
 @configclass
@@ -118,14 +127,12 @@ class ObservationsCfg:
     class PolicyCfg(ObsGroup):
         """Observations for policy group."""
 
-        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
+        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1))
 
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_ee_frame, noise=Unoise(n_min=-1, n_max=1))
-        desired_state = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_force_pose"})
-
-        actions = ObsTerm(func=mdp.last_action)
-        joint_vel = ObsTerm(func=mdp.joint_vel_rel, noise=Unoise(n_min=-0.1, n_max=0.1))
+        pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
+        actions = ObsTerm(func=mdp.last_processed_action)
 
         def __post_init__(self):
             self.enable_corruption = True
@@ -137,6 +144,8 @@ class ObservationsCfg:
 
 @configclass
 class EventCfg:
+    """Configuration for events."""
+
     reset_robot_joints = EventTerm(
         func=mdp.reset_joints_by_scale,
         mode="reset",
@@ -150,7 +159,7 @@ class EventCfg:
         func=mdp.reset_root_state_uniform,
         mode="reset",
         params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (0.0, 0.0)},
+            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.15, 0.0)},
             "velocity_range": {},
             "asset_cfg": SceneEntityCfg("table"),
         },
@@ -162,37 +171,65 @@ class RewardsCfg:
     """Reward terms for the MDP."""
 
     # task terms
-    end_effector_force_tracking = RewTerm(
-        func=mdp.force_command_error, weight=-0.1, params={"command_name": "ee_force_pose"}
+    end_effector_position_tracking = RewTerm(
+        func=mdp.position_command_error,
+        weight=-6.0,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
+    )
+    end_effector_position_tracking_fine_grained = RewTerm(
+        func=mdp.position_command_error_tanh,
+        weight=3.6,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose"},
+    )
+    end_effector_orientation_tracking = RewTerm(
+        func=mdp.orientation_command_error,
+        weight=-2,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
 
-    end_effector_state_tracking = RewTerm(
-        func=mdp.state_command_error, weight=-20, params={"command_name": "ee_force_pose"}
+    action_termination_penalty = RewTerm(
+        func=mdp.action_termination,
+        weight=-0.01,
+        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
-
-    end_effector_force_tracking_fine_grained = RewTerm(
-        func=mdp.force_command_error_tanh, weight=3.6, params={"command_name": "ee_force_pose", "std": 0.2}
-    )
-
-    end_effector_state_tracking_fine_grained = RewTerm(
-        func=mdp.state_command_error_tanh,
-        weight=7.2,
+    velocity_contact = RewTerm(
+        func=mdp.velocity_contact,
+        weight=-0.01,
         params={
-            "command_name": "ee_force_pose",
+            "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
+            "end_effector_cfg": SceneEntityCfg("ee_frame"),
         },
     )
 
-    end_effector_orientation_tracking = RewTerm(
-        func=mdp.orientation_command_error,
-        weight=-4,
-        params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_force_pose"},
+    # force limit penalty
+    force_limit_penalty = RewTerm(
+        func=mdp.force_limit_penalty,
+        weight=-5,
+        params={
+            "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
+            "end_effector_cfg": SceneEntityCfg("ee_frame"),
+            "maximum_limit": 25,
+        },
     )
 
-    # behavioral terms
+    # force in the direction of the position error
+    force_direction_reward = RewTerm(
+        func=mdp.force_direction_reward,
+        weight=0.05,
+        params={
+            "asset_cfg": SceneEntityCfg("robot", body_names=MISSING),
+            "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
+            "command_name": "ee_pose",
+            "limit": 2,
+        },
+    )
+    # action penalty
     action_rate = RewTerm(func=mdp.action_rate_l2, weight=-0.01)
-    joint_vel = RewTerm(func=mdp.joint_vel_l2, weight=-0.0001, params={"asset_cfg": SceneEntityCfg("robot")})
-    joint_acceleration = RewTerm(func=mdp.joint_acc_l2, weight=-2.5e-7, params={"asset_cfg": SceneEntityCfg("robot")})
-    action_term = RewTerm(func=mdp.action_l2, weight=-0.01)
+    joint_vel = RewTerm(
+        func=mdp.joint_vel_l2,
+        weight=-0.0001,
+        params={"asset_cfg": SceneEntityCfg("robot")},
+    )
 
 
 @configclass
@@ -206,17 +243,21 @@ class TerminationsCfg:
 class CurriculumCfg:
     """Curriculum terms for the MDP."""
 
-    force_tracking = CurrTerm(
-        func=mdp.modify_reward_weight,
-        params={"term_name": "end_effector_force_tracking", "weight": -0.2, "num_steps": 24000},
-    )
-
     action_rate = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -1e-1, "num_steps": 60000}
+        func=mdp.modify_reward_weight, params={"term_name": "action_rate", "weight": -0.04, "num_steps": 4500}
     )
 
     joint_vel = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -1e-1, "num_steps": 60000}
+        func=mdp.modify_reward_weight, params={"term_name": "joint_vel", "weight": -0.001, "num_steps": 4500}
+    )
+
+    action_termination_penalty = CurrTerm(
+        func=mdp.modify_reward_weight,
+        params={"term_name": "action_termination_penalty", "weight": -0.02, "num_steps": 4500},
+    )
+
+    force_limit_penalty = CurrTerm(
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -10, "num_steps": 6000}
     )
 
 
@@ -226,11 +267,12 @@ class CurriculumCfg:
 
 
 @configclass
-class ImpedanceControlRLSceneCfg(ManagerBasedRLEnvCfg):
-    """Configuration for the lifting environment."""
+class ForceLimitEnvCfg(ManagerBasedRLEnvCfg):
+    """Configuration for the force limit environment."""
 
     # Scene settings
-    scene: ImpedanceControlSceneCfg = ImpedanceControlSceneCfg(num_envs=4096, env_spacing=2.5)
+    scene: ForceLimitSceneCfg = ForceLimitSceneCfg(num_envs=4096, env_spacing=2.5)
+
     # Basic settings
     observations: ObservationsCfg = ObservationsCfg()
     actions: ActionsCfg = ActionsCfg()
@@ -246,7 +288,7 @@ class ImpedanceControlRLSceneCfg(ManagerBasedRLEnvCfg):
         # general settings
         self.decimation = 5
         self.sim.render_interval = self.decimation
-        self.episode_length_s = 15.0
+        self.episode_length_s = 10.0
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 500.0
