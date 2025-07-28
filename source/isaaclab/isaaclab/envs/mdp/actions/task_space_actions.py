@@ -123,7 +123,7 @@ class DifferentialInverseKinematicsAction(ActionTerm):
                 )
 
             else:
-                raise ValueError(f"Unsupported clip type: {type(cfg.clip)}. Supported types are dict.")
+                raise ValueError(f"Unsupported clip type: {type(cfg.clip)}. Supported types are dict and tuple (length 2).")
 
     """
     Properties.
