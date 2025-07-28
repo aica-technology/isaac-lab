@@ -55,7 +55,7 @@ UR10_CFG = ArticulationCfg(
 
 UR5E_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"/workspace/isaaclab/source/ur5e_unscrewer/ur5e/ur5e_instanceable.usd",
+        usd_path=f"/workspace/isaaclab/usd/robots/ur5e/ur5e_instanceable.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=5.0,
