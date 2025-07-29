@@ -1,25 +1,28 @@
 import isaaclab.sim as sim_utils
-from isaaclab.actuators import ImplicitActuatorCfg
+from isaaclab.actuators import ImplicitActuatorCfg, VelocityPIDActuatorCfg
 from isaaclab.assets.articulation import ArticulationCfg
 
 
 KUKA_KR210_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="source/isaaclab_assets/data/kuka/kr210.usd",
+        usd_path="/workspace/isaaclab/usd/robots/kuka/kr210/kuka_kr210.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=5.0,
         ),
         activate_contact_sensors=False,
+        articulation_props=sim_utils.ArticulationRootPropertiesCfg(
+            fix_root_link=True
+        ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
-            "kr210_joint_a1": -0.6981,
-            "kr210_joint_a2": -1.85,
-            "kr210_joint_a3": 2.0944,
-            "kr210_joint_a4": 1.047,
-            "kr210_joint_a5": 0.6458,
-            "kr210_joint_a6": -0.925 
+            "joint_a1": 0.0,
+            "joint_a2": 0.0,
+            "joint_a3": 0.0,
+            "joint_a4": 0.0,
+            "joint_a5": 1.57,
+            "joint_a6": 1.57,
         },
     ),
 
@@ -33,7 +36,26 @@ KUKA_KR210_CFG = ArticulationCfg(
     },
 )
 
-
 KUKA_VEL_KR210_CFG = KUKA_KR210_CFG.copy()
 KUKA_VEL_KR210_CFG.actuators["arm"].stiffness = 0
 KUKA_VEL_KR210_CFG.actuators["arm"].damping = 50000
+
+KUKA_KR210_LOW_LEVEL_PID_CFG = KUKA_KR210_CFG.copy()
+KUKA_KR210_LOW_LEVEL_PID_CFG.actuators = {
+    "arm": VelocityPIDActuatorCfg(
+            joint_names_expr=[".*"],
+            effort_limit={
+                "joint_a1": 990,
+                "joint_a2": 2000,
+                "joint_a3": 2000,
+                "joint_a4": 600,
+                "joint_a5": 600,
+                "joint_a6": 110,
+            },
+            proportional_gain=10000,
+            derivative_gain=0,
+            integral_gain=100000,
+            max_integral_error=2000,
+            delta_time=0.002
+        ),
+    }
