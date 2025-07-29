@@ -162,7 +162,7 @@ def action_termination(env: ManagerBasedRLEnv, command_name: str, asset_cfg: Sce
     """
     # Calculate the L2 squared penalty for the action
     asset: Articulation = env.scene[asset_cfg.name]
-    velocity =  torch.sum(torch.square(asset.data.joint_vel[:, asset_cfg.joint_ids]), dim=1)
+    velocity = torch.sum(torch.square(asset.data.joint_vel[:, asset_cfg.joint_ids]), dim=1)
     
     # Compute the distance to the target
     position_error = position_command_error(env, command_name, asset_cfg)
