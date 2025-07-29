@@ -45,12 +45,12 @@ KUKA_KR210_LOW_LEVEL_PID_CFG.actuators = {
     "arm": VelocityPIDActuatorCfg(
             joint_names_expr=[".*"],
             effort_limit={
-                "joint_a1": 990,
-                "joint_a2": 2000,
-                "joint_a3": 2000,
-                "joint_a4": 600,
-                "joint_a5": 600,
-                "joint_a6": 110,
+                "joint_a1": 4100,
+                "joint_a2": 4100,
+                "joint_a3": 4100,
+                "joint_a4": 1250,
+                "joint_a5": 1250,
+                "joint_a6": 700,
             },
             proportional_gain=10000,
             derivative_gain=0,
