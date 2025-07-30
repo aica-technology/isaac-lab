@@ -18,11 +18,11 @@ KUKA_KR210_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
             "joint_a1": 0.0,
-            "joint_a2": 0.0,
-            "joint_a3": 0.0,
+            "joint_a2": -1.57,
+            "joint_a3": 1.57,
             "joint_a4": 0.0,
-            "joint_a5": 1.57,
-            "joint_a6": 1.57,
+            "joint_a5": 0.0,
+            "joint_a6": 0.0,
         },
     ),
 
