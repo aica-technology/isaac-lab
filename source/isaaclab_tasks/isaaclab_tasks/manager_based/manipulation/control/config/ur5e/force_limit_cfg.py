@@ -42,5 +42,5 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
             scale=0.02,
-            clip=(-0.06, 0.06), 
+            clip=(-0.06, 0.06),
         )
