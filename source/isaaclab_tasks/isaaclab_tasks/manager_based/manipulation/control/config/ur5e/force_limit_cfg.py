@@ -30,12 +30,17 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
         self.commands.ee_pose.body_name = self.ee_str
         self.commands.ee_pose.ranges.pitch = (0, 0)
 
-        # override actions
+        # A clip of ±6 cm/s is applied to ensure the robot does not sample actions that are too large near contact, 
+        # as the goal is to allow the robot to reach the target without exceeding the force limit.
+        # The scaling ensures that the sampled actions remain within a reasonable range.
+        # Assuming an initial Gaussian distribution, the policy samples actions with a mean of 0 and a standard deviation of 0.02cm/s
+        # Allowing more efficient training and exploration of the action space.
+
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
             scale=0.02,
-            clip=(-0.06, 0.06),
+            clip=(-0.06, 0.06), 
         )
