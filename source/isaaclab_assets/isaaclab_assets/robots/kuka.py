@@ -5,24 +5,24 @@ from isaaclab.assets.articulation import ArticulationCfg
 
 KUKA_KR210_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path="/workspace/isaaclab/usd/robots/kuka/kr210/kuka_kr210.usd",
+        usd_path="/workspace/isaaclab/usd/robots/kuka/kr210/kr210.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=5.0,
         ),
-        activate_contact_sensors=False,
+        activate_contact_sensors=True,
         articulation_props=sim_utils.ArticulationRootPropertiesCfg(
             fix_root_link=True
         ),
     ),
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
-            "joint_a1": 0.0,
-            "joint_a2": 0.0,
-            "joint_a3": 0.0,
-            "joint_a4": 0.0,
-            "joint_a5": 1.57,
-            "joint_a6": 1.57,
+            "kr210_joint_a1": 0.0,
+            "kr210_joint_a2": -1.57,
+            "kr210_joint_a3": 1.57,
+            "kr210_joint_a4": 0.0,
+            "kr210_joint_a5": 1.57,
+            "kr210_joint_a6": 0.0
         },
     ),
 
@@ -45,17 +45,24 @@ KUKA_KR210_LOW_LEVEL_PID_CFG.actuators = {
     "arm": VelocityPIDActuatorCfg(
             joint_names_expr=[".*"],
             effort_limit={
-                "joint_a1": 4100,
-                "joint_a2": 4100,
-                "joint_a3": 4100,
-                "joint_a4": 1250,
-                "joint_a5": 1250,
-                "joint_a6": 700,
+                "kr210_joint_a1": 4100,
+                "kr210_joint_a2": 4100,
+                "kr210_joint_a3": 4100,
+                "kr210_joint_a4": 1250,
+                "kr210_joint_a5": 1250,
+                "kr210_joint_a6": 700,
             },
-            proportional_gain=10000,
+            proportional_gain=400,
             derivative_gain=0,
-            integral_gain=100000,
-            max_integral_error=2000,
+            integral_gain=20000,
+            max_integral_error={
+                "kr210_joint_a1": 4100,
+                "kr210_joint_a2": 4100,
+                "kr210_joint_a3": 4100,
+                "kr210_joint_a4": 1250,
+                "kr210_joint_a5": 1250,
+                "kr210_joint_a6": 700,
+            },
             delta_time=0.002
         ),
     }
