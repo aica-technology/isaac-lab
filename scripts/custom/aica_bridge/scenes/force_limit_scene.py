@@ -42,7 +42,7 @@ class ForceLimitScene(InteractiveSceneCfg):
     )
 
     contact_forces = ContactSensorCfg(
-        prim_path="{ENV_REGEX_NS}/Robot/kr210_link_6",
+        prim_path="{ENV_REGEX_NS}/Robot/custom_tool",
         update_period=0.0,
         history_length=2,
         debug_vis=True,
@@ -55,7 +55,7 @@ class ForceLimitScene(InteractiveSceneCfg):
         visualizer_cfg=ee_frame_cfg,
         target_frames=[
             FrameTransformerCfg.FrameCfg(
-                prim_path="{ENV_REGEX_NS}/Robot/kr210_link_6",
+                prim_path="{ENV_REGEX_NS}/Robot/ee_frame",
                 name="end_effector",
                 offset=OffsetCfg(
                     pos=(0, 0, 0),
