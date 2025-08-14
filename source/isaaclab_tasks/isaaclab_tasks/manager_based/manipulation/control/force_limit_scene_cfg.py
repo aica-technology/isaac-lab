@@ -129,7 +129,7 @@ class ObservationsCfg:
 
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1))
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 0.01})
 
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
         actions = ObsTerm(func=mdp.last_processed_action)
@@ -208,7 +208,7 @@ class RewardsCfg:
         params={
             "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
             "end_effector_cfg": SceneEntityCfg("ee_frame"),
-            "maximum_limit": 25,
+            "maximum_limit": 3500,
         },
     )
 

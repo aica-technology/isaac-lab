@@ -14,13 +14,13 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
 
         # increase env spacing for big robots
         self.scene.env_spacing = 5
-        self.episode_length_s = 15
+        self.episode_length_s = 20
         self.ee_str = "ee_frame"
 
         #adjust the scene
         self.scene.robot = KUKA_KR210_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
-        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
-        self.scene.table.spawn.size = (1.4, 1.6, 1.8) #type: ignore
+        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/custom_tool"
+        self.scene.table.spawn.size = (1.4, 1.6, 1.5) #type: ignore
         self.scene.table.init_state.pos = (1.7, 0.0, 0.0)
 
         # set rewards body name
@@ -35,10 +35,11 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         self.commands.ee_pose.body_name = self.ee_str
+        self.commands.ee_pose.resampling_time_range = (16.0, 20.0)
         self.commands.ee_pose.ranges.pitch = (0, 0)
-        self.commands.ee_pose.ranges.pos_x = (1.2, 1.6)
-        self.commands.ee_pose.ranges.pos_y = (-0.2, 0.2)
-        self.commands.ee_pose.ranges.pos_z = (0.75, 1.05)
+        self.commands.ee_pose.ranges.pos_x = (1.2, 1.4)
+        self.commands.ee_pose.ranges.pos_y = (-0.1, 0.1)
+        self.commands.ee_pose.ranges.pos_z = (0.75, 0.9)
 
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
