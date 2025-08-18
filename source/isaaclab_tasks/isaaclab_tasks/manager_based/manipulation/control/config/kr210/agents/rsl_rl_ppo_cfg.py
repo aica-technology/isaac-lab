@@ -8,7 +8,7 @@ class KR210ForceLimitPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 24
     max_iterations = 2000
     save_interval = 50
-    experiment_name = "force_limit_kr210_z"
+    experiment_name = "force_limit_kr210_general"
     run_name = ""
     resume = False
     empirical_normalization = False

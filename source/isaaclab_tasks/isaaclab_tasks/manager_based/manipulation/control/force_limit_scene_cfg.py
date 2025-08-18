@@ -101,12 +101,14 @@ class CommandsCfg:
         resampling_time_range=(10.0, 10.0),
         debug_vis=True,
         make_quat_unique=True,
+        mode="relative",
+        spawn=SceneEntityCfg("table"),
         ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.3, 0.5),
-            pos_y=(-0.2, 0.2),
-            pos_z=(0.15, 0.4),
+            pos_x=(-0.1, 0.1),
+            pos_y=(-0.1, 0.1),
+            pos_z=(-0.1, 0.0),
             roll=(-math.pi, -math.pi),
-            pitch=MISSING,  # depends on end-effector axis
+            pitch=(0, 0),
             yaw=(0, 0)
         ),
     )
@@ -147,24 +149,16 @@ class EventCfg:
     """Configuration for events."""
 
     reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
+        func=mdp.reset_force_compliant_scene,
         mode="reset",
         params={
-            "position_range": (1.0, 1.0),
-            "velocity_range": (0.0, 0.0),
+            "x_range": (0.3, 0.5),
+            "y_range": (-0.2, 0.2),
+            "z_range": (0.15, 0.4),
+            "ee_frame_name": MISSING,
+            "arm_joint_names": MISSING
         },
     )
-
-    reset_object_position = EventTerm(
-        func=mdp.reset_root_state_uniform,
-        mode="reset",
-        params={
-            "pose_range": {"x": (0.0, 0.0), "y": (0.0, 0.0), "z": (-0.05, 0.05)},
-            "velocity_range": {},
-            "asset_cfg": SceneEntityCfg("table"),
-        },
-    )
-
 
 @configclass
 class RewardsCfg:

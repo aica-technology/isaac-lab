@@ -30,7 +30,7 @@ KUKA_KR210_CFG = ArticulationCfg(
             "kr210_joint_a3": 2.4,
             "kr210_joint_a4": -1.57,
             "kr210_joint_a5": 1.57,
-            "kr210_joint_a6": 0.3
+            "kr210_joint_a6": 0.37
         },
     ),
 

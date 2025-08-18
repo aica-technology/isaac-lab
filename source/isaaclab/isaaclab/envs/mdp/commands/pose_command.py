@@ -11,7 +11,7 @@ import torch
 from collections.abc import Sequence
 from typing import TYPE_CHECKING
 
-from isaaclab.assets import Articulation
+from isaaclab.assets import Articulation, RigidObject
 from isaaclab.managers import CommandTerm
 from isaaclab.markers import VisualizationMarkers
 from isaaclab.utils.math import combine_frame_transforms, compute_pose_error, quat_from_euler_xyz, quat_unique
@@ -54,6 +54,9 @@ class UniformPoseCommand(CommandTerm):
         # initialize the base class
         super().__init__(cfg, env)
 
+        if self.cfg.mode not in ["relative", "absolute"]:
+            return ValueError("Pose command mode should either relative or absolute.")
+
         # extract the robot and body index for which the command is generated
         self.robot: Articulation = env.scene[cfg.asset_name]
         self.body_idx = self.robot.find_bodies(cfg.body_name)[0][0]
@@ -90,13 +93,6 @@ class UniformPoseCommand(CommandTerm):
     """
 
     def _update_metrics(self):
-        # transform command from base frame to simulation world frame
-        self.pose_command_w[:, :3], self.pose_command_w[:, 3:] = combine_frame_transforms(
-            self.robot.data.root_pos_w,
-            self.robot.data.root_quat_w,
-            self.pose_command_b[:, :3],
-            self.pose_command_b[:, 3:],
-        )
         # compute the error
         pos_error, rot_error = compute_pose_error(
             self.pose_command_w[:, :3],
@@ -110,18 +106,49 @@ class UniformPoseCommand(CommandTerm):
     def _resample_command(self, env_ids: Sequence[int]):
         # sample new pose targets
         # -- position
-        r = torch.empty(len(env_ids), device=self.device)
-        self.pose_command_b[env_ids, 0] = r.uniform_(*self.cfg.ranges.pos_x)
-        self.pose_command_b[env_ids, 1] = r.uniform_(*self.cfg.ranges.pos_y)
-        self.pose_command_b[env_ids, 2] = r.uniform_(*self.cfg.ranges.pos_z)
+        random_range = torch.empty(len(env_ids), device=self.device)
+        self.pose_command_b[env_ids, 0] = random_range.uniform_(*self.cfg.ranges.pos_x)
+        self.pose_command_b[env_ids, 1] = random_range.uniform_(*self.cfg.ranges.pos_y)
+        self.pose_command_b[env_ids, 2] = random_range.uniform_(*self.cfg.ranges.pos_z)
+
+        if self.cfg.mode == "relative":
+            ee_pos_b = self.robot.data.body_pos_w[:, self.body_idx] - self.robot.data.root_pos_w
+            self.pose_command_b[env_ids, 0] += ee_pos_b[env_ids, 0]
+            self.pose_command_b[env_ids, 1] += ee_pos_b[env_ids, 1]
+            self.pose_command_b[env_ids, 2] += ee_pos_b[env_ids, 2]
+
         # -- orientation
         euler_angles = torch.zeros_like(self.pose_command_b[env_ids, :3])
         euler_angles[:, 0].uniform_(*self.cfg.ranges.roll)
         euler_angles[:, 1].uniform_(*self.cfg.ranges.pitch)
         euler_angles[:, 2].uniform_(*self.cfg.ranges.yaw)
         quat = quat_from_euler_xyz(euler_angles[:, 0], euler_angles[:, 1], euler_angles[:, 2])
+
         # make sure the quaternion has real part as positive
         self.pose_command_b[env_ids, 3:] = quat_unique(quat) if self.cfg.make_quat_unique else quat
+
+        self.pose_command_w[:, :3], self.pose_command_w[:, 3:] = combine_frame_transforms(
+            self.robot.data.root_pos_w,
+            self.robot.data.root_quat_w,
+            self.pose_command_b[:, :3],
+            self.pose_command_b[:, 3:],
+        )
+
+        if self.cfg.spawn:
+            rigid_body: RigidObject = self._env.scene[self.cfg.spawn.name]
+            positions = self.pose_command_w[env_ids, :3].clone()
+
+            # sample random
+            random_range = torch.empty(len(env_ids), device=self.device)
+            
+            positions[:, 0] += random_range.uniform_(-0.15, 0.15)
+            positions[:, 1] += random_range.uniform_(-0.15, 0.15)
+            positions[:, 2] += random_range.uniform_(-0.15, -0.05)
+
+            orientations = torch.zeros((len(env_ids), 4), device=rigid_body.device)
+            orientations[:, 0] = 1
+            rigid_body.write_root_pose_to_sim(torch.cat([positions, orientations], dim=-1), env_ids=env_ids)
+
 
     def _update_command(self):
         pass

@@ -6,7 +6,7 @@
 import math
 from dataclasses import MISSING
 
-from isaaclab.managers import CommandTermCfg
+from isaaclab.managers import CommandTermCfg, SceneEntityCfg
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
 from isaaclab.utils import configclass
@@ -146,6 +146,10 @@ class UniformPoseCommandCfg(CommandTermCfg):
 
     If True, the quaternion is made unique by ensuring the real part is positive.
     """
+
+    mode: str = "absolute"
+
+    spawn: SceneEntityCfg = None
 
     @configclass
     class Ranges:
