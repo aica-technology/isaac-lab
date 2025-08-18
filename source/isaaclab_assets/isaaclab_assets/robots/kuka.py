@@ -27,10 +27,10 @@ KUKA_KR210_CFG = ArticulationCfg(
         joint_pos={
             "kr210_joint_a1": 0.0,
             "kr210_joint_a2": -2,
-            "kr210_joint_a3": 2.2,
-            "kr210_joint_a4": 0,
-            "kr210_joint_a5": -0.2,
-            "kr210_joint_a6": -1.57
+            "kr210_joint_a3": 2.4,
+            "kr210_joint_a4": -1.57,
+            "kr210_joint_a5": 1.57,
+            "kr210_joint_a6": 0.3
         },
     ),
 

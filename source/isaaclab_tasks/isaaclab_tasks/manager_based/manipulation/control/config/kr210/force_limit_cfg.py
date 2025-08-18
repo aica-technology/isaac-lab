@@ -4,7 +4,7 @@ from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 
 from isaaclab_assets import KUKA_KR210_LOW_LEVEL_PID_CFG
-
+import math
 
 @configclass
 class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
@@ -20,8 +20,8 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         #adjust the scene
         self.scene.robot = KUKA_KR210_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/custom_tool"
-        self.scene.table.spawn.size = (1.4, 1.6, 1.5) #type: ignore
-        self.scene.table.init_state.pos = (1.7, 0.0, 0.0)
+        self.scene.table.spawn.size = (1.4, 1.6, 0.1) #type: ignore
+        self.scene.table.init_state.pos = (1.4, 0.0, 0.0)
 
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
@@ -35,11 +35,13 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         self.commands.ee_pose.body_name = self.ee_str
-        self.commands.ee_pose.resampling_time_range = (16.0, 20.0)
+        self.commands.ee_pose.resampling_time_range = (3.0, 4.0)
         self.commands.ee_pose.ranges.pitch = (0, 0)
-        self.commands.ee_pose.ranges.pos_x = (1.2, 1.4)
-        self.commands.ee_pose.ranges.pos_y = (-0.1, 0.1)
-        self.commands.ee_pose.ranges.pos_z = (0.75, 0.9)
+        self.commands.ee_pose.ranges.roll=(-math.pi - math.pi/6, -math.pi + math.pi/6)
+        self.commands.ee_pose.ranges.yaw = (math.pi/2, math.pi/2)
+        self.commands.ee_pose.ranges.pos_x = (0.9, 1.0)
+        self.commands.ee_pose.ranges.pos_y = (0.3, 0.4)
+        self.commands.ee_pose.ranges.pos_z = (0.8, 0.85)
 
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
@@ -47,5 +49,5 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
             scale=0.02,
-            clip=(-0.06, 0.06),
+            clip=[0.06, 0.06, 0.06, 0.25, 0.25, 0.25],
         )
