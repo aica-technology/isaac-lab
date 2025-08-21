@@ -4,7 +4,7 @@ from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 
 from isaaclab_assets import UR5E_CFG_LOW_LEVEL_PID
-
+import math
 
 @configclass
 class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
@@ -29,7 +29,11 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
 
         self.commands.ee_pose.body_name = self.ee_str
         self.commands.ee_pose.ranges.pitch = (0, 0)
+        #self.commands.ee_pose.ranges.roll=(-math.pi - math.pi/6, -math.pi + math.pi/6)
+        #self.commands.ee_pose.ranges.yaw = (-math.pi/2, math.pi/2)
 
+        self.events.reset_robot_joints.params["ee_frame_name"] = self.ee_str
+        self.events.reset_robot_joints.params["arm_joint_names"] = ["shoulder_pan_joint", "shoulder_lift_joint", "elbow_joint", "wrist_1_joint", "wrist_2_joint", "wrist_3_joint"]
         # A clip of ±6 cm/s is applied to ensure the robot does not sample actions that are too large near contact, 
         # as the goal is to allow the robot to reach the target without exceeding the force limit.
         # The scaling ensures that the sampled actions remain within a reasonable range.
@@ -41,6 +45,6 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
-            scale=0.02,
-            clip=(-0.06, 0.06),
+            scale=(0.02, 0.02, 0.02, 0.1, 0.1, 0.1),
+            clip=[0.06, 0.06, 0.06, 0.3, 0.3, 0.3]
         )

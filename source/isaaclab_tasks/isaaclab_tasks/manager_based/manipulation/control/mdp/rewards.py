@@ -114,7 +114,6 @@ def force_limit_penalty(
     mask = torch.max(force > maximum_limit * torch.ones_like(force), dim=1)[0]
     reward = torch.zeros_like(mask)
     reward[mask] = -1
-
     return reward
 
 def position_command_error(env: ManagerBasedRLEnv, command_name: str, asset_cfg: SceneEntityCfg, raw_vector=False) -> torch.Tensor:

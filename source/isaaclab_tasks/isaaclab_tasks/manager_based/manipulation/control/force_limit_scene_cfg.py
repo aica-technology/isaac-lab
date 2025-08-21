@@ -67,14 +67,14 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
 
     table = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Table",
-        spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.3),
+        spawn=sim_utils.SphereCfg(
+            radius=0.05,
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
             activate_contact_sensors=True,
         ),
-        init_state=RigidObjectCfg.InitialStateCfg(pos=(0.8, 0.0, 0.15), rot=(1.0, 0.0, 0.0, 0.0)),
+        init_state=RigidObjectCfg.InitialStateCfg(pos=(1, 0.0, 0.0), rot=(1.0, 0.0, 0.0, 0.0)),
     )
 
     contact_sensor = ContactSensorCfg(
@@ -106,7 +106,7 @@ class CommandsCfg:
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             pos_x=(-0.1, 0.1),
             pos_y=(-0.1, 0.1),
-            pos_z=(-0.1, 0.0),
+            pos_z=(-0.1, 0.1),
             roll=(-math.pi, -math.pi),
             pitch=(0, 0),
             yaw=(0, 0)
@@ -131,7 +131,7 @@ class ObservationsCfg:
 
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 0.01})
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 1.0})
 
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
         actions = ObsTerm(func=mdp.last_processed_action)
@@ -154,7 +154,7 @@ class EventCfg:
         params={
             "x_range": (0.3, 0.5),
             "y_range": (-0.2, 0.2),
-            "z_range": (0.15, 0.4),
+            "z_range": (0.3, 0.5),
             "ee_frame_name": MISSING,
             "arm_joint_names": MISSING
         },
@@ -202,7 +202,7 @@ class RewardsCfg:
         params={
             "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
             "end_effector_cfg": SceneEntityCfg("ee_frame"),
-            "maximum_limit": 25,
+            "maximum_limit": 50,
         },
     )
 
@@ -214,7 +214,7 @@ class RewardsCfg:
             "asset_cfg": SceneEntityCfg("robot", body_names=MISSING),
             "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
             "command_name": "ee_pose",
-            "limit": 2,
+            "limit": 1,
         },
     )
     # action penalty

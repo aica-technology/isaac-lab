@@ -88,9 +88,70 @@ class UniformPoseCommand(CommandTerm):
         """
         return self.pose_command_b
 
-    """
-    Implementation specific functions.
-    """
+    @staticmethod
+    def _exclusion_region_sampling(random_range: torch.Tensor,
+                                low: float, high: float,
+                                excl_low: float = -0.025, excl_high: float = 0.025) -> torch.Tensor:
+        """
+        Fill `random_range` (shape: [num_envs, ...]) with uniform samples from
+        [low, excl_low] ∪ [excl_high, high], excluding (excl_low, excl_high).
+
+        Args:
+            random_range: preallocated tensor to be filled (dtype/device preserved).
+            low, high: overall sampling bounds.
+            excl_low, excl_high: open interval to exclude.
+
+        Returns:
+            The same tensor, filled in-place.
+        """
+        # Lengths of allowed sub-ranges (clipped to 0 in case exclusion extends beyond bounds)
+        left_len = max(0.0, float(excl_low) - float(low))
+        right_len = max(0.0, float(high) - float(excl_high))
+        total_len = left_len + right_len
+
+        if total_len <= 0:
+            raise ValueError("Exclusion region covers or exceeds the sampling range.")
+
+        # Degenerate sides: if one side has zero length, sample from the other directly.
+        if left_len == 0.0:
+            return random_range.uniform_(excl_high, high)
+        if right_len == 0.0:
+            return random_range.uniform_(low, excl_low)
+
+        # Vectorized mapping from U(0,1) to the two allowed intervals, with proper proportions.
+        p_left = left_len / total_len  # scalar
+        u = random_range.uniform_(0.0, 1.0)  # reuse the provided buffer
+
+        mask_left = u < p_left
+        mask_right = ~mask_left
+
+        # Left side: map u in [0, p_left) to [low, excl_low]
+        if mask_left.any():
+            u_left = u[mask_left]
+            random_range[mask_left] = low + (u_left / p_left) * left_len
+
+        # Right side: map u in [p_left, 1] to [excl_high, high]
+        if mask_right.any():
+            u_right = u[mask_right]
+            random_range[mask_right] = excl_high + ((u_right - p_left) / (1.0 - p_left)) * right_len
+
+        return random_range
+
+    @staticmethod
+    def randomly_offset_position(positions: torch.Tensor,
+                                p_noise: float = 0.5,
+                                noise_low: float = -0.02,
+                                noise_high: float = 0.02,
+                                z_constant: float = -1.0):
+        """
+        For each row i, with prob `p_noise` do: z_i += U(noise_low, noise_high),
+        otherwise set: z_i = z_constant.
+
+        positions: [N, 1] (float tensor)
+        """
+        mask = torch.empty_like(positions).uniform_(0.0, 1.0) < p_noise
+        noise = torch.empty_like(positions).uniform_(noise_low, noise_high)
+        return torch.where(mask, noise, torch.full_like(positions, z_constant))
 
     def _update_metrics(self):
         # compute the error
@@ -106,10 +167,17 @@ class UniformPoseCommand(CommandTerm):
     def _resample_command(self, env_ids: Sequence[int]):
         # sample new pose targets
         # -- position
+        exclusion_region_low, exclusion_region_high = -0.055, 0.055
         random_range = torch.empty(len(env_ids), device=self.device)
-        self.pose_command_b[env_ids, 0] = random_range.uniform_(*self.cfg.ranges.pos_x)
-        self.pose_command_b[env_ids, 1] = random_range.uniform_(*self.cfg.ranges.pos_y)
-        self.pose_command_b[env_ids, 2] = random_range.uniform_(*self.cfg.ranges.pos_z)
+        self.pose_command_b[env_ids, 0] = self._exclusion_region_sampling(
+            random_range, *self.cfg.ranges.pos_x, exclusion_region_low, exclusion_region_high
+        )
+        self.pose_command_b[env_ids, 1] = self._exclusion_region_sampling(
+            random_range, *self.cfg.ranges.pos_y, exclusion_region_low, exclusion_region_high
+        )
+        self.pose_command_b[env_ids, 2] = self._exclusion_region_sampling(
+            random_range, *self.cfg.ranges.pos_z, exclusion_region_low, exclusion_region_high
+        )
 
         if self.cfg.mode == "relative":
             ee_pos_b = self.robot.data.body_pos_w[:, self.body_idx] - self.robot.data.root_pos_w
@@ -137,14 +205,13 @@ class UniformPoseCommand(CommandTerm):
         if self.cfg.spawn:
             rigid_body: RigidObject = self._env.scene[self.cfg.spawn.name]
             positions = self.pose_command_w[env_ids, :3].clone()
-
             # sample random
             random_range = torch.empty(len(env_ids), device=self.device)
             
-            positions[:, 0] += random_range.uniform_(-0.15, 0.15)
-            positions[:, 1] += random_range.uniform_(-0.15, 0.15)
-            positions[:, 2] += random_range.uniform_(-0.15, -0.05)
-
+            positions[:, 0] += random_range.uniform_(-0.02, 0.02)
+            positions[:, 1] += random_range.uniform_(-0.02, 0.02)
+            positions[:, 2] += self.randomly_offset_position(positions[:, 2])
+        
             orientations = torch.zeros((len(env_ids), 4), device=rigid_body.device)
             orientations[:, 0] = 1
             rigid_body.write_root_pose_to_sim(torch.cat([positions, orientations], dim=-1), env_ids=env_ids)

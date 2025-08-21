@@ -35,13 +35,13 @@ class UR5eVelocityImpedancePPORunnerCfg(RslRlOnPolicyRunnerCfg):
 
 @configclass
 class UR5eForceLimitPPORunnerCfg(RslRlOnPolicyRunnerCfg):
-    num_steps_per_env = 24
+    num_steps_per_env = 48
     max_iterations = 2000
     save_interval = 50
     experiment_name = "force_limit_ur5e"
     run_name = ""
     resume = False
-    empirical_normalization = False
+    empirical_normalization = True
     policy = RslRlPpoActorCriticCfg(
         init_noise_std=1.0,
         actor_hidden_dims=[64, 64],
@@ -59,7 +59,7 @@ class UR5eForceLimitPPORunnerCfg(RslRlOnPolicyRunnerCfg):
         schedule="adaptive",
         gamma=0.99,
         lam=0.95,
-        desired_kl=0.01,
+        desired_kl=0.03,
         max_grad_norm=1.0,
     )
     clip_actions: float = 100.0   

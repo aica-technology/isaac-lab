@@ -14,7 +14,7 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
 
         # increase env spacing for big robots
         self.scene.env_spacing = 5
-        self.episode_length_s = 5
+        self.episode_length_s = 10
         self.ee_str = "ee_frame"
 
         #adjust the scene
@@ -35,7 +35,7 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         self.commands.ee_pose.body_name = self.ee_str
-        self.commands.ee_pose.resampling_time_range = (5.0, 5.0)
+        self.commands.ee_pose.resampling_time_range = (10.0, 10.0)
         self.commands.ee_pose.ranges.pitch = (0, 0)
         
         #self.commands.ee_pose.ranges.roll=(-math.pi - math.pi/6, -math.pi + math.pi/6)
@@ -52,6 +52,6 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
-            scale=0.02,
-            clip=[0.06, 0.06, 0.06, 0.25, 0.25, 0.25],
+            scale=(0.02, 0.02, 0.02, 0.1, 0.1, 0.1),
+            clip=[0.06, 0.06, 0.06, 0.3, 0.3, 0.3]
         )
