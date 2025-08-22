@@ -38,8 +38,8 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         self.commands.ee_pose.resampling_time_range = (10.0, 10.0)
         self.commands.ee_pose.ranges.pitch = (0, 0)
         
-        #self.commands.ee_pose.ranges.roll=(-math.pi - math.pi/6, -math.pi + math.pi/6)
-        self.commands.ee_pose.ranges.yaw = (math.pi/2, math.pi/2)
+        self.commands.ee_pose.ranges.roll=(-math.pi - math.pi/6, -math.pi + math.pi/6)
+        self.commands.ee_pose.ranges.yaw = (-math.pi/4, math.pi/4)
 
         self.events.reset_robot_joints.params["ee_frame_name"] = self.ee_str
         self.events.reset_robot_joints.params["arm_joint_names"] = ["kr210_joint_a1", "kr210_joint_a2", "kr210_joint_a3", "kr210_joint_a4", "kr210_joint_a5", "kr210_joint_a6"]
@@ -52,6 +52,6 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
-            scale=(0.02, 0.02, 0.02, 0.1, 0.1, 0.1),
-            clip=[0.06, 0.06, 0.06, 0.3, 0.3, 0.3]
+            scale=(0.01, 0.01, 0.01, 0.2, 0.2, 0.2),
+            clip=[0.06, 0.06, 0.06, 0.6, 0.6, 0.6]
         )

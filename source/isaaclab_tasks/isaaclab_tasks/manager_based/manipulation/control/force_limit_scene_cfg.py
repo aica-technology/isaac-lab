@@ -131,7 +131,7 @@ class ObservationsCfg:
 
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
         ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 1.0})
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 0.01})
 
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
         actions = ObsTerm(func=mdp.last_processed_action)
@@ -198,11 +198,11 @@ class RewardsCfg:
     # force limit penalty
     force_limit_penalty = RewTerm(
         func=mdp.force_limit_penalty,
-        weight=-5,
+        weight=-1,
         params={
             "contact_sensor_cfg": SceneEntityCfg("contact_sensor"),
             "end_effector_cfg": SceneEntityCfg("ee_frame"),
-            "maximum_limit": 50,
+            "maximum_limit": 100,
         },
     )
 
@@ -251,7 +251,7 @@ class CurriculumCfg:
     )
 
     force_limit_penalty = CurrTerm(
-        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -10, "num_steps": 6000}
+        func=mdp.modify_reward_weight, params={"term_name": "force_limit_penalty", "weight": -2, "num_steps": 6000}
     )
 
 
@@ -277,6 +277,8 @@ class ForceLimitEnvCfg(ManagerBasedRLEnvCfg):
     events: EventCfg = EventCfg()
     curriculum: CurriculumCfg = CurriculumCfg()
 
+
+        # self.sim.physx.gpu_max_particle_contacts *= 1
     def __post_init__(self):
         """Post initialization."""
         # general settings
@@ -286,3 +288,24 @@ class ForceLimitEnvCfg(ManagerBasedRLEnvCfg):
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 500.0
+        
+        self.sim.physx.max_position_iteration_count = 192  # Important to avoid interpenetration.
+        self.sim.physx.max_velocity_iteration_count = 1
+        self.sim.physx.bounce_threshold_velocity = 0.2
+        self.sim.physx.friction_offset_threshold = 0.01
+        self.sim.physx.friction_correlation_distance = 0.00625
+
+        self.sim.physx.gpu_max_rigid_contact_count = 2**23
+        self.sim.physx.gpu_max_rigid_patch_count = 2**23
+        self.sim.physx.gpu_max_num_partitions = 1  # Important for stable simulation.
+        #######################################
+
+        # Custom settings
+        self.sim.physx.gpu_collision_stack_size = 2**31
+        # self.sim.physx.enable_ccd = True  # TODO Check if this is needed
+        # self.sim.physx.gpu_found_lost_pairs_capacity *= 1
+        # self.sim.physx.gpu_found_lost_aggregate_pairs_capacity *= 1
+        # self.sim.physx.gpu_total_aggregate_pairs_capacity *= 1
+        # self.sim.physx.gpu_heap_capacity *= 1
+        # self.sim.physx.gpu_temp_buffer_capacity *= 1
+        # self.sim.physx.gpu_max_soft_body_contacts *= 1
