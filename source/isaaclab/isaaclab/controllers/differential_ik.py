@@ -146,8 +146,7 @@ class DifferentialIKController:
                     self.ee_pos_des, self.ee_quat_des = apply_delta_pose(ee_pos, ee_quat, self._command)
                 else:
                     self.ee_pos_des = self._command[:, 0:3]
-                    if self.cfg.command_type == "velocity":
-                        self.ee_quat_des = self._command[:, 3:7]
+                    self.ee_quat_des = self._command[:, 3:7]
 
     def compute(
         self, jacobian: torch.Tensor, ee_pos: torch.Tensor = None, ee_quat: torch.Tensor = None, joint_pos: torch.Tensor = None
