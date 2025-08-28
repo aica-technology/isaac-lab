@@ -76,7 +76,7 @@ class DifferentialIKController:
     @property
     def action_dim(self) -> int:
         """Dimension of the controller's input command."""
-        if self.cfg.command_type == "position":
+        if self.cfg.command_type == "position" or self.cfg.command_type == "linear_velocity":
             return 3  # (x, y, z)
         elif (self.cfg.command_type == "pose" and self.cfg.use_relative_mode) or self.cfg.command_type == "velocity":
             return 6  # (dx, dy, dz, droll, dpitch, dyaw)
@@ -145,8 +145,9 @@ class DifferentialIKController:
                         )
                     self.ee_pos_des, self.ee_quat_des = apply_delta_pose(ee_pos, ee_quat, self._command)
                 else:
+                    if self.cfg.command_type !="linear_velocity":
+                        self.ee_quat_des = self._command[:, 3:7]
                     self.ee_pos_des = self._command[:, 0:3]
-                    self.ee_quat_des = self._command[:, 3:7]
 
     def compute(
         self, jacobian: torch.Tensor, ee_pos: torch.Tensor = None, ee_quat: torch.Tensor = None, joint_pos: torch.Tensor = None
@@ -179,6 +180,7 @@ class DifferentialIKController:
 
             return joint_pos + delta_joint_pos
         else:
+            jacobian = jacobian[:, :3] if self.cfg.command_type == "linear_velocity" else jacobian
             return self._compute_delta_joint_state(delta_cartesian_state=self._command, jacobian=jacobian)
 
     """

@@ -103,13 +103,11 @@ class CommandsCfg:
         make_quat_unique=True,
         mode="relative",
         spawn=SceneEntityCfg("table"),
+        position_only =True,
         ranges=mdp.UniformPoseCommandCfg.Ranges(
             pos_x=(-0.1, 0.1),
             pos_y=(-0.1, 0.1),
-            pos_z=(-0.1, 0.1),
-            roll=(-math.pi, -math.pi),
-            pitch=(0, 0),
-            yaw=(0, 0)
+            pos_z=(-0.1, 0.1)
         ),
     )
 
@@ -130,7 +128,7 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
-        ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
+        #ee_orientation = ObsTerm(func=mdp.ee_rotation_in_robot_root_frame)
         ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 0.01})
 
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
@@ -175,11 +173,14 @@ class RewardsCfg:
         weight=3.6,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "std": 0.1, "command_name": "ee_pose"},
     )
+
+    """
     end_effector_orientation_tracking = RewTerm(
         func=mdp.orientation_command_error,
         weight=-2,
         params={"asset_cfg": SceneEntityCfg("robot", body_names=MISSING), "command_name": "ee_pose"},
     )
+    """
 
     action_termination_penalty = RewTerm(
         func=mdp.action_termination,

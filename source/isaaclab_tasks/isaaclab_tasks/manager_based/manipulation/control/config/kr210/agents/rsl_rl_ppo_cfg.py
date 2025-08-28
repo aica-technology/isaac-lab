@@ -5,18 +5,21 @@ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, R
 
 @configclass
 class KR210ForceLimitPPORunnerCfg(RslRlOnPolicyRunnerCfg):
-    num_steps_per_env = 48
-    max_iterations = 2000
+    num_steps_per_env = 64
+    max_iterations = 1000
     save_interval = 50
-    experiment_name = "force_limit_kr210_general"
+    experiment_name = "force_limit_kr210_linear"
     run_name = ""
     resume = False
     empirical_normalization = True
     policy = RslRlPpoActorCriticCfg(
         init_noise_std=1.0,
-        actor_hidden_dims=[64, 64],
-        critic_hidden_dims=[64, 64],
+        actor_hidden_dims=[128, 128],
+        critic_hidden_dims=[128, 128],
         activation="elu",
+        #rnn_type="lstm",
+        #rnn_hidden_dim=128,
+        #rnn_num_layers=1,
     )
     algorithm = RslRlPpoAlgorithmCfg(
         value_loss_coef=1.0,
@@ -25,7 +28,7 @@ class KR210ForceLimitPPORunnerCfg(RslRlOnPolicyRunnerCfg):
         entropy_coef=0.01,
         num_learning_epochs=8,
         num_mini_batches=4,
-        learning_rate=1.0e-3,
+        learning_rate=3e-4,
         schedule="adaptive",
         gamma=0.99,
         lam=0.95,

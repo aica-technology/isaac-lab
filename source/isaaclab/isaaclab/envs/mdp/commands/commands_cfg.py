@@ -149,6 +149,8 @@ class UniformPoseCommandCfg(CommandTermCfg):
 
     mode: str = "absolute"
 
+    position_only: bool = False
+
     spawn: SceneEntityCfg = None
 
     @configclass
@@ -164,13 +166,13 @@ class UniformPoseCommandCfg(CommandTermCfg):
         pos_z: tuple[float, float] = MISSING
         """Range for the z position (in m)."""
 
-        roll: tuple[float, float] = MISSING
+        roll: tuple[float, float] = None
         """Range for the roll angle (in rad)."""
 
-        pitch: tuple[float, float] = MISSING
+        pitch: tuple[float, float] = None
         """Range for the pitch angle (in rad)."""
 
-        yaw: tuple[float, float] = MISSING
+        yaw: tuple[float, float] = None
         """Range for the yaw angle (in rad)."""
 
     ranges: Ranges = MISSING

@@ -121,7 +121,7 @@ class DifferentialInverseKinematicsAction(ActionTerm):
                 self._clip = torch.tensor([[self.cfg.clip[0], self.cfg.clip[1]]], device=self.device).repeat(
                     self.num_envs, self.action_dim, 1
                 )
-            elif isinstance(self.cfg.clip, list) and len(self.cfg.clip) == 6:
+            elif isinstance(self.cfg.clip, list) and (len(self.cfg.clip) == 3 or len(self.cfg.clip) == 6):
                 self._clip = torch.tensor(self.cfg.clip, device=self.device).unsqueeze(0).repeat(
                     self.num_envs, 1
                 )

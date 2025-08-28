@@ -26,7 +26,7 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.ee_str]
-        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
+        #self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.force_direction_reward.params["asset_cfg"].body_names = [self.ee_str]
 
@@ -51,7 +51,7 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
             asset_name="robot",
             joint_names=[".*"],
             body_name=self.ee_str,
-            controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
-            scale=(0.01, 0.01, 0.01, 0.2, 0.2, 0.2),
-            clip=[0.06, 0.06, 0.06, 0.6, 0.6, 0.6]
+            controller=DifferentialIKControllerCfg(command_type="linear_velocity", ik_method="dls"),
+            scale=(0.01, 0.01, 0.01),
+            clip=[0.06, 0.06, 0.06]
         )

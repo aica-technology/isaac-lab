@@ -63,12 +63,14 @@ class UniformPoseCommand(CommandTerm):
 
         # create buffers
         # -- commands: (x, y, z, qw, qx, qy, qz) in root frame
-        self.pose_command_b = torch.zeros(self.num_envs, 7, device=self.device)
-        self.pose_command_b[:, 3] = 1.0
+        self.size_of_buffer = 7 if not self.cfg.position_only else 3
+        self.pose_command_b = torch.zeros(self.num_envs, self.size_of_buffer, device=self.device)
         self.pose_command_w = torch.zeros_like(self.pose_command_b)
         # -- metrics
         self.metrics["position_error"] = torch.zeros(self.num_envs, device=self.device)
-        self.metrics["orientation_error"] = torch.zeros(self.num_envs, device=self.device)
+        if not self.cfg.position_only:
+            self.pose_command_b[:, 3] = 1.0
+            self.metrics["orientation_error"] = torch.zeros(self.num_envs, device=self.device)
 
     def __str__(self) -> str:
         msg = "UniformPoseCommand:\n"
@@ -155,14 +157,17 @@ class UniformPoseCommand(CommandTerm):
 
     def _update_metrics(self):
         # compute the error
-        pos_error, rot_error = compute_pose_error(
-            self.pose_command_w[:, :3],
-            self.pose_command_w[:, 3:],
-            self.robot.data.body_pos_w[:, self.body_idx],
-            self.robot.data.body_quat_w[:, self.body_idx],
-        )
-        self.metrics["position_error"] = torch.norm(pos_error, dim=-1)
-        self.metrics["orientation_error"] = torch.norm(rot_error, dim=-1)
+        if not self.cfg.position_only:
+            pos_error, rot_error = compute_pose_error(
+                self.pose_command_w[:, :3],
+                self.pose_command_w[:, 3:],
+                self.robot.data.body_pos_w[:, self.body_idx],
+                self.robot.data.body_quat_w[:, self.body_idx],
+            )
+            self.metrics["position_error"] = torch.norm(pos_error, dim=-1)
+            self.metrics["orientation_error"] = torch.norm(rot_error, dim=-1)
+        else:
+            self.metrics["position_error"] = torch.norm(self.robot.data.body_pos_w[:, self.body_idx] - self.pose_command_w[:, :3], dim=-1)
 
     def _resample_command(self, env_ids: Sequence[int]):
         # sample new pose targets
@@ -186,21 +191,28 @@ class UniformPoseCommand(CommandTerm):
             self.pose_command_b[env_ids, 2] += ee_pos_b[env_ids, 2]
 
         # -- orientation
-        euler_angles = torch.zeros_like(self.pose_command_b[env_ids, :3])
-        euler_angles[:, 0].uniform_(*self.cfg.ranges.roll)
-        euler_angles[:, 1].uniform_(*self.cfg.ranges.pitch)
-        euler_angles[:, 2].uniform_(*self.cfg.ranges.yaw)
-        quat = quat_from_euler_xyz(euler_angles[:, 0], euler_angles[:, 1], euler_angles[:, 2])
+        if not self.cfg.position_only:
+            euler_angles = torch.zeros_like(self.pose_command_b[env_ids, :3])
+            euler_angles[:, 0].uniform_(*self.cfg.ranges.roll)
+            euler_angles[:, 1].uniform_(*self.cfg.ranges.pitch)
+            euler_angles[:, 2].uniform_(*self.cfg.ranges.yaw)
+            quat = quat_from_euler_xyz(euler_angles[:, 0], euler_angles[:, 1], euler_angles[:, 2])
 
-        # make sure the quaternion has real part as positive
-        self.pose_command_b[env_ids, 3:] = quat_unique(quat) if self.cfg.make_quat_unique else quat
+            # make sure the quaternion has real part as positive
+            self.pose_command_b[env_ids, 3:] = quat_unique(quat) if self.cfg.make_quat_unique else quat
 
-        self.pose_command_w[:, :3], self.pose_command_w[:, 3:] = combine_frame_transforms(
-            self.robot.data.root_pos_w,
-            self.robot.data.root_quat_w,
-            self.pose_command_b[:, :3],
-            self.pose_command_b[:, 3:],
-        )
+            self.pose_command_w[:, :3], self.pose_command_w[:, 3:] = combine_frame_transforms(
+                self.robot.data.root_pos_w,
+                self.robot.data.root_quat_w,
+                self.pose_command_b[:, :3],
+                self.pose_command_b[:, 3:],
+            )
+        else:
+            self.pose_command_w[:, :3], _ = combine_frame_transforms(
+                self.robot.data.root_pos_w,
+                self.robot.data.root_quat_w,
+                self.pose_command_b[:, :3],
+            )
 
         if self.cfg.spawn:
             rigid_body: RigidObject = self._env.scene[self.cfg.spawn.name]
@@ -243,7 +255,12 @@ class UniformPoseCommand(CommandTerm):
             return
         # update the markers
         # -- goal pose
-        self.goal_pose_visualizer.visualize(self.pose_command_w[:, :3], self.pose_command_w[:, 3:])
+        if not self.cfg.position_only:
+            self.goal_pose_visualizer.visualize(self.pose_command_w[:, :3], self.pose_command_w[:, 3:])
+        else:
+            orientations = torch.zeros((self.num_envs, 4), device=self.device)
+            orientations[:, 0] = 1
+            self.goal_pose_visualizer.visualize(self.pose_command_w[:, :3], orientations)
         # -- current body pose
         body_link_pose_w = self.robot.data.body_link_pose_w[:, self.body_idx]
         self.current_pose_visualizer.visualize(body_link_pose_w[:, :3], body_link_pose_w[:, 3:7])
