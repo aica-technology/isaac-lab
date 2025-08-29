@@ -6,7 +6,7 @@
 import math
 from dataclasses import MISSING
 
-from isaaclab.managers import CommandTermCfg
+from isaaclab.managers import CommandTermCfg, SceneEntityCfg
 from isaaclab.markers import VisualizationMarkersCfg
 from isaaclab.markers.config import BLUE_ARROW_X_MARKER_CFG, FRAME_MARKER_CFG, GREEN_ARROW_X_MARKER_CFG
 from isaaclab.utils import configclass
@@ -16,6 +16,8 @@ from .pose_2d_command import TerrainBasedPose2dCommand, UniformPose2dCommand
 from .pose_command import UniformPoseCommand
 from .velocity_command import NormalVelocityCommand, UniformVelocityCommand
 from .pose_force_command import UniformPoseForceCommand
+from .pose_obstacle_command import UniformPoseCommandWithObstacle
+
 
 @configclass
 class NullCommandCfg(CommandTermCfg):
@@ -27,7 +29,6 @@ class NullCommandCfg(CommandTermCfg):
         """Post initialization."""
         # set the resampling time range to infinity to avoid resampling
         self.resampling_time_range = (math.inf, math.inf)
-
 
 @configclass
 class UniformVelocityCommandCfg(CommandTermCfg):
@@ -127,6 +128,90 @@ class NormalVelocityCommandCfg(UniformVelocityCommandCfg):
 
     ranges: Ranges = MISSING
     """Distribution ranges for the velocity commands."""
+
+
+@configclass
+class UniformPoseCommandWithObstacleCfg(CommandTermCfg):
+    """Configuration for uniform pose command generator."""
+
+    class_type: type = UniformPoseCommandWithObstacle
+
+    asset_name: str = MISSING
+    """Name of the asset in the environment for which the commands are generated."""
+
+    body_name: str = MISSING
+    """Name of the body in the asset for which the commands are generated."""
+
+    make_quat_unique: bool = False
+    """Whether to make the quaternion unique or not. Defaults to False.
+
+    If True, the quaternion is made unique by ensuring the real part is positive.
+    """
+
+    mode: str = "relative"
+    """Specifies whether the input values are interpreted as absolute positions or relative offsets.
+    
+    By default, the mode is set to relative values.
+    """
+
+    position_only: bool = False
+    """Specifies whether the sampling includes only positions, without orientations."""
+
+    spawn: SceneEntityCfg = None
+    """
+    If the rigid body entity config is provided, an obstacle will spawn at a position relative to the command.
+    """
+
+    probability_of_obstacle_existance: float = 1.0
+
+    @configclass
+    class Ranges:
+        """Uniform distribution ranges for the pose commands."""
+
+        pos_x: tuple[float, float] = MISSING
+        """Range for the x position (in m)."""
+
+        pos_y: tuple[float, float] = MISSING
+        """Range for the y position (in m)."""
+
+        pos_z: tuple[float, float] = MISSING
+        """Range for the z position (in m)."""
+
+        obstacle_pos_x: tuple[float, float] = None
+        """Range for the relative x position of the obstacle with relative to the command generated (in m)."""
+
+        obstacle_pos_y: tuple[float, float] = None
+        """Range for the relative y position of the obstacle with relative to the command generated (in m)."""
+
+        obstacle_pos_z: tuple[float, float] = None
+        """Range for the relative z position of the obstacle with relative to the command generated (in m)."""
+
+        exlusion_region: tuple[float, float] = None
+        """Range for which commands cannot be generated in the range of the pos_x, pos_y, pos_z (in m)."""
+
+        roll: tuple[float, float] = None
+        """Range for the roll angle (in rad)."""
+
+        pitch: tuple[float, float] = None
+        """Range for the pitch angle (in rad)."""
+
+        yaw: tuple[float, float] = None
+        """Range for the yaw angle (in rad)."""
+
+    ranges: Ranges = MISSING
+    """Ranges for the commands."""
+
+    goal_pose_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(prim_path="/Visuals/Command/goal_pose")
+    """The configuration for the goal pose visualization marker. Defaults to FRAME_MARKER_CFG."""
+
+    current_pose_visualizer_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.replace(
+        prim_path="/Visuals/Command/body_pose"
+    )
+    """The configuration for the current pose visualization marker. Defaults to FRAME_MARKER_CFG."""
+
+    # Set the scale of the visualization markers to (0.1, 0.1, 0.1)
+    goal_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
+    current_pose_visualizer_cfg.markers["frame"].scale = (0.1, 0.1, 0.1)
 
 
 @configclass
