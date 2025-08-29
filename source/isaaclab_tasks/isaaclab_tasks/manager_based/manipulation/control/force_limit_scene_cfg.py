@@ -65,10 +65,10 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
         spawn=sim_utils.DomeLightCfg(color=(0.75, 0.75, 0.75), intensity=2500.0),
     )
 
-    table = RigidObjectCfg(
-        prim_path="{ENV_REGEX_NS}/Table",
-        spawn=sim_utils.CuboidCfg(
-            size=(1.25, 1.0, 0.3),
+    collider = RigidObjectCfg(
+        prim_path="{ENV_REGEX_NS}/Collider",
+        spawn=sim_utils.SphereCfg(
+            radius=(0.02),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
@@ -82,7 +82,7 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
         update_period=0.0,
         history_length=2,
         debug_vis=True,
-        filter_prim_paths_expr=["{ENV_REGEX_NS}/Table"],
+        filter_prim_paths_expr=["{ENV_REGEX_NS}/Collider"],
     )
 
 
@@ -95,19 +95,24 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
 class CommandsCfg:
     """Command terms for the MDP."""
 
-    ee_pose = mdp.UniformPoseCommandCfg(
+    ee_pose = mdp.UniformPoseCommandWithObstacleCfg(
         asset_name="robot",
         body_name=MISSING,
         resampling_time_range=(10.0, 10.0),
         debug_vis=True,
         make_quat_unique=True,
-        ranges=mdp.UniformPoseCommandCfg.Ranges(
-            pos_x=(0.3, 0.5),
-            pos_y=(-0.2, 0.2),
-            pos_z=(0.15, 0.4),
-            roll=(-math.pi, -math.pi),
-            pitch=MISSING,  # depends on end-effector axis
-            yaw=(0, 0)
+        mode="relative",
+        probability_of_obstacle_existance=0.5,
+        spawn=SceneEntityCfg("collider"),
+        position_only=True,
+        ranges=mdp.UniformPoseCommandWithObstacleCfg.Ranges(
+            pos_x=(-0.1, 0.1),
+            pos_y=(-0.1, 0.1),
+            pos_z=(-0.1, 0.1),
+            obstacle_pos_x=(-0.02, 0.02),
+            obstacle_pos_y=(-0.02, 0.02),
+            obstacle_pos_z=(-0.02, 0.02),
+            exlusion_region=(-0.05, 0.05)
         ),
     )
 
