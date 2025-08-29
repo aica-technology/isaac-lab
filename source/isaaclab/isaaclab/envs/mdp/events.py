@@ -1091,6 +1091,7 @@ def reset_joints_by_offset(
     # set into the physics simulation
     asset.write_joint_state_to_sim(joint_pos, joint_vel, env_ids=env_ids)
 
+
 def reset_robot_by_ee_pose(
     env: ManagerBasedRLEnv,
     env_ids: torch.Tensor,
@@ -1113,14 +1114,14 @@ def reset_robot_by_ee_pose(
     # extract the used quantities (to enable type-hinting)
     asset: Articulation = env.scene[asset_cfg.name]
 
-    end_effector_jacobian_index = asset.find_bodies(ee_frame_name)[0][0] - 1 
+    end_effector_jacobian_index = asset.find_bodies(ee_frame_name)[0][0] - 1
     arm_joint_ids = asset.find_joints(arm_joint_names)[0]
 
     # sample random end-effector pose
     num_envs = len(env_ids)
 
     # Fill position
-    target_pos_b = torch.empty((num_envs, 3), device=asset.device)    
+    target_pos_b = torch.empty((num_envs, 3), device=asset.device)
     target_pos_b[:, 0] = torch.empty(num_envs, device=asset.device).uniform_(*x_range)
     target_pos_b[:, 1] = torch.empty(num_envs, device=asset.device).uniform_(*y_range)
     target_pos_b[:, 2] = torch.empty(num_envs, device=asset.device).uniform_(*z_range)
@@ -1135,27 +1136,32 @@ def reset_robot_by_ee_pose(
             root_quat_w = asset.data.root_quat_w[env_ids]
 
             joint_pos = asset.data.joint_pos[env_ids][:, arm_joint_ids]
-            ee_pos_w  = asset.data.body_link_pos_w[env_ids][:, end_effector_jacobian_index, :].squeeze(1)
+            ee_pos_w = asset.data.body_link_pos_w[env_ids][:, end_effector_jacobian_index, :].squeeze(1)
             ee_pos_b = ee_pos_w - root_pos_w
 
             position_error = target_pos_b - ee_pos_b
             pos_error_norm = position_error.norm(dim=-1)
-            solving = (pos_error_norm >= position_error_threshold)
+            solving = pos_error_norm >= position_error_threshold
             if not solving.any():
                 break
 
             solving_index = solving.nonzero(as_tuple=False).squeeze(-1)
-            jacobian = asset.root_physx_view.get_jacobians()[env_ids][:, end_effector_jacobian_index, 0:3, arm_joint_ids][
-                solving_index
-            ]
+            jacobian = asset.root_physx_view.get_jacobians()[env_ids][
+                :, end_effector_jacobian_index, 0:3, arm_joint_ids
+            ][solving_index]
             base_rot_matrix = math_utils.matrix_from_quat(math_utils.quat_inv(root_quat_w[solving_index]))
+
             jacobian_base = jacobian.clone()
             jacobian_base = torch.bmm(base_rot_matrix, jacobian)
             jacobian_base_transpose = torch.transpose(jacobian_base, dim0=1, dim1=2)
-            lambda_matrix = (lambda_val**2) + torch.eye(n=jacobian_base.shape[1], device=asset.device)
+            lambda_matrix = (lambda_val ** 2) + torch.eye(n=jacobian_base.shape[1], device=asset.device)
 
             delta_joint_pos = torch.zeros_like(joint_pos, device=asset.device)
-            delta_joint_pos[solving_index] = (jacobian_base_transpose @ torch.inverse(jacobian_base @ jacobian_base_transpose + lambda_matrix) @ position_error[solving_index].unsqueeze(-1)).squeeze(-1)
+            delta_joint_pos[solving_index] = (
+                jacobian_base_transpose
+                @ torch.inverse(jacobian_base @ jacobian_base_transpose + lambda_matrix)
+                @ position_error[solving_index].unsqueeze(-1)
+            ).squeeze(-1)
 
             target_joint_pos = joint_pos + delta_joint_pos
             joint_pos_limits = asset.data.soft_joint_pos_limits[env_ids][:, arm_joint_ids]
@@ -1170,8 +1176,9 @@ def reset_robot_by_ee_pose(
         )
 
         # Invalidate timestamps so consequent call update the kinematics, in case needed
-        asset.data._joint_pos.timestamp = -1 # type: ignore
-        asset.data._body_link_pose_w.timestamp = -1 # type: ignore
+        asset.data._joint_pos.timestamp = -1  # type: ignore
+        asset.data._body_link_pose_w.timestamp = -1  # type: ignore
+
 
 def reset_nodal_state_uniform(
     env: ManagerBasedEnv,
