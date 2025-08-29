@@ -158,11 +158,12 @@ class UniformPoseCommandWithObstacleCfg(CommandTermCfg):
     """Specifies whether the sampling includes only positions, without orientations."""
 
     spawn: SceneEntityCfg = None
-    """
-    If the rigid body entity config is provided, an obstacle will spawn at a position relative to the command.
-    """
+    """If the rigid body entity config is provided, an obstacle will spawn at a position relative to the command."""
 
     probability_of_obstacle_existance: float = 1.0
+    """Specifies the probability of spawning obstacles near the command. This helps randomize the environment to ensure 
+    that the trained policy does not overfit to the presence of obstacles.
+    """
 
     @configclass
     class Ranges:
