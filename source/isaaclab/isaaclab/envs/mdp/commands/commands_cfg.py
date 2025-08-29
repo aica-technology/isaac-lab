@@ -132,7 +132,7 @@ class NormalVelocityCommandCfg(UniformVelocityCommandCfg):
 
 @configclass
 class UniformPoseCommandWithObstacleCfg(CommandTermCfg):
-    """Configuration for uniform pose command generator."""
+    """Configuration for uniform pose with obstacle command generator."""
 
     class_type: type = UniformPoseCommandWithObstacle
 
