@@ -222,24 +222,37 @@ class UniformPoseCommandWithObstacle(CommandTerm):
         # -- position
         exclusion_region_low, exclusion_region_high = self.cfg.ranges.exlusion_region
         random_range = torch.empty(len(env_ids), device=self.device)
-        self.pose_command_b[env_ids, 0] = self._exclusion_region_sampling(
-            random_range,
-            *self.cfg.ranges.pos_x,
-            exclusion_region_low,
-            exclusion_region_high,
-        )
-        self.pose_command_b[env_ids, 1] = self._exclusion_region_sampling(
-            random_range,
-            *self.cfg.ranges.pos_y,
-            exclusion_region_low,
-            exclusion_region_high,
-        )
-        self.pose_command_b[env_ids, 2] = self._exclusion_region_sampling(
-            random_range,
-            *self.cfg.ranges.pos_z,
-            exclusion_region_low,
-            exclusion_region_high,
-        )
+        excluded_axes = torch.randint(0, 3, (len(env_ids),), device=self.device)
+
+        # Axis configuration
+        axis_configs = [
+            (0, self.cfg.ranges.pos_x),
+            (1, self.cfg.ranges.pos_y),
+            (2, self.cfg.ranges.pos_z),
+        ]
+
+        for axis_idx, (col_idx, (low, high)) in enumerate(axis_configs):
+            # Mask for environments where this axis should use exclusion sampling
+            mask = excluded_axes == axis_idx
+            num_excluded = mask.sum().item()
+
+            values = torch.empty(len(env_ids), device=self.device)
+
+            if num_excluded > 0:
+                excluded_samples = self._exclusion_region_sampling(
+                    torch.empty(num_excluded, device=self.device),
+                    low, high,
+                    exclusion_region_low,
+                    exclusion_region_high,
+                )
+                values[mask] = excluded_samples
+
+            if num_excluded < len(env_ids):
+                uniform_samples = torch.empty(len(env_ids) - num_excluded, device=self.device).uniform_(low, high)
+                values[~mask] = uniform_samples
+
+            # Assign to the final pose buffer
+            self.pose_command_b[env_ids, col_idx] = values
 
         if self.cfg.mode == "relative":
             ee_pos_b = (
