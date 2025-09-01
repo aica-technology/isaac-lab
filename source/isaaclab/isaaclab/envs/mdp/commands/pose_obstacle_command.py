@@ -83,6 +83,8 @@ class UniformPoseCommandWithObstacle(CommandTerm):
                     "Rotation values (r, p, y) must all be defined if a pose is sampled."
                 )
 
+        if not 0 <= self.cfg.probability_of_obstacle_existance <= 1:
+            raise ValueError("Probability of obstacle existance should be between 0 and 1 (inclusive).")
 
         # extract the robot and body index for which the command is generated
         self.robot: Articulation = env.scene[cfg.asset_name]
