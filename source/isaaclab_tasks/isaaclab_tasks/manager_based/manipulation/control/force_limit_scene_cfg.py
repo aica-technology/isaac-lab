@@ -68,7 +68,7 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
     collider = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Collider",
         spawn=sim_utils.SphereCfg(
-            radius=(0.05),
+            radius=(0.015),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
@@ -106,13 +106,13 @@ class CommandsCfg:
         spawn=SceneEntityCfg("collider"),
         position_only=True,
         ranges=mdp.UniformPoseCommandWithObstacleCfg.Ranges(
-            pos_x=(-0.1, 0.1),
-            pos_y=(-0.1, 0.1),
-            pos_z=(-0.1, 0.1),
-            obstacle_pos_x=(-0.02, 0.02),
-            obstacle_pos_y=(-0.02, 0.02),
-            obstacle_pos_z=(-0.02, 0.02),
-            exlusion_region=(-0.07, 0.07)
+            pos_x=(-0.05, 0.05),
+            pos_y=(-0.05, 0.05),
+            pos_z=(-0.05, 0.05),
+            obstacle_pos_x=(-0.01, 0.01),
+            obstacle_pos_y=(-0.01, 0.01),
+            obstacle_pos_z=(-0.01, 0.01),
+            exlusion_region=(-0.03, 0.03)
         ),
     )
 

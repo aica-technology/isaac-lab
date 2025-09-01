@@ -19,7 +19,6 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.ee_str]
-        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.force_direction_reward.params["asset_cfg"].body_names = [self.ee_str]
 
@@ -28,9 +27,21 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         self.commands.ee_pose.body_name = self.ee_str
-        self.commands.ee_pose.ranges.pitch = (0, 0)
 
-        # A clip of ±6 cm/s is applied to ensure the robot does not sample actions that are too large near contact, 
+        self.events.reset_robot_joints.params["ee_frame_name"] = self.ee_str
+        self.events.reset_robot_joints.params["arm_joint_names"] = [
+            "shoulder_pan_joint",
+            "shoulder_lift_joint",
+            "elbow_joint",
+            "wrist_1_joint",
+            "wrist_2_joint",
+            "wrist_3_joint",
+        ]
+        self.events.reset_robot_joints.params["x_range"] = (0.2, 0.5)
+        self.events.reset_robot_joints.params["y_range"] = (-0.3, 0.3)
+        self.events.reset_robot_joints.params["z_range"] = (0.3, 0.45)
+
+        # A clip of ±6 cm/s is applied to ensure the robot does not sample actions that are too large near contact,
         # as the goal is to allow the robot to reach the target without exceeding the force limit.
         # The scaling ensures that the sampled actions remain within a reasonable range.
         # Assuming an initial Gaussian distribution, the policy samples actions with a mean of 0 and a standard deviation of 0.02cm/s
@@ -40,7 +51,7 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
             asset_name="robot",
             joint_names=[".*"],
             body_name=self.ee_str,
-            controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
+            controller=DifferentialIKControllerCfg(command_type="linear_velocity", ik_method="dls"),
             scale=0.02,
             clip=(-0.06, 0.06),
         )
