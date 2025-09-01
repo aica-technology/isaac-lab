@@ -19,7 +19,8 @@ def measured_forces_in_ee_frame(
 def measured_forces_in_world_frame(
     env: ManagerBasedRLEnv,
     contact_sensor_cfg: SceneEntityCfg = SceneEntityCfg("contact_sensor"),
+    scale: float = 1
 ) -> torch.Tensor:
     contact_sensor: ContactSensor = env.scene[contact_sensor_cfg.name]
     force_w, _ = torch.max(torch.mean(contact_sensor.data.force_matrix_w, dim=1), dim=1)  # type: ignore
-    return force_w.view(-1, 3)
+    return force_w.view(-1, 3) * scale
