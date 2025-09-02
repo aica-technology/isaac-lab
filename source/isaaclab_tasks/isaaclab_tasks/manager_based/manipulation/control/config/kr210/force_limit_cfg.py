@@ -3,7 +3,7 @@ from isaaclab_tasks.manager_based.manipulation.control.force_limit_scene_cfg imp
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 
-from isaaclab_assets import KUKA_KR210_LOW_LEVEL_PID_CFG
+from isaaclab_assets import KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG
 
 
 @configclass
@@ -18,7 +18,7 @@ class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
         self.ee_str = "ee_frame"
 
         # adjust the scene
-        self.scene.robot = KUKA_KR210_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.robot = KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
         self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/custom_tool"
         self.scene.collider.spawn.size = (0.1, 0.1, 0.1) #type: ignore
         self.scene.collider.init_state.pos = (2, 0.0, 0.0) # far distance (this will be overriden by the environment)

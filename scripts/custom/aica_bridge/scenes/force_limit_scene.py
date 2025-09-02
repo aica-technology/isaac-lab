@@ -6,7 +6,7 @@ from isaaclab.sensors import ContactSensorCfg
 from isaaclab.utils import configclass
 from isaaclab.markers.config import FRAME_MARKER_CFG
 from isaaclab.markers.visualization_markers import VisualizationMarkersCfg
-from isaaclab_assets import KUKA_KR210_LOW_LEVEL_PID_CFG
+from isaaclab_assets import KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG
 
 
 ee_frame_cfg: VisualizationMarkersCfg = FRAME_MARKER_CFG.copy()  # type: ignore
@@ -16,7 +16,7 @@ ee_frame_cfg.prim_path = "/Visuals/EEFrame"
 
 @configclass
 class ForceLimitScene(InteractiveSceneCfg):
-    robot: ArticulationCfg = KUKA_KR210_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+    robot: ArticulationCfg = KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
 
     # ground plane
     ground = AssetBaseCfg(
