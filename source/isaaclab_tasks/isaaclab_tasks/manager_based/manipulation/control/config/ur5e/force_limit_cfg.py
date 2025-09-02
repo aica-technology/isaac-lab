@@ -19,7 +19,6 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = [self.ee_str]
-        self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.action_termination_penalty.params["asset_cfg"].body_names = [self.ee_str]
         self.rewards.force_direction_reward.params["asset_cfg"].body_names = [self.ee_str]
 
@@ -40,7 +39,7 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
             asset_name="robot",
             joint_names=[".*"],
             body_name=self.ee_str,
-            controller=DifferentialIKControllerCfg(command_type="velocity", ik_method="dls"),
+            controller=DifferentialIKControllerCfg(command_type="linear_velocity", ik_method="dls"),
             scale=0.02,
             clip=(-0.06, 0.06),
         )
