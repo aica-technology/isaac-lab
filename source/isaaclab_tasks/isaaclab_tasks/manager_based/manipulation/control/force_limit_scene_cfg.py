@@ -69,6 +69,7 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
         prim_path="{ENV_REGEX_NS}/Collider",
         spawn=sim_utils.SphereCfg(
             radius=(0.015),
+            radius=(0.02),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
             rigid_props=sim_utils.RigidBodyPropertiesCfg(kinematic_enabled=True, max_depenetration_velocity=0.1),
@@ -133,7 +134,8 @@ class ObservationsCfg:
         """Observations for policy group."""
 
         ee_position = ObsTerm(func=mdp.ee_position_in_robot_root_frame)
-        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1), params={"scale": 0.01})
+        ee_measured_forces = ObsTerm(func=mdp.measured_forces_in_world_frame, noise=Unoise(n_min=-1, n_max=1))
+
         pose_command = ObsTerm(func=mdp.generated_commands, params={"command_name": "ee_pose"})
         actions = ObsTerm(func=mdp.last_processed_action)
 
