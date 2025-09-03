@@ -68,6 +68,7 @@ class ForceLimitSceneCfg(InteractiveSceneCfg):
     collider = RigidObjectCfg(
         prim_path="{ENV_REGEX_NS}/Collider",
         spawn=sim_utils.SphereCfg(
+            radius=(0.015),
             radius=(0.02),
             collision_props=sim_utils.CollisionPropertiesCfg(),
             visual_material=sim_utils.PreviewSurfaceCfg(),
@@ -106,13 +107,13 @@ class CommandsCfg:
         spawn=SceneEntityCfg("collider"),
         position_only=True,
         ranges=mdp.UniformPoseCommandWithObstacleCfg.Ranges(
-            pos_x=(-0.1, 0.1),
-            pos_y=(-0.1, 0.1),
-            pos_z=(-0.1, 0.1),
-            obstacle_pos_x=(-0.02, 0.02),
-            obstacle_pos_y=(-0.02, 0.02),
-            obstacle_pos_z=(-0.02, 0.02),
-            exlusion_region=(-0.05, 0.05)
+            pos_x=(-0.05, 0.05),
+            pos_y=(-0.05, 0.05),
+            pos_z=(-0.05, 0.05),
+            obstacle_pos_x=(-0.01, 0.01),
+            obstacle_pos_y=(-0.01, 0.01),
+            obstacle_pos_z=(-0.01, 0.01),
+            exlusion_region=(-0.03, 0.03)
         ),
     )
 
@@ -151,11 +152,14 @@ class EventCfg:
     """Configuration for events."""
 
     reset_robot_joints = EventTerm(
-        func=mdp.reset_joints_by_scale,
+        func=mdp.reset_robot_by_ee_pose,
         mode="reset",
         params={
-            "position_range": (1.0, 1.0),
-            "velocity_range": (0.0, 0.0),
+            "x_range": (0.3, 0.5),
+            "y_range": (-0.2, 0.2),
+            "z_range": (0.3, 0.5),
+            "ee_frame_name": MISSING,
+            "arm_joint_names": MISSING
         },
     )
 
@@ -281,3 +285,13 @@ class ForceLimitEnvCfg(ManagerBasedRLEnvCfg):
         self.viewer.eye = (3.5, 3.5, 3.5)
         # simulation settings
         self.sim.dt = 1.0 / 500.0
+
+        self.sim.physx.max_position_iteration_count = 192  # Important to avoid interpenetration.
+        self.sim.physx.max_velocity_iteration_count = 1
+        self.sim.physx.bounce_threshold_velocity = 0.2
+        self.sim.physx.friction_offset_threshold = 0.01
+        self.sim.physx.friction_correlation_distance = 0.00625
+
+        self.sim.physx.gpu_max_rigid_contact_count = 2**23
+        self.sim.physx.gpu_max_rigid_patch_count = 2**23
+        self.sim.physx.gpu_max_num_partitions = 1  # Important for stable simulation.

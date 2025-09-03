@@ -11,6 +11,7 @@ KR210_EFFORT_LIMITS = {
     "kr210_joint_a6": 700,
 }
 
+# Default KR210 with no tool attached
 KUKA_KR210_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
         usd_path="/workspace/isaaclab/usd/robots/kuka/kr210/kr210.usd",
@@ -26,11 +27,11 @@ KUKA_KR210_CFG = ArticulationCfg(
     init_state=ArticulationCfg.InitialStateCfg(
         joint_pos={
             "kr210_joint_a1": 0.0,
-            "kr210_joint_a2": -1.57,
-            "kr210_joint_a3": 1.57,
-            "kr210_joint_a4": 0.0,
+            "kr210_joint_a2": -2,
+            "kr210_joint_a3": 2.4,
+            "kr210_joint_a4": -1.57,
             "kr210_joint_a5": 1.57,
-            "kr210_joint_a6": 0.0
+            "kr210_joint_a6": 0.37
         },
     ),
 
@@ -44,13 +45,17 @@ KUKA_KR210_CFG = ArticulationCfg(
     },
 )
 
+# KR210 with implicit velocity control
 KUKA_VEL_KR210_CFG = KUKA_KR210_CFG.copy()
 KUKA_VEL_KR210_CFG.actuators["arm"].stiffness = 0
 KUKA_VEL_KR210_CFG.actuators["arm"].damping = 50000
 
-KUKA_KR210_LOW_LEVEL_PID_CFG = KUKA_KR210_CFG.copy()
+KUKA_KR210_CUTTER_CFG = KUKA_KR210_CFG.copy()
+KUKA_KR210_CUTTER_CFG.spawn.usd_path="/workspace/isaaclab/usd/robots/kuka/kr210/kr210_cutter.usd"
 
-KUKA_KR210_LOW_LEVEL_PID_CFG.actuators = {
+#KR210 with low level velocity PID control
+KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG = KUKA_KR210_CUTTER_CFG.copy()
+KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG.actuators = {
     "arm": VelocityPIDActuatorCfg(
             joint_names_expr=[".*"],
             effort_limit=KR210_EFFORT_LIMITS,

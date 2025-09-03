@@ -3,18 +3,25 @@ from isaaclab_tasks.manager_based.manipulation.control.force_limit_scene_cfg imp
 from isaaclab.controllers.differential_ik_cfg import DifferentialIKControllerCfg
 from isaaclab.envs.mdp.actions.actions_cfg import DifferentialInverseKinematicsActionCfg
 
-from isaaclab_assets import UR5E_CFG_LOW_LEVEL_PID
+from isaaclab_assets import KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG
 
 
 @configclass
-class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
+class KR210ForceLimitEnvCfg(ForceLimitEnvCfg):
     def __post_init__(self):
         # post init of parent
         super().__post_init__()
 
-        self.scene.robot = UR5E_CFG_LOW_LEVEL_PID.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        # increase env spacing for big robots
+        self.scene.env_spacing = 5
+        self.episode_length_s = 10
+        self.ee_str = "ee_frame"
 
-        self.ee_str = "wrist_3_link"
+        # adjust the scene
+        self.scene.robot = KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG.replace(prim_path="{ENV_REGEX_NS}/Robot")
+        self.scene.contact_sensor.prim_path = "{ENV_REGEX_NS}/Robot/custom_tool"
+        self.scene.collider.spawn.size = (0.1, 0.1, 0.1) #type: ignore
+        self.scene.collider.init_state.pos = (2, 0.0, 0.0) # far distance (this will be overriden by the environment)
 
         # set rewards body name
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = [self.ee_str]
@@ -23,35 +30,30 @@ class UR5eForceLimitEnvCfg(ForceLimitEnvCfg):
         self.rewards.force_direction_reward.params["asset_cfg"].body_names = [self.ee_str]
 
         # set end-effector frame
-        self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/base_link"
+        self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/world"
         self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/" + self.ee_str
 
         self.commands.ee_pose.body_name = self.ee_str
+        self.commands.ee_pose.resampling_time_range = (10.0, 10.0)
 
         self.events.reset_robot_joints.params["ee_frame_name"] = self.ee_str
         self.events.reset_robot_joints.params["arm_joint_names"] = [
-            "shoulder_pan_joint",
-            "shoulder_lift_joint",
-            "elbow_joint",
-            "wrist_1_joint",
-            "wrist_2_joint",
-            "wrist_3_joint",
+            "kr210_joint_a1",
+            "kr210_joint_a2",
+            "kr210_joint_a3",
+            "kr210_joint_a4",
+            "kr210_joint_a5",
+            "kr210_joint_a6",
         ]
-        self.events.reset_robot_joints.params["x_range"] = (0.2, 0.5)
-        self.events.reset_robot_joints.params["y_range"] = (-0.3, 0.3)
-        self.events.reset_robot_joints.params["z_range"] = (0.3, 0.45)
-
-        # A clip of ±6 cm/s is applied to ensure the robot does not sample actions that are too large near contact,
-        # as the goal is to allow the robot to reach the target without exceeding the force limit.
-        # The scaling ensures that the sampled actions remain within a reasonable range.
-        # Assuming an initial Gaussian distribution, the policy samples actions with a mean of 0 and a standard deviation of 0.02cm/s
-        # Allowing more efficient training and exploration of the action space.
+        self.events.reset_robot_joints.params["x_range"] = (1.4, 2.0)
+        self.events.reset_robot_joints.params["y_range"] = (-0.6, 0.85)
+        self.events.reset_robot_joints.params["z_range"] = (0.74, 0.98)
 
         self.actions.arm_action = DifferentialInverseKinematicsActionCfg(
             asset_name="robot",
             joint_names=[".*"],
             body_name=self.ee_str,
             controller=DifferentialIKControllerCfg(command_type="linear_velocity", ik_method="dls"),
-            scale=0.02,
-            clip=(-0.06, 0.06),
+            scale=(0.01, 0.01, 0.01),
+            clip=[0.06, 0.06, 0.06]
         )
