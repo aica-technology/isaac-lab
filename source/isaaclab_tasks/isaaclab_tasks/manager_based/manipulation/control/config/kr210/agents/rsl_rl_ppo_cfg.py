@@ -6,7 +6,7 @@ from isaaclab_rl.rsl_rl import RslRlOnPolicyRunnerCfg, RslRlPpoActorCriticCfg, R
 @configclass
 class KR210ForceLimitPPORunnerCfg(RslRlOnPolicyRunnerCfg):
     num_steps_per_env = 64
-    max_iterations = 1000
+    max_iterations = 400
     save_interval = 50
     experiment_name = "force_limit_kr210"
     run_name = ""
