@@ -102,7 +102,7 @@ class CommandsCfg:
         debug_vis=True,
         make_quat_unique=True,
         mode="relative",
-        probability_of_obstacle_existance=1,
+        probability_of_obstacle_existance=0.5,
         spawn=SceneEntityCfg("collider"),
         position_only=True,
         ranges=mdp.UniformPoseCommandWithObstacleCfg.Ranges(
