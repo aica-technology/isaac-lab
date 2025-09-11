@@ -3,11 +3,13 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
+
 """Configuration for the Universal Robots.
 
 The following configuration parameters are available:
 
 * :obj:`UR10_CFG`: The UR10 arm without a gripper.
+* :obj:`UR10E_ROBOTIQ_GRIPPER_CFG`: The UR10E arm with Robotiq_2f_140 gripper.
 
 Reference: https://github.com/ros-industrial/universal_robot
 """
@@ -44,8 +46,7 @@ UR10_CFG = ArticulationCfg(
     actuators={
         "arm": ImplicitActuatorCfg(
             joint_names_expr=[".*"],
-            velocity_limit=100.0,
-            effort_limit=87.0,
+            effort_limit_sim=87.0,
             stiffness=800.0,
             damping=40.0,
         ),
