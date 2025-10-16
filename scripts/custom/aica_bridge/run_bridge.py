@@ -10,7 +10,9 @@ parser.add_argument("--ip_address", type=str, default="*", help="IP address of t
 parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
 parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
 parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
-parser.add_argument("--joint_names", nargs="+", default=["*"], help="List of joint names to control. Defaults to '*' (all joints).")
+parser.add_argument(
+    "--joint_names", nargs="+", default="*", help="List of joint names to control. Defaults to '*' (all joints)."
+)
 parser.add_argument(
     "--command_interface", type=str, default="positions", help="Command interface to use (default: positions)."
 )
