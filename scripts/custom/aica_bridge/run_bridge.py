@@ -5,13 +5,13 @@ parser = argparse.ArgumentParser(description="Run the AICA bridge.")
 
 parser.add_argument("--scene", type=str, help="Scene name to load.")
 parser.add_argument("--rate", type=float, default=100.0, help="Simulation rate in Hz.")
-parser.add_argument("--force_sensor", type=str, default=None, help="Force sensor name.")
+parser.add_argument("--ft_sensor_name", type=str, default=None, help="Force sensor name.")
 parser.add_argument("--ip_address", type=str, default="*", help="IP address of the AICA server.")
 parser.add_argument("--state_port", type=int, default=1801, help="Port for the state socket.")
 parser.add_argument("--command_port", type=int, default=1802, help="Port for the command socket.")
-parser.add_argument("--force_port", type=int, default=1803, help="Port for the force sensor.")
+parser.add_argument("--ft_sensor_port", type=int, default=1803, help="Port for the force sensor.")
 parser.add_argument(
-    "--joint_names", nargs="+", default="*", help="List of joint names to control. Defaults to '*' (all joints)."
+    "--joint_names", nargs="+", default=".*", help="List of joint names to control. Defaults to '.*' (all joints)."
 )
 parser.add_argument(
     "--command_interface", type=str, default="positions", help="Command interface to use (default: positions)."
@@ -226,8 +226,8 @@ def main() -> None:
         address=arguments.ip_address,
         state_port=arguments.state_port,
         command_port=arguments.command_port,
-        force_port=arguments.force_port,
-        force_sensor_name=arguments.force_sensor,
+        force_port=arguments.ft_sensor_port,
+        force_sensor_name=arguments.ft_sensor_name,
     )
 
     sim = Simulator(
