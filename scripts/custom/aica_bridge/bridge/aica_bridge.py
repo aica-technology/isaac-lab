@@ -39,11 +39,11 @@ class AICABridge:
 
         self._joint_state: sr.JointState = None
 
-        self._use_force_sensor = config.force_sensor_name is not None
-        if self._use_force_sensor:
-            self._cartesian_wrench = sr.CartesianWrench().Zero(config.force_sensor_name)
+        self._use_ft_sensor = config.ft_sensor_name is not None
+        if self._use_ft_sensor:
+            self._cartesian_wrench = sr.CartesianWrench().Zero(config.ft_sensor_name)
             self._force_publisher = ZMQPublisher(
-                ZMQSocketConfiguration(self._context, config.address, str(config.force_port), True)
+                ZMQSocketConfiguration(self._context, config.address, str(config.ft_sensor_port), True)
             )
 
         self.__is_active = False
@@ -56,7 +56,7 @@ class AICABridge:
     def activate(self, joint_names: list[str], robot_joint_ids: list[int]) -> None:
         """Open ZMQ sockets for bidirectional communication and initialize joint state."""
         if not self.__is_active:
-            if self._use_force_sensor:
+            if self._use_ft_sensor:
                 self._force_publisher.open()
 
             self._state_command_publisher_subscriber.open()
@@ -94,7 +94,7 @@ class AICABridge:
                 clproto.encode(self._joint_state, clproto.MessageType.JOINT_STATE_MESSAGE)
             )
 
-            if self._use_force_sensor:
+            if self._use_ft_sensor:
                 forces = measured_forces(scene)[0][0].cpu().numpy()
                 self._cartesian_wrench.set_force(forces)
                 self._cartesian_wrench.set_torque(torch.zeros(3).cpu().numpy())

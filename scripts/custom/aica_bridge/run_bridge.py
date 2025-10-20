@@ -226,8 +226,8 @@ def main() -> None:
         address=arguments.ip_address,
         state_port=arguments.state_port,
         command_port=arguments.command_port,
-        force_port=arguments.ft_sensor_port,
-        force_sensor_name=arguments.ft_sensor_name,
+        ft_sensor_port=arguments.ft_sensor_port,
+        ft_sensor_name=arguments.ft_sensor_name,
     )
 
     sim = Simulator(
