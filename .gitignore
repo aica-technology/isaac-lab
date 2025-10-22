@@ -8,11 +8,6 @@
 **/*.dmp
 **/.thumbs
 
-# No USD files allowed in the repo
-**/*.usd
-**/*.usda
-**/*.usdc
-**/*.usdz
 
 # Python
 .DS_Store
@@ -69,4 +64,4 @@ tests/
 
 # Docker history
 .isaac-lab-docker-history
-usd/*
+aica_usd/*
