@@ -167,7 +167,7 @@ UR10e_ROBOTIQ_GRIPPER_CFG.actuators["gripper_passive"] = ImplicitActuatorCfg(
 
 UR5E_CFG = ArticulationCfg(
     spawn=sim_utils.UsdFileCfg(
-        usd_path=f"/workspace/isaaclab/usd/robots/universal_robots/ur5e/ur5e_instanceable.usd", # If you need access to this asset, please contact support@aica.tech
+        usd_path=f"/workspace/isaaclab/usd/robots/universal_robots/ur5e/ur5e_instanceable.usd",
         rigid_props=sim_utils.RigidBodyPropertiesCfg(
             disable_gravity=True,
             max_depenetration_velocity=5.0,

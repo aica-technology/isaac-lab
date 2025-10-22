@@ -51,7 +51,7 @@ KUKA_VEL_KR210_CFG.actuators["arm"].stiffness = 0
 KUKA_VEL_KR210_CFG.actuators["arm"].damping = 50000
 
 KUKA_KR210_CUTTER_CFG = KUKA_KR210_CFG.copy()
-KUKA_KR210_CUTTER_CFG.spawn.usd_path="/workspace/isaaclab/usd/robots/kuka/kr210/kr210_cutter.usd" # proprietary tool attached
+KUKA_KR210_CUTTER_CFG.spawn.usd_path="/workspace/isaaclab/aica_usd/robots/kuka/kr210/kr210_cutter.usd"
 
 #KR210 with low level velocity PID control
 KUKA_KR210_CUTTER_LOW_LEVEL_PID_CFG = KUKA_KR210_CUTTER_CFG.copy()
