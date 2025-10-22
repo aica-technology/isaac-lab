@@ -69,4 +69,4 @@ tests/
 
 # Docker history
 .isaac-lab-docker-history
-usd/*
+aica_usd/*
