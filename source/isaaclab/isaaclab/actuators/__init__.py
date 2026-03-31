@@ -1,4 +1,4 @@
-# Copyright (c) 2022-2025, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
+# Copyright (c) 2022-2026, The Isaac Lab Project Developers (https://github.com/isaac-sim/IsaacLab/blob/main/CONTRIBUTORS.md).
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -23,17 +23,16 @@ and called by the :class:`isaaclab.assets.Articulation` class.
 """
 
 from .actuator_base import ActuatorBase
-from .actuator_cfg import (
-    ActuatorBaseCfg,
-    ActuatorNetLSTMCfg,
-    ActuatorNetMLPCfg,
+from .actuator_base_cfg import ActuatorBaseCfg
+from .actuator_net import ActuatorNetLSTM, ActuatorNetMLP
+from .actuator_net_cfg import ActuatorNetLSTMCfg, ActuatorNetMLPCfg
+from .actuator_pd import DCMotor, DelayedPDActuator, IdealPDActuator, ImplicitActuator, RemotizedPDActuator
+from .actuator_pd_cfg import (
     DCMotorCfg,
     DelayedPDActuatorCfg,
     IdealPDActuatorCfg,
     ImplicitActuatorCfg,
     RemotizedPDActuatorCfg,
-    VelocityPIDActuatorCfg,
 )
-from .actuator_net import ActuatorNetLSTM, ActuatorNetMLP
-from .actuator_pd import DCMotor, DelayedPDActuator, IdealPDActuator, ImplicitActuator, RemotizedPDActuator
 from .actuator_pid import VelocityPIDActuator
+from .actuator_pid_cfg import VelocityPIDActuatorCfg
