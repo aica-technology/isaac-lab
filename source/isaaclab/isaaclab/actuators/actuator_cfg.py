@@ -6,7 +6,7 @@
 import sys
 import warnings
 
-from . import actuator_base_cfg, actuator_net_cfg, actuator_pd_cfg
+from . import actuator_base_cfg, actuator_net_cfg, actuator_pd_cfg, actuator_pid_cfg
 
 
 def __getattr__(name):
@@ -17,6 +17,8 @@ def __getattr__(name):
         new_module = actuator_net_cfg
     elif name in dir(actuator_base_cfg):
         new_module = actuator_base_cfg
+    elif name in dir(actuator_pid_cfg):
+        new_module = actuator_pid_cfg
 
     if new_module is not None:
         warnings.warn(

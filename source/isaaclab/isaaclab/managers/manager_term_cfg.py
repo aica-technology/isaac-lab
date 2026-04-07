@@ -94,7 +94,7 @@ class ActionTermCfg:
     debug_vis: bool = False
     """Whether to visualize debug information. Defaults to False."""
 
-    clip: dict[str, tuple] | None = None
+    clip: dict[str, tuple] | tuple[float, float] | list[float] | None = None
     """Clip range for the action (dict of regex expressions). Defaults to None."""
 
 

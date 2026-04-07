@@ -115,14 +115,25 @@ class DifferentialInverseKinematicsAction(ActionTerm):
 
         # parse clip
         if self.cfg.clip is not None:
-            if isinstance(cfg.clip, dict):
+            if isinstance(self.cfg.clip, dict):
                 self._clip = torch.tensor([[-float("inf"), float("inf")]], device=self.device).repeat(
                     self.num_envs, self.action_dim, 1
                 )
                 index_list, _, value_list = string_utils.resolve_matching_names_values(self.cfg.clip, self._joint_names)
                 self._clip[:, index_list] = torch.tensor(value_list, device=self.device)
+
+            elif isinstance(self.cfg.clip, tuple) and len(self.cfg.clip) == 2:
+                self._clip = torch.tensor([[self.cfg.clip[0], self.cfg.clip[1]]], device=self.device).repeat(
+                    self.num_envs, self.action_dim, 1
+                )
+            elif isinstance(self.cfg.clip, list) and (len(self.cfg.clip) == 3 or len(self.cfg.clip) == 6):
+                self._clip = torch.tensor(self.cfg.clip, device=self.device).unsqueeze(0).repeat(
+                    self.num_envs, 1
+                )
             else:
-                raise ValueError(f"Unsupported clip type: {type(cfg.clip)}. Supported types are dict.")
+                raise ValueError(
+                    f"Unsupported clip type: {type(cfg.clip)}. Supported types are dict, tuple (length 2), list (length 3), and list (length 6)."
+                )
 
     """
     Properties.
@@ -193,9 +204,14 @@ class DifferentialInverseKinematicsAction(ActionTerm):
         self._raw_actions[:] = actions
         self._processed_actions[:] = self.raw_actions * self._scale
         if self.cfg.clip is not None:
-            self._processed_actions = torch.clamp(
-                self._processed_actions, min=self._clip[:, :, 0], max=self._clip[:, :, 1]
-            )
+            if isinstance(self.cfg.clip, tuple):
+                self._processed_actions = torch.clamp(
+                    self._processed_actions, min=self._clip[:, :, 0], max=self._clip[:, :, 1]
+                )
+            if isinstance(self.cfg.clip, list):
+                self._processed_actions = torch.clamp(
+                    self._processed_actions, min=-self._clip, max=self._clip
+                )              
         # obtain quantities from simulation
         ee_pos_curr, ee_quat_curr = self._compute_frame_pose()
         # set command into controller
@@ -208,11 +224,15 @@ class DifferentialInverseKinematicsAction(ActionTerm):
         # compute the delta in joint-space
         if ee_quat_curr.norm() != 0:
             jacobian = self._compute_frame_jacobian()
-            joint_pos_des = self._ik_controller.compute(ee_pos_curr, ee_quat_curr, jacobian, joint_pos)
+            joint_command_desired = self._ik_controller.compute(jacobian, ee_pos_curr, ee_quat_curr, joint_pos)
         else:
-            joint_pos_des = joint_pos.clone()
-        # set the joint position command
-        self._asset.set_joint_position_target(joint_pos_des, self._joint_ids)
+            joint_command_desired = joint_pos.clone()
+
+        if self.cfg.controller.command_type in ["pose", "position"]:
+            # set the joint position command
+            self._asset.set_joint_position_target(joint_command_desired, self._joint_ids)
+        else:
+            self._asset.set_joint_velocity_target(joint_command_desired, self._joint_ids)
 
     def reset(self, env_ids: Sequence[int] | None = None) -> None:
         self._raw_actions[env_ids] = 0.0

@@ -3,8 +3,6 @@
 #
 # SPDX-License-Identifier: BSD-3-Clause
 
-import math
-
 from isaaclab.utils import configclass
 
 import isaaclab_tasks.manager_based.manipulation.reach.mdp as mdp
@@ -33,15 +31,24 @@ class FrankaReachEnvCfg(ReachEnvCfg):
         self.rewards.end_effector_position_tracking.params["asset_cfg"].body_names = ["panda_hand"]
         self.rewards.end_effector_position_tracking_fine_grained.params["asset_cfg"].body_names = ["panda_hand"]
         self.rewards.end_effector_orientation_tracking.params["asset_cfg"].body_names = ["panda_hand"]
+        self.rewards.action_termination_penalty.params["asset_cfg"].body_names = ["panda_hand"]
 
         # override actions
         self.actions.arm_action = mdp.JointPositionActionCfg(
             asset_name="robot", joint_names=["panda_joint.*"], scale=0.5, use_default_offset=True
         )
+
+        # set end-effector frame
+        self.scene.ee_frame.prim_path = "{ENV_REGEX_NS}/Robot/panda_link0"
+        self.scene.ee_frame.target_frames[0].prim_path = "{ENV_REGEX_NS}/Robot/panda_hand"
+        
         # override command generator body
         # end-effector is along z-direction
         self.commands.ee_pose.body_name = "panda_hand"
-        self.commands.ee_pose.ranges.pitch = (math.pi, math.pi)
+        self.commands.ee_pose.ranges.pitch = (0, 0)
+        
+        self.observations.policy.ee_position = None
+        self.observations.policy.ee_orientation = None
 
 
 @configclass

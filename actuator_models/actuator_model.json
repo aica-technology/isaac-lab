@@ -1,0 +1,41 @@
+{
+    "name": "UR5e",
+    "version": "0.0.1",
+    "description": "UR5e actuator model trained on dataset (v1 https://drive.google.com/file/d/1G1V-y0hHAjVN6Uy34iNlVfRDm1VV5dij/view?usp=drive_link)",
+    "metric_score": 0.87,
+    "metric_unit": "degrees",
+    "joint_names": [
+        "shoulder_pan_joint",
+        "shoulder_lift_joint",
+        "elbow_joint",
+        "wrist_1_joint",
+        "wrist_2_joint",
+        "wrist_3_joint"
+    ],
+    "stiffness": {
+        "shoulder_pan_joint": 2113863.94,
+        "shoulder_lift_joint": 1451148.29,
+        "elbow_joint": 219415.2,
+        "wrist_1_joint": 164067.28,
+        "wrist_2_joint": 1300626.9,
+        "wrist_3_joint": 766102.34
+    },
+    "damping": {
+        "shoulder_pan_joint": 884633.11,
+        "shoulder_lift_joint": 344428.1,
+        "elbow_joint": 96524.43,
+        "wrist_1_joint": 1462344.35,
+        "wrist_2_joint": 0.0,
+        "wrist_3_joint": 48971.72
+    },
+    "friction": {
+        "shoulder_pan_joint": 645028.3,
+        "shoulder_lift_joint": 1691058.70,
+        "elbow_joint": 69339.52,
+        "wrist_1_joint": 162239.83,
+        "wrist_2_joint": 0.0,
+        "wrist_3_joint": 975237.67
+    },
+    "velocity_limit": 100.0,
+    "effort_limit": 87.0
+}

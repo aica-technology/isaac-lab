@@ -34,3 +34,5 @@ from .actuator_pd_cfg import (
     ImplicitActuatorCfg,
     RemotizedPDActuatorCfg,
 )
+from .actuator_pid_cfg import VelocityPIDActuatorCfg
+from .actuator_pid import VelocityPIDActuator
