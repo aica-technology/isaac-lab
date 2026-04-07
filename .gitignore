@@ -64,4 +64,8 @@ tests/
 
 # Docker history
 .isaac-lab-docker-history
+
+# TacSL sensor
+**/tactile_record/*
+**/gelsight_r15_data/*
 aica_usd/*
